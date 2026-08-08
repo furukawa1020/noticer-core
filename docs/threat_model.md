@@ -30,18 +30,18 @@ Atypicality Capabilityだけを解放する。
 
 ```mermaid
 flowchart LR
-    S["Wearable Sensor<br>PPG / IBI / ACC"]
+    SENSOR["Wearable Sensor<br>PPG / IBI / ACC"]
 
-    subgraph TCB["Trusted Computing Base"]
+    subgraph CORE["Noticer Core / TCB"]
         Q["Signal Quality Gate"]
         E["Feature Encoder"]
-        B["Personal Baseline"]
+        BASELINE["Personal Baseline"]
         A["Atypicality Engine"]
         P["Privacy / Release Shaper"]
-        K["Hardware-backed Keystore"]
+        KEYSTORE["Hardware-backed Keystore"]
         T["Token Broker"]
-        C["Claim Cap Monitor"]
-        R["Trusted Renderer"]
+        CLAIM["Claim Cap Monitor"]
+        RENDERER["Trusted Renderer"]
     end
 
     APP["Untrusted Application / Service"]
@@ -50,18 +50,18 @@ flowchart LR
     COLL["Colluding Services"]
     ATTACK["Adaptive ML Attacker"]
 
-    S --> Q
+    SENSOR --> Q
     Q --> E
     E --> A
-    B --> A
+    BASELINE --> A
     A --> P
-    K --> T
+    KEYSTORE --> T
     P --> T
-    T --> C
-    C --> R
-    C --> FUGU
+    T --> CLAIM
+    CLAIM --> RENDERER
+    CLAIM --> FUGU
 
-    APP -. "queries / observes output" .-> C
+    APP -. "queries / observes output" .-> CLAIM
     NET -. "observes traffic and timing" .-> T
     COLL -. "combines outputs" .-> T
     ATTACK -. "trains inference models" .-> T
@@ -71,17 +71,18 @@ flowchart LR
 
 ## 3. System Entities
 
-| ID    | Entity                | Role                         |
-| ----- | --------------------- | ---------------------------- |
-| `S`   | Wearable Sensor       | PPG、IBI、ACCなどを取得する           |
-| `C`   | Noticer Core          | 信号処理、baseline比較、release制御を行う |
-| `B_u` | Personal Baseline     | ユーザー本人の通常時分布を端末内に保持する        |
-| `K`   | Keystore              | サービス別・epoch別の鍵を保護する          |
-| `R`   | Trusted Renderer      | Claim Capに従った表示だけを行う         |
-| `M`   | Menfugu               | 正規tokenを検証し、許可された動作だけを実行する   |
-| `A_j` | Application / Service | Noticer Coreの出力を利用しようとする外部主体 |
-| `N`   | Network Observer      | BLEやネットワーク通信を観測する主体          |
-| `X`   | Adaptive Attacker     | 出力から禁止情報を推定する攻撃モデル           |
+| ID | Entity | Role |
+|---|---|---|
+| `SENSOR` | Wearable Sensor | PPG、IBI、ACCなどを取得する |
+| `CORE` | Noticer Core / TCB | 信号処理、baseline比較、release制御を行う |
+| `BASELINE` | Personal Baseline | 本人の通常時分布を端末内に保持する |
+| `KEYSTORE` | Keystore | サービス別・epoch別の鍵を保護する |
+| `CLAIM` | Claim Cap Monitor | 許可された表示・通知・動作だけを通過させる |
+| `RENDERER` | Trusted Renderer | Claim Capに従った表示だけを行う |
+| `FUGU` | Menfugu | 正規tokenを検証し、許可された動作だけを実行する |
+| `APP` | Application / Service | Noticer Coreの出力を利用する外部主体 |
+| `NET` | Network Observer | BLEやネットワーク通信を観測する主体 |
+| `ATTACK` | Adaptive Attacker | 出力から禁止情報を推定する攻撃者 |
 
 ---
 
