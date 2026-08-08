@@ -1,0 +1,25 @@
+experiment:
+  name: w2_identity_smoke
+  seed: 42
+  artifact_root: artifacts/w2_identity_smoke
+synthetic:
+  n_subjects: 12
+  sessions_per_subject: 3
+  windows_per_session: 60
+  n_features: 16
+  n_conditions: 3
+  identity_signal_strength: 2.5
+  session_drift_strength: 0.4
+  condition_effect_strength: 0.5
+  noise_strength: 1.0
+attack:
+  model: logistic_regression
+  regularization_candidates: [0.1, 1.0, 10.0]
+  max_iter: 2000
+control:
+  enabled: true
+  permutation_seed: 1042
+output:
+  save_predictions: true
+  save_probabilities: true
+  save_confusion_matrix: true
