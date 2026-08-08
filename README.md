@@ -24,6 +24,17 @@
 
 ---
 
+## Identity attack smoke harness
+
+```bash
+python -m pip install -e ".[dev]"
+python -m noticer_core.cli attack identity --config configs/attacks/identity_smoke.yaml
+```
+
+Generated artifacts are written below `artifacts/w2_identity_smoke/` and are not committed.
+
+---
+
 ## 目次 / Table of Contents
 
 - [🇯🇵 日本語](#-日本語)
