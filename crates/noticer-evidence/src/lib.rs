@@ -89,12 +89,34 @@ impl<G: GuaranteeMarker> fmt::Debug for EvidencePermit<G> {
 }
 
 pub struct PermitAuthority {
-    pub action: ActionCode,
-    pub policy_hash: PolicyHash,
-    pub issued_slot: LogicalSlot,
-    pub expires_slot: LogicalSlot,
-    pub evidence_epoch: EvidenceEpochId,
-    pub guarantee: &'static str,
+    action: ActionCode,
+    policy_hash: PolicyHash,
+    issued_slot: LogicalSlot,
+    expires_slot: LogicalSlot,
+    evidence_epoch: EvidenceEpochId,
+    guarantee: &'static str,
+}
+
+impl PermitAuthority {
+    pub fn into_claim_parts(
+        self,
+    ) -> (
+        ActionCode,
+        PolicyHash,
+        LogicalSlot,
+        LogicalSlot,
+        EvidenceEpochId,
+        &'static str,
+    ) {
+        (
+            self.action,
+            self.policy_hash,
+            self.issued_slot,
+            self.expires_slot,
+            self.evidence_epoch,
+            self.guarantee,
+        )
+    }
 }
 
 #[derive(Clone, Deserialize)]

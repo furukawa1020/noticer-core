@@ -411,6 +411,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-claim"
+version = "0.1.0"
+dependencies = [
+ "noticer-evidence",
+ "noticer-types",
+ "thiserror",
+]
+
+[[package]]
 name = "noticer-crypto"
 version = "0.1.0"
 dependencies = [
@@ -458,6 +467,17 @@ name = "noticer-protocol"
 version = "0.1.0"
 dependencies = [
  "noticer-types",
+]
+
+[[package]]
+name = "noticer-release"
+version = "0.1.0"
+dependencies = [
+ "noticer-claim",
+ "noticer-protocol",
+ "noticer-types",
+ "sha2",
+ "thiserror",
 ]
 
 [[package]]

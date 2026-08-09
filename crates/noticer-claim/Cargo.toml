@@ -1,0 +1,11 @@
+[package]
+name = "noticer-claim"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+noticer-evidence.workspace = true
+noticer-types.workspace = true
+thiserror.workspace = true

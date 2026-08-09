@@ -10,7 +10,7 @@ Last Updated: 2026-08-09
 ## 1. Purpose
 
 この文書は、Noticer CoreにおけるAtypicality Token v2を、
-**Evidence-Conditioned Atypicality Capability**として定義する。
+**Claim-Quotient Atypicality Token (CQ-AT)**として定義する。
 
 Atypicality Tokenは本人内変化の値や表現ではない。
 本人内変化についての私的な逐次証拠がpolicy条件を満たしたとき、
@@ -728,9 +728,9 @@ K1  Private Atypicality Evidence Process
     context baseline / conformal p-value / e-process
     anchor-adaptive baseline / poisoning guard
 
-K2  Claim-Conditioned Release Simulator
-    token content / timing trace / multi-service attacker
-    conditional-excess / Pufferfish pairs / composition
+K2  Claim-Quotient Security Core
+    EvidencePermit -> ActionClaim one-way quotient
+    Low Side type boundary / matched-claim trace simulator / TNMC smoke game
 
 K3  Standard-Based Capability Envelope
     expiry / proof of possession / replay / revocation
@@ -748,9 +748,9 @@ K1以降の実装は、本仕様のinvariantとevaluation obligationへ追跡可
 
 ## 19. Research Claim
 
-> **Noticer Core converts private, anytime-valid evidence of within-person change into
-> bounded action capabilities, while limiting information leakage from both capability
-> contents and their longitudinal release traces beyond the explicitly allowed claim.**
+> **Noticer Core irreversibly quotients private sequential evidence of within-person change
+> into an explicitly authorized action claim, then mints bounded capabilities whose full
+> observable trace has no information dependency beyond that claim.**
 
 `anytime-valid`はK1で仮定と実証が成立した場合だけ使用する。
 成立前の安全な表現は`sequential evidence-conditioned`とする。

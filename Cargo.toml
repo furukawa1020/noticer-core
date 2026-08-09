@@ -7,6 +7,8 @@ members = [
   "crates/noticer-baseline",
   "crates/noticer-evidence",
   "crates/noticer-evidence-demo",
+  "crates/noticer-claim",
+  "crates/noticer-release",
 ]
 
 [workspace.package]
@@ -21,6 +23,8 @@ noticer-protocol = { path = "crates/noticer-protocol" }
 noticer-crypto = { path = "crates/noticer-crypto" }
 noticer-baseline = { path = "crates/noticer-baseline" }
 noticer-evidence = { path = "crates/noticer-evidence" }
+noticer-claim = { path = "crates/noticer-claim" }
+noticer-release = { path = "crates/noticer-release" }
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 rand_core = { version = "0.6", features = ["getrandom"] }
 sha2 = "0.10"
@@ -32,4 +36,3 @@ proptest = "1"
 trybuild = "1"
 clap = { version = "4", features = ["derive"] }
 csv = "1"
-
