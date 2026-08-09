@@ -1,0 +1,32 @@
+[evidence]
+alpha_total = 0.05
+max_monitoring_steps = 2048
+power_epsilons = [0.1, 0.3, 0.5, 0.7, 0.9]
+power_weights = [0.2, 0.2, 0.2, 0.2, 0.2]
+
+[persistence]
+window = 5
+required_hits = 3
+p_max = 0.10
+
+[baseline]
+minimum_reference_samples = 128
+minimum_calibration_samples = 128
+scale_floor = 0.000001
+z_cap = 20.0
+
+[shadow]
+enabled = true
+learning_rate = 0.01
+clip_z = 2.5
+maximum_anchor_divergence = 0.75
+maximum_updates_per_epoch = 256
+evidence_update_ceiling = 2.0
+quarantine_slots_after_alert = 30
+rollback_depth = 8
+
+[[contexts]]
+id = "default-private-context"
+alpha_weight = 1.0
+fallback = false
+

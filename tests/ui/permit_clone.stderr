@@ -1,0 +1,5 @@
+error[E0599]: no method named `clone` found for struct `EvidencePermit<G>` in the current scope
+ --> $WORKSPACE/tests/ui/permit_clone.rs
+  |
+  |     let _second = permit.clone();
+  |                          ^^^^^ method not found in `EvidencePermit<EmpiricalOnly>`

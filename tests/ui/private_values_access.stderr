@@ -1,0 +1,5 @@
+error[E0616]: field `values` of struct `PrivateFeatureVector` is private
+ --> $WORKSPACE/tests/ui/private_values_access.rs
+  |
+  |     let _ = feature.values[0];
+  |                     ^^^^^^ private field

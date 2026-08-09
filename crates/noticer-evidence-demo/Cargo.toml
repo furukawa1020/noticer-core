@@ -1,0 +1,19 @@
+[package]
+name = "noticer-evidence-demo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+noticer-types.workspace = true
+noticer-baseline.workspace = true
+noticer-evidence.workspace = true
+clap.workspace = true
+csv.workspace = true
+rand_core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+toml.workspace = true
+

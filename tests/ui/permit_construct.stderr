@@ -1,0 +1,17 @@
+error[E0451]: fields `action`, `policy_hash`, `issued_slot`, `expires_slot`, `evidence_epoch` and `marker` of struct `EvidencePermit` are private
+ --> $WORKSPACE/tests/ui/permit_construct.rs
+  |
+  |     let _ = EvidencePermit::<EmpiricalOnly> {
+  |             ------------------------------- in this type
+  |         action: ActionCode::NoAction,
+  |         ^^^^^^ private field
+  |         policy_hash: PolicyHash([0; 32]),
+  |         ^^^^^^^^^^^ private field
+  |         issued_slot: LogicalSlot(1),
+  |         ^^^^^^^^^^^ private field
+  |         expires_slot: LogicalSlot(2),
+  |         ^^^^^^^^^^^^ private field
+  |         evidence_epoch: EvidenceEpochId(1),
+  |         ^^^^^^^^^^^^^^ private field
+  |         marker: PhantomData,
+  |         ^^^^^^ private field

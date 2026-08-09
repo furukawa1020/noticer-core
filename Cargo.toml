@@ -1,0 +1,35 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/noticer-types",
+  "crates/noticer-protocol",
+  "crates/noticer-crypto",
+  "crates/noticer-baseline",
+  "crates/noticer-evidence",
+  "crates/noticer-evidence-demo",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+noticer-types = { path = "crates/noticer-types" }
+noticer-protocol = { path = "crates/noticer-protocol" }
+noticer-crypto = { path = "crates/noticer-crypto" }
+noticer-baseline = { path = "crates/noticer-baseline" }
+noticer-evidence = { path = "crates/noticer-evidence" }
+ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+sha2 = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+thiserror = "2"
+proptest = "1"
+trybuild = "1"
+clap = { version = "4", features = ["derive"] }
+csv = "1"
+
