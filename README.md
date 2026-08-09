@@ -1,7 +1,6 @@
 <div align="center">
 
 # 🌊🐡 Noticer Core
-
 ### **観測は事実だが解釈は主張である。**  
 ### **Observation is a fact. Interpretation is a claim.**
 
