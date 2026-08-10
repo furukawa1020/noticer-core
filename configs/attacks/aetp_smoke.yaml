@@ -1,0 +1,21 @@
+experiment:
+  seed: 240817
+  artifact_root: artifacts/k2_aetp_smoke
+synthetic:
+  n_action_semantics: 4
+  sessions_per_action: 5
+  pairs_per_session: 40
+  nonce_features: 8
+  packet_count: 16
+  packet_size: 89
+  interval_slots: 5
+attack:
+  model: logistic_regression
+  regularization_candidates: [0.1, 1.0, 10.0]
+  max_iter: 1000
+  bootstrap_samples: 500
+criteria:
+  safe_excess_upper_bound: 0.02
+  negative_control_min_auc: 0.95
+output:
+  note: implementation smoke only; not scientific evidence of deployment privacy

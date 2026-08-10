@@ -34,6 +34,10 @@ pub struct ClaimProjection {
     pub release_slot: LogicalSlot,
 }
 
+/// The complete action meaning intentionally released across the High/Low boundary.
+/// Private evidence is not part of this type.
+pub type ActionSemantics = ClaimProjection;
+
 impl From<&ActionClaim> for ClaimProjection {
     fn from(claim: &ActionClaim) -> Self {
         Self {
@@ -57,6 +61,15 @@ pub struct TracePolicy {
 pub struct ObservablePacket {
     pub slot: LogicalSlot,
     pub bytes: [u8; BODY_LENGTH],
+    pub wire_size: usize,
+    pub retry_count: u8,
+    pub delivery: DeliveryObservation,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DeliveryObservation {
+    Sent,
+    Failed,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -117,6 +130,9 @@ impl MatchedClaimTraceSimulator {
             packets.push(ObservablePacket {
                 slot,
                 bytes: body.encode(),
+                wire_size: BODY_LENGTH,
+                retry_count: 0,
+                delivery: DeliveryObservation::Sent,
             });
         }
         Ok(ObservableTrace { packets })
@@ -136,28 +152,28 @@ fn public_nonce(seed: [u8; 32], slot: LogicalSlot, audience: [u8; 32]) -> [u8; 1
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct TnmcSmokeReport {
+pub struct AetpSmokeReport {
     pub trials: u64,
     pub trace_mismatches: u64,
     pub packet_mismatches: u64,
 }
 
-impl TnmcSmokeReport {
+impl AetpSmokeReport {
     pub const fn passes(&self) -> bool {
         self.trace_mismatches == 0 && self.packet_mismatches == 0
     }
 }
 
-pub fn run_tnmc_smoke_game(
+pub fn run_aetp_counterfactual_game(
     claims: &[ClaimProjection],
     policy: TracePolicy,
     master_seed: [u8; 32],
     trials: u64,
-) -> Result<TnmcSmokeReport, TraceViolation> {
+) -> Result<AetpSmokeReport, TraceViolation> {
     if trials == 0 {
         return Err(TraceViolation::InvalidPolicy);
     }
-    let mut report = TnmcSmokeReport {
+    let mut report = AetpSmokeReport {
         trials,
         trace_mismatches: 0,
         packet_mismatches: 0,
@@ -207,7 +223,7 @@ mod tests {
             policy_hash: PolicyHash([9; 32]),
             release_slot: LogicalSlot(120),
         }];
-        let report = run_tnmc_smoke_game(&claims, policy(), [42; 32], 1_000).unwrap();
+        let report = run_aetp_counterfactual_game(&claims, policy(), [42; 32], 1_000).unwrap();
         assert!(report.passes());
         assert_eq!(report.trace_mismatches, 0);
     }
@@ -224,6 +240,11 @@ mod tests {
             .packets
             .windows(2)
             .all(|pair| pair[1].slot.0 - pair[0].slot.0 == 5));
+        assert!(trace.packets.iter().all(|packet| {
+            packet.wire_size == BODY_LENGTH
+                && packet.retry_count == 0
+                && packet.delivery == DeliveryObservation::Sent
+        }));
     }
 
     #[test]

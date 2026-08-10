@@ -16,19 +16,20 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import yaml
 
+from noticer_core.attacks.aetp import AetpAttackResult, run_aetp_attack
 from noticer_core.attacks.identity import AttackResult, run_identity_attack
+from noticer_core.data.aetp_synthetic import AetpSyntheticConfig, generate_aetp_dataset
 from noticer_core.data.synthetic import SyntheticConfig, generate_identity_dataset
-from noticer_core.evaluation.splits import session_disjoint_split
+from noticer_core.evaluation.splits import aetp_session_disjoint_split, session_disjoint_split
 
 
-def _load(path: Path) -> dict[str, Any]:
+def _load(path: Path, required: set[str]) -> dict[str, Any]:
     if not path.is_file():
         raise ValueError(f"configuration file does not exist: {path}")
     with path.open(encoding="utf-8") as handle:
         value = yaml.safe_load(handle)
     if not isinstance(value, dict):
         raise ValueError("configuration root must be a mapping")
-    required = {"experiment", "synthetic", "attack", "control", "output"}
     if missing := required - value.keys():
         raise ValueError(f"configuration is missing sections: {sorted(missing)}")
     if value["attack"].get("model") != "logistic_regression":
@@ -51,7 +52,7 @@ def _plot(result: AttackResult, path: Path) -> None:
 
 def run_identity_experiment(config_path: Path, output_dir: Path | None = None) -> dict[str, Any]:
     """Execute the identity smoke protocol and persist its complete artifact contract."""
-    config = _load(config_path)
+    config = _load(config_path, {"experiment", "synthetic", "attack", "control", "output"})
     canonical = json.dumps(config, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(canonical.encode()).hexdigest()[:8]
     run_id = f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{digest}"
@@ -109,6 +110,72 @@ def run_identity_experiment(config_path: Path, output_dir: Path | None = None) -
     }
 
 
+def _plot_aetp(result: AetpAttackResult, path: Path) -> None:
+    names = ["claim_only", "aetp", "timing_control", "payload_control", "retry_control"]
+    values = [float(result.metrics[name]["roc_auc"]) for name in names]
+    figure, axis = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    axis.bar(names, values, color=["#6b7280", "#0f766e", "#b45309", "#b91c1c", "#1d4ed8"])
+    axis.axhline(0.5, color="black", linestyle="--", linewidth=1)
+    axis.set_ylim(0.45, 1.02)
+    axis.set_ylabel("Counterfactual distinguishing ROC-AUC")
+    axis.set_title("AETP smoke and deliberate leakage controls")
+    axis.tick_params(axis="x", rotation=18)
+    figure.savefig(path, dpi=150)
+    plt.close(figure)
+
+
+def run_aetp_experiment(config_path: Path, output_dir: Path | None = None) -> dict[str, Any]:
+    """Execute the AETP counterfactual attack protocol and persist artifacts."""
+    config = _load(config_path, {"experiment", "synthetic", "attack", "criteria", "output"})
+    canonical = json.dumps(config, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(canonical.encode()).hexdigest()[:8]
+    run_id = f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{digest}"
+    root = output_dir or Path(config["experiment"]["artifact_root"]) / run_id
+    root.mkdir(parents=True, exist_ok=False)
+    seed = int(config["experiment"]["seed"])
+    dataset = generate_aetp_dataset(AetpSyntheticConfig(**config["synthetic"]), seed=seed)
+    split = aetp_session_disjoint_split(dataset, seed=seed)
+    attack = config["attack"]
+    criteria = config["criteria"]
+    result = run_aetp_attack(
+        dataset,
+        split,
+        regularization_candidates=[float(value) for value in attack["regularization_candidates"]],
+        max_iter=int(attack["max_iter"]),
+        bootstrap_samples=int(attack["bootstrap_samples"]),
+        seed=seed,
+        safe_excess_upper_bound=float(criteria["safe_excess_upper_bound"]),
+        negative_control_min_auc=float(criteria["negative_control_min_auc"]),
+    )
+    summary = {
+        "dataset": "synthetic_action_equivalent_counterfactual_traces",
+        "n_worlds": dataset.n_worlds,
+        "n_pairs": dataset.n_pairs,
+        "n_sessions": len(set(dataset.session_ids)),
+        "n_action_semantics": len(set(dataset.action_ids)),
+    }
+    for name, payload in {
+        "run_config.json": config,
+        "dataset_summary.json": summary,
+        "aetp_metrics.json": result.metrics,
+        "feature_schema.json": {
+            "claim_only": dataset.claim_feature_names,
+            "full_trace": dataset.trace_feature_names,
+        },
+    }.items():
+        (root / name).write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+    split.manifest.to_csv(root / "split_manifest.csv", index=False)
+    result.predictions.to_csv(root / "predictions.csv", index=False)
+    _plot_aetp(result, root / "attack_auc.png")
+    (root / "run.log").write_text(
+        "AETP counterfactual implementation smoke; not scientific deployment evidence.\n",
+        encoding="utf-8",
+    )
+    return {"directory": root, "summary": summary, "metrics": result.metrics}
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="noticer-core")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -116,6 +183,9 @@ def build_parser() -> argparse.ArgumentParser:
     identity = attack.add_parser("identity")
     identity.add_argument("--config", type=Path, required=True)
     identity.add_argument("--output-dir", type=Path)
+    aetp = attack.add_parser("aetp")
+    aetp.add_argument("--config", type=Path, required=True)
+    aetp.add_argument("--output-dir", type=Path)
     return parser
 
 
@@ -123,16 +193,25 @@ def main(argv: list[str] | None = None) -> int:
     """Run CLI with concise errors and non-zero failure status."""
     try:
         args = build_parser().parse_args(argv)
-        result = run_identity_experiment(args.config, args.output_dir)
+        if args.attack == "identity":
+            result = run_identity_experiment(args.config, args.output_dir)
+        else:
+            result = run_aetp_experiment(args.config, args.output_dir)
     except (KeyError, TypeError, ValueError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
-    print("dataset: synthetic_identity")
+    print(f"dataset: {result['summary']['dataset']}")
     print("split protocol: session-disjoint train/validation/test")
-    print(f"number of subjects: {result['summary']['n_subjects']}")
-    print(f"primary balanced accuracy: {result['primary']['balanced_accuracy']:.6f}")
-    print(f"control balanced accuracy: {result['control']['balanced_accuracy']:.6f}")
-    print(f"chance accuracy: {result['primary']['chance_accuracy']:.6f}")
+    if args.attack == "identity":
+        print(f"number of subjects: {result['summary']['n_subjects']}")
+        print(f"primary balanced accuracy: {result['primary']['balanced_accuracy']:.6f}")
+        print(f"control balanced accuracy: {result['control']['balanced_accuracy']:.6f}")
+        print(f"chance accuracy: {result['primary']['chance_accuracy']:.6f}")
+    else:
+        print(f"counterfactual pairs: {result['summary']['n_pairs']}")
+        print(f"AETP ROC-AUC: {result['metrics']['aetp']['roc_auc']:.6f}")
+        print(f"AETP excess AUC: {result['metrics']['aetp']['excess_auc']:.6f}")
+        print(f"all criteria passed: {result['metrics']['protocol']['all_criteria_passed']}")
     print(f"artifact directory: {result['directory']}")
     return 0
 

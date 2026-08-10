@@ -32,6 +32,22 @@ python -m noticer_core.cli attack identity --config configs/attacks/identity_smo
 
 Generated artifacts are written below `artifacts/w2_identity_smoke/` and are not committed.
 
+## Action-Equivalent Trace Privacy smoke harness
+
+AETP is a candidate new primitive and proposed security notion for making the complete release
+trace depend only on explicitly allowed action semantics, not on the private evidence that
+justified them.
+
+```bash
+python -m noticer_core.cli attack aetp --config configs/attacks/aetp_smoke.yaml
+```
+
+The harness compares a claim-only attacker with a full-trace attacker on session-disjoint,
+counterfactual pairs. It also includes deliberate timing, payload, and retry leakage controls.
+Generated artifacts are written below `artifacts/k2_aetp_smoke/` and are not committed. These
+synthetic results test the harness and dependency boundary; they are not deployment privacy
+evidence.
+
 ---
 
 ## 目次 / Table of Contents

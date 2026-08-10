@@ -1,5 +1,9 @@
 # Claim-Quotient Atypicality Token Security Core
 
+The canonical name of the trace property is now **Action-Equivalent Trace Privacy (AETP)**.
+See `docs/action_equivalent_trace_privacy.md`. The earlier TNMC name is retained only as research
+history; AETP makes the counterfactual action-equivalence relation explicit.
+
 Status: K2 smoke implementation  
 Last Updated: 2026-08-09
 
