@@ -110,6 +110,7 @@ pub struct ActionTemplate {
     pub obligation: ActionObligation,
 }
 
+#[derive(Debug)]
 pub struct AdmittedAction {
     semantics: ActionObligation,
 }
@@ -254,7 +255,8 @@ pub fn generate_action_equivalent_pairs(
         let family = PairFamily::ALL[pair_id % PairFamily::ALL.len()];
         let semantics = semantics_for_context(services, context, pair_id as u64)?;
         let policy = AdmissionPolicy::from_semantics(&semantics);
-        let (h0, h1) = histories_for_family(family, &semantics, context.public_epoch, pair_id as u64);
+        let (h0, h1) =
+            histories_for_family(family, &semantics, context.public_epoch, pair_id as u64);
         action_equivalent(&h0, &h1, &policy, context)
             .map_err(|_| GeneratorError::PairNotEquivalent)?;
         let mut hash = Sha256::new();
@@ -374,16 +376,10 @@ pub fn coupled_trace_witness(
 ) -> Result<CoupledTraceWitness, AetpViolation> {
     let policy = AdmissionPolicy::from_semantics(&pair.shared_semantics);
     let semantics = action_equivalent(&pair.h0, &pair.h1, &policy, &pair.public_context)?;
-    let left = ActionEquivalentTraceShaper::shape(
-        &semantics,
-        &pair.public_context,
-        &pair.random_tape,
-    )?;
-    let right = ActionEquivalentTraceShaper::shape(
-        &semantics,
-        &pair.public_context,
-        &pair.random_tape,
-    )?;
+    let left =
+        ActionEquivalentTraceShaper::shape(&semantics, &pair.public_context, &pair.random_tape)?;
+    let right =
+        ActionEquivalentTraceShaper::shape(&semantics, &pair.public_context, &pair.random_tape)?;
     Ok(witness(&semantics, &left, &right))
 }
 
