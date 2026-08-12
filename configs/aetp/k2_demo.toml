@@ -1,0 +1,12 @@
+[simulation]
+pair_count = 4000
+services = 4
+buckets_per_trace = 16
+horizons = [1, 4, 16, 64]
+seed = 42
+
+[channel]
+slots_per_bucket = 32
+frame_interval_ms = 1000
+fixed_plaintext_size = 88
+fixed_ciphertext_size = 104
