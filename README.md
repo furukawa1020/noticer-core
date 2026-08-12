@@ -48,6 +48,16 @@ Generated artifacts are written below `artifacts/k2_aetp_smoke/` and are not com
 synthetic results test the harness and dependency boundary; they are not deployment privacy
 evidence.
 
+Complete K2 vertical slice:
+
+```bash
+python tools/run_k2_aetp.py --config configs/aetp/k2_demo.toml --out artifacts/k2_aetp
+```
+
+This runs the Rust counterfactual simulator and AETS first, then the Python multi-model attacker.
+AETP remains a candidate new primitive and proposed security notion pending broader literature
+and patent review.
+
 ---
 
 ## 目次 / Table of Contents
