@@ -1,0 +1,17 @@
+error[E0308]: arguments to this function are incorrect
+ --> tests/ui/shaper_private_input.rs:6:13
+  |
+6 |     let _ = ActionEquivalentTraceShaper::shape(history, history, &RandomTape([0; 32]));
+  |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ -------  ------- expected `&PublicContext`, found `&PrivateHistory`
+  |                                                |
+  |                                                expected `&ActionSemantics`, found `&PrivateHistory`
+  |
+  = note: expected reference `&ActionSemantics`
+             found reference `&PrivateHistory`
+  = note: expected reference `&PublicContext`
+             found reference `&PrivateHistory`
+note: associated function defined here
+ --> $WORKSPACE/crates/noticer-trace-shaper/src/lib.rs
+  |
+  |     pub fn shape(
+  |            ^^^^^

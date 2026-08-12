@@ -1,0 +1,5 @@
+error[E0609]: no field `private_ready_slot` on type `&PrivateHistory`
+ --> tests/ui/private_history_fields.rs:4:21
+  |
+4 |     let _ = history.private_ready_slot;
+  |                     ^^^^^^^^^^^^^^^^^^ unknown field
