@@ -77,8 +77,7 @@ impl ActionEquivalentTraceShaper {
         random_tape: &RandomTape,
     ) -> Result<ShapedTrace, ShaperError> {
         if usize::from(context.channel_schedule.fixed_plaintext_size) != FIXED_PLAINTEXT_SIZE
-            || usize::from(context.channel_schedule.fixed_ciphertext_size)
-                != FIXED_CIPHERTEXT_SIZE
+            || usize::from(context.channel_schedule.fixed_ciphertext_size) != FIXED_CIPHERTEXT_SIZE
             || context.channel_schedule.buckets == 0
             || context.channel_schedule.slots_per_bucket == 0
         {
@@ -126,8 +125,8 @@ impl ActionEquivalentTraceShaper {
                     DecodedFrameKind::AuthorizedAction(obligation.action)
                 });
                 let bucket = BucketId(slot / u64::from(context.channel_schedule.slots_per_bucket));
-                let slot_in_bucket = (slot % u64::from(context.channel_schedule.slots_per_bucket))
-                    as u16;
+                let slot_in_bucket =
+                    (slot % u64::from(context.channel_schedule.slots_per_bucket)) as u16;
                 let plain = encode_plain_frame(
                     context,
                     bucket,
@@ -221,7 +220,11 @@ fn domain_u64(
     hash.update(bucket.0.to_be_bytes());
     hash.update(index.to_be_bytes());
     let digest = hash.finalize();
-    u64::from_be_bytes(digest[..8].try_into().expect("SHA-256 prefix has fixed size"))
+    u64::from_be_bytes(
+        digest[..8]
+            .try_into()
+            .expect("SHA-256 prefix has fixed size"),
+    )
 }
 
 fn encode_plain_frame(
@@ -352,8 +355,8 @@ mod tests {
     #[test]
     fn frame_length_cadence_and_utility_hold() {
         let (semantics, context) = fixture((8, 31));
-        let trace = ActionEquivalentTraceShaper::shape(&semantics, &context, &RandomTape([7; 32]))
-            .unwrap();
+        let trace =
+            ActionEquivalentTraceShaper::shape(&semantics, &context, &RandomTape([7; 32])).unwrap();
         assert!(trace.network.frames.iter().all(|frame| {
             frame.packet_length as usize == FIXED_CIPHERTEXT_SIZE
                 && frame.ciphertext.len() == FIXED_CIPHERTEXT_SIZE
