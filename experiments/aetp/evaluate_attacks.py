@@ -5,9 +5,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 
 import matplotlib
 
@@ -210,7 +210,11 @@ def _mmd(frame: pd.DataFrame, columns: list[str], seed: int) -> float:
         distance = ((first[:, None, :] - second[None, :, :]) ** 2).sum(axis=2)
         return np.exp(-distance / max(1, first.shape[1]))
 
-    return float(kernel(left, left).mean() + kernel(right, right).mean() - 2 * kernel(left, right).mean())
+    return float(
+        kernel(left, left).mean()
+        + kernel(right, right).mean()
+        - 2 * kernel(left, right).mean()
+    )
 
 
 def _result_row(result: ScenarioResult) -> dict[str, float | int | str]:
@@ -259,7 +263,9 @@ def evaluate_artifacts(artifact_dir: Path, *, seed: int = 42) -> dict[str, objec
                 "view": view,
                 "horizon": horizon,
                 **interval,
-                "paired_permutation_p_value": _paired_permutation_p_value(result, seed + 100 + index),
+                "paired_permutation_p_value": _paired_permutation_p_value(
+                    result, seed + 100 + index
+                ),
             }
         )
     bootstrap = pd.DataFrame(bootstrap_rows)
@@ -338,7 +344,9 @@ def evaluate_artifacts(artifact_dir: Path, *, seed: int = 42) -> dict[str, objec
             "ImmediateRelease_timing_auc": naive.test_auc,
             "FixedSizeOnly_timing_auc": best[("FixedSizeOnly", "timing_only", 1)].test_auc,
             "CoarseBucket_timing_auc": best[("CoarseBucket", "timing_only", 1)].test_auc,
-            "EvidenceDependentSlot_timing_auc": best[("EvidenceDependentSlot", "timing_only", 1)].test_auc,
+            "EvidenceDependentSlot_timing_auc": best[
+                ("EvidenceDependentSlot", "timing_only", 1)
+            ].test_auc,
             "AETS_timing_auc": best[("AETS", "timing_only", 1)].test_auc,
             "AETS_full_network_auc": full.test_auc,
             "AETS_service_view_auc": best[("AETS", "service_view", 1)].test_auc,
@@ -356,7 +364,9 @@ def evaluate_artifacts(artifact_dir: Path, *, seed: int = 42) -> dict[str, objec
         },
         "go_pivot_kill": {
             "decision": "GO" if go else "PIVOT",
-            "reason": "All K2 structural, negative-control, statistical, and utility criteria passed."
+            "reason": (
+                "All K2 structural, negative-control, statistical, and utility criteria passed."
+            )
             if go
             else "At least one preregistered K2 smoke criterion did not pass.",
         },
@@ -391,7 +401,10 @@ def _write_plots(
     figure.savefig(artifact_dir / "aetp_advantage_by_horizon.svg")
     plt.close(figure)
 
-    sample = frame[(frame["horizon"] == 1) & frame["mechanism"].isin(["ImmediateRelease", "AETS"])].head(80)
+    sample = frame[
+        (frame["horizon"] == 1)
+        & frame["mechanism"].isin(["ImmediateRelease", "AETS"])
+    ].head(80)
     figure, axis = plt.subplots(figsize=(8, 5), constrained_layout=True)
     for mechanism, group in sample.groupby("mechanism"):
         axis.scatter(group["pair_id"], group["action_slot"], label=mechanism, s=18)

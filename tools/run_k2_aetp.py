@@ -26,7 +26,8 @@ def main() -> int:
     ]
     if sys.platform == "win32":
         developer = Path(
-            r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat"
+            r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
+            r"\Common7\Tools\VsDevCmd.bat"
         )
         if developer.is_file():
             quoted = subprocess.list2cmdline(rust_command)
