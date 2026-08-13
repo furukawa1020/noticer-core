@@ -22,6 +22,10 @@
 use std::collections::VecDeque;
 use std::fmt;
 
+use noticer_ppg_features::{
+    extract_private_features, EmpiricalSpoofRisk, FeatureSchema, PrivateFeatureVector,
+    PrivateWindowInput, SignalQuality, FEATURE_STRIDE_NS, FEATURE_WINDOW_NS,
+};
 use noticer_provenance::{PolarSourceClaim, SourceAssurance};
 use thiserror::Error;
 
@@ -420,6 +424,7 @@ struct BatchTiming {
 #[derive(Clone, Copy, Default)]
 struct ClockTrack {
     last: Option<BatchTiming>,
+    max_observed_drift_ns: u64,
 }
 
 impl ClockTrack {
@@ -444,11 +449,19 @@ impl ClockTrack {
             if device_delta > config.max_gap_ns || host_delta > config.max_gap_ns {
                 return Err(AcquisitionError::ClockGap);
             }
-            if device_delta.abs_diff(host_delta) > config.max_clock_drift_ns {
+            let drift = device_delta.abs_diff(host_delta);
+            if drift > config.max_clock_drift_ns {
                 return Err(AcquisitionError::ClockDrift);
             }
+            return Ok(Self {
+                last: Some(timing),
+                max_observed_drift_ns: self.max_observed_drift_ns.max(drift),
+            });
         }
-        Ok(Self { last: Some(timing) })
+        Ok(Self {
+            last: Some(timing),
+            max_observed_drift_ns: self.max_observed_drift_ns,
+        })
     }
 }
 
@@ -484,6 +497,8 @@ pub struct AcquisitionSession {
     acc_clock: ClockTrack,
     retained_samples: usize,
     transcript: VecDeque<PrivateRecord>,
+    next_feature_window_ns: Option<u64>,
+    next_feature_ordinal: u64,
 }
 
 impl AcquisitionSession {
@@ -509,6 +524,8 @@ impl AcquisitionSession {
             acc_clock: ClockTrack::default(),
             retained_samples: 0,
             transcript: VecDeque::new(),
+            next_feature_window_ns: None,
+            next_feature_ordinal: 0,
         })
     }
 
@@ -519,6 +536,9 @@ impl AcquisitionSession {
         }
         let clock = self.ppg_clock.candidate(batch.timing(), self.config)?;
         self.prepare_capacity(batch.sample_count())?;
+        if self.next_feature_window_ns.is_none() {
+            self.next_feature_window_ns = Some(batch.device_time_ns);
+        }
         self.ppg_clock = clock;
         self.push(PrivateRecord::Ppg(batch));
         Ok(())
@@ -541,6 +561,7 @@ impl AcquisitionSession {
         self.ppg_clock = ClockTrack::default();
         self.acc_clock = ClockTrack::default();
         self.state = SessionState::Disconnected;
+        self.next_feature_window_ns = None;
     }
 
     pub fn fault(&mut self) {
@@ -548,6 +569,7 @@ impl AcquisitionSession {
         self.ppg_clock = ClockTrack::default();
         self.acc_clock = ClockTrack::default();
         self.state = SessionState::Faulted;
+        self.next_feature_window_ns = None;
     }
 
     pub fn status(&self) -> SessionStatus {
@@ -561,6 +583,112 @@ impl AcquisitionSession {
 
     pub const fn source_assurance(&self) -> SourceAssurance {
         self.source.assurance()
+    }
+
+    pub fn extract_next_feature_window(
+        &mut self,
+    ) -> Result<PrivateFeatureWindow, AcquisitionError> {
+        self.require_active()?;
+        let settings = self
+            .ppg_settings
+            .ok_or(AcquisitionError::PpgStreamRequired)?;
+        let start_ns = self
+            .next_feature_window_ns
+            .ok_or(AcquisitionError::WindowNotReady)?;
+        let end_ns = start_ns
+            .checked_add(FEATURE_WINDOW_NS)
+            .ok_or(AcquisitionError::TimestampOverflow)?;
+
+        let latest_ppg_ns = self
+            .transcript
+            .iter()
+            .filter_map(|record| match record {
+                PrivateRecord::Ppg(batch) => batch.device_time_ns.checked_add(
+                    u64::try_from(batch.frame_count().saturating_sub(1))
+                        .ok()?
+                        .checked_mul(batch.sample_period_ns)?,
+                ),
+                PrivateRecord::Acc(_) => None,
+            })
+            .max()
+            .ok_or(AcquisitionError::WindowNotReady)?;
+        if latest_ppg_ns.saturating_add(settings.period_ns()) < end_ns {
+            return Err(AcquisitionError::WindowNotReady);
+        }
+
+        let mut ppg_samples = Vec::new();
+        for record in &self.transcript {
+            let PrivateRecord::Ppg(batch) = record else {
+                continue;
+            };
+            let channels = usize::from(batch.settings.channel_count());
+            for frame in 0..batch.frame_count() {
+                let timestamp = batch.device_time_ns
+                    + u64::try_from(frame).map_err(|_| AcquisitionError::TimestampOverflow)?
+                        * batch.sample_period_ns;
+                if (start_ns..end_ns).contains(&timestamp) {
+                    let offset = frame * channels;
+                    ppg_samples.extend_from_slice(&batch.samples[offset..offset + channels]);
+                }
+            }
+        }
+
+        let mut acc_samples = Vec::new();
+        if self.acc_settings.is_some() {
+            for record in &self.transcript {
+                let PrivateRecord::Acc(batch) = record else {
+                    continue;
+                };
+                let axes = usize::from(batch.settings.axis_count());
+                for frame in 0..batch.frame_count() {
+                    let timestamp = batch.device_time_ns
+                        + u64::try_from(frame).map_err(|_| AcquisitionError::TimestampOverflow)?
+                            * batch.sample_period_ns;
+                    if (start_ns..end_ns).contains(&timestamp) {
+                        let offset = frame * axes;
+                        acc_samples.extend_from_slice(&batch.samples[offset..offset + axes]);
+                    }
+                }
+            }
+        }
+
+        let drift_ratio = if self.config.max_clock_drift_ns == 0 {
+            f64::from(self.ppg_clock.max_observed_drift_ns != 0)
+        } else {
+            self.ppg_clock.max_observed_drift_ns as f64 / self.config.max_clock_drift_ns as f64
+        };
+        let input = PrivateWindowInput::new(
+            &ppg_samples,
+            settings.channel_count(),
+            settings.sample_rate_hz(),
+            settings.resolution_bits(),
+            if acc_samples.is_empty() {
+                None
+            } else {
+                Some(acc_samples.as_slice())
+            },
+            self.acc_settings.map(NegotiatedAccSettings::sample_rate_hz),
+            self.acc_settings
+                .map(NegotiatedAccSettings::resolution_bits),
+            drift_ratio,
+        )
+        .map_err(|_| AcquisitionError::FeatureExtractionFailed)?;
+        let extracted = extract_private_features(input)
+            .map_err(|_| AcquisitionError::FeatureExtractionFailed)?;
+        let result = PrivateFeatureWindow {
+            ordinal: self.next_feature_ordinal,
+            extracted,
+        };
+        self.next_feature_window_ns = Some(
+            start_ns
+                .checked_add(FEATURE_STRIDE_NS)
+                .ok_or(AcquisitionError::TimestampOverflow)?,
+        );
+        self.next_feature_ordinal = self
+            .next_feature_ordinal
+            .checked_add(1)
+            .ok_or(AcquisitionError::FeatureOrdinalOverflow)?;
+        Ok(result)
     }
 
     fn require_active(&self) -> Result<(), AcquisitionError> {
@@ -604,6 +732,54 @@ impl AcquisitionSession {
         }
         self.transcript.clear();
         self.retained_samples = 0;
+    }
+}
+
+/// Opaque feature result. Exact acquisition timestamps are intentionally not
+/// available through this type.
+///
+/// ~~~compile_fail
+/// use noticer_acquisition_core::PrivateFeatureWindow;
+/// fn leak(window: &PrivateFeatureWindow) -> u64 { window.window_start_ns() }
+/// ~~~
+pub struct PrivateFeatureWindow {
+    ordinal: u64,
+    extracted: noticer_ppg_features::ExtractedPrivateFeatures,
+}
+
+impl PrivateFeatureWindow {
+    pub const fn ordinal(&self) -> u64 {
+        self.ordinal
+    }
+
+    pub const fn schema(&self) -> FeatureSchema {
+        self.extracted.schema()
+    }
+
+    pub const fn quality(&self) -> SignalQuality {
+        self.extracted.quality()
+    }
+
+    pub const fn empirical_spoof_risk(&self) -> EmpiricalSpoofRisk {
+        self.extracted.empirical_spoof_risk()
+    }
+
+    pub fn into_feature_vector(self) -> PrivateFeatureVector {
+        self.extracted.into_feature_vector()
+    }
+}
+
+impl fmt::Debug for PrivateFeatureWindow {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("PrivateFeatureWindow")
+            .field("ordinal", &self.ordinal)
+            .field("schema", &self.schema())
+            .field("quality", &self.quality())
+            .field("empirical_spoof_risk", &self.empirical_spoof_risk())
+            .field("exact_timing", &"REDACTED")
+            .field("features", &"REDACTED")
+            .finish()
     }
 }
 
@@ -663,6 +839,14 @@ pub enum AcquisitionError {
     SampleCountOverflow,
     #[error("session is disconnected or faulted")]
     SessionNotActive,
+    #[error("a PPG stream is required for feature extraction")]
+    PpgStreamRequired,
+    #[error("the next complete feature window is not available")]
+    WindowNotReady,
+    #[error("private feature extraction failed closed")]
+    FeatureExtractionFailed,
+    #[error("feature window ordinal overflowed")]
+    FeatureOrdinalOverflow,
 }
 
 #[cfg(test)]
@@ -828,6 +1012,62 @@ mod tests {
                 SourceAssurance::paired_commercial_sensor()
             );
         }
+    }
+
+    #[test]
+    fn four_second_windows_advance_by_public_ordinal_not_private_time() {
+        let ppg_settings = NegotiatedPpgSettings::new(100, 22, 2).unwrap();
+        let acc_settings = NegotiatedAccSettings::new(100, 16, 3).unwrap();
+        let mut session = AcquisitionSession::start(
+            SessionId::new([9; 16]).unwrap(),
+            SessionPhase::Monitoring,
+            SourceDescriptor::replay(),
+            Some(ppg_settings),
+            Some(acc_settings),
+            SessionConfig::default(),
+        )
+        .unwrap();
+        let ppg_samples = (0..400)
+            .flat_map(|index| {
+                let value = ((index % 20) - 10) * 1_000;
+                [value, -value]
+            })
+            .collect();
+        let acc_samples = (0..400).flat_map(|_| [10, 10, 10]).collect();
+        session
+            .ingest_ppg(
+                PrivatePpgBatch::new(
+                    71_234_567,
+                    90_000_000,
+                    ppg_settings.period_ns(),
+                    ppg_settings,
+                    ppg_samples,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        session
+            .ingest_acc(
+                PrivateAccBatch::new(
+                    71_234_567,
+                    90_000_000,
+                    acc_settings.period_ns(),
+                    acc_settings,
+                    acc_samples,
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        let window = session.extract_next_feature_window().unwrap();
+        assert_eq!(window.ordinal(), 0);
+        assert_eq!(window.schema(), FeatureSchema::PpgAccV1);
+        let debug = format!("{window:?}");
+        assert!(!debug.contains("71234567"));
+        assert!(debug.contains("REDACTED"));
+        assert_eq!(
+            session.extract_next_feature_window().unwrap_err(),
+            AcquisitionError::WindowNotReady
+        );
     }
 
     proptest! {
