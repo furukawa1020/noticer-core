@@ -16,7 +16,9 @@
 //! }
 //! ```
 
-use noticer_aetp::{required_claim, validate_obligation, ActionObligation, ClaimBound, ServiceBinding};
+use noticer_aetp::{
+    required_claim, validate_obligation, ActionObligation, ClaimBound, ServiceBinding,
+};
 use noticer_evidence::{EvidenceEpochId, EvidencePermit, GuaranteeMarker};
 use noticer_types::{ActionCode, LogicalSlot, PolicyHash};
 use std::fmt;

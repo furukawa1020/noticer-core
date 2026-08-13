@@ -32,9 +32,8 @@ use noticer_crypto::{
     VerifierKeyMaterial,
 };
 use noticer_protocol::{
-    AtypicalityTokenEnvelope, FrameKind, InnerBody, OuterHeader, CIPHERTEXT_SIZE,
-    ENVELOPE_SIZE, INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE,
-    SIGNED_PLAINTEXT_SIZE,
+    AtypicalityTokenEnvelope, FrameKind, InnerBody, OuterHeader, CIPHERTEXT_SIZE, ENVELOPE_SIZE,
+    INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE, SIGNED_PLAINTEXT_SIZE,
 };
 use noticer_trace_shaper::{FrameIssueError, FrameIssuer, PublicFrameIdentity};
 use sha2::{Digest, Sha256};
@@ -75,11 +74,10 @@ impl TokenIssuer {
         })
     }
 
-    pub fn verifier_material(
-        &self,
-        service: ServiceBinding,
-    ) -> Option<VerifierKeyMaterial> {
-        self.keys.get(&service).map(IssuerKeyMaterial::verifier_material)
+    pub fn verifier_material(&self, service: ServiceBinding) -> Option<VerifierKeyMaterial> {
+        self.keys
+            .get(&service)
+            .map(IssuerKeyMaterial::verifier_material)
     }
 
     pub fn issue_cover_frame(
@@ -96,8 +94,9 @@ impl TokenIssuer {
         claim_bound: ClaimBound,
     ) -> Result<AtypicalityTokenEnvelope, TokenIssueError> {
         if identity.service != obligation.service
-            || identity.public_bucket != u32::try_from(obligation.public_bucket.0)
-                .map_err(|_| TokenIssueError::InvalidPublicInput)?
+            || identity.public_bucket
+                != u32::try_from(obligation.public_bucket.0)
+                    .map_err(|_| TokenIssueError::InvalidPublicInput)?
             || identity.absolute_slot < obligation.release_window_start
             || identity.absolute_slot > obligation.release_deadline
         {
@@ -172,8 +171,7 @@ impl TokenIssuer {
         let signature = keys.sign(&signed_message);
         let mut plaintext = [0_u8; SIGNED_PLAINTEXT_SIZE];
         plaintext[..INNER_BODY_SIZE].copy_from_slice(&inner_bytes);
-        plaintext[INNER_BODY_SIZE..INNER_BODY_SIZE + SIGNATURE_SIZE]
-            .copy_from_slice(&signature);
+        plaintext[INNER_BODY_SIZE..INNER_BODY_SIZE + SIGNATURE_SIZE].copy_from_slice(&signature);
         let ciphertext = keys.seal(&nonce, &outer_bytes, &plaintext)?;
         let mut envelope = [0_u8; ENVELOPE_SIZE];
         envelope[..OUTER_HEADER_SIZE].copy_from_slice(&outer_bytes);
@@ -258,7 +256,8 @@ mod tests {
     #[test]
     fn cover_and_action_are_exactly_the_same_length() {
         let service = ServiceBinding([1; 16]);
-        let issuer = TokenIssuer::new(CryptographicRootSecret::new([7; 32]), 3, &[service]).unwrap();
+        let issuer =
+            TokenIssuer::new(CryptographicRootSecret::new([7; 32]), 3, &[service]).unwrap();
         let cover = issuer.issue_cover_frame(identity(service, 1)).unwrap();
         let obligation = ActionObligation {
             service,
@@ -284,7 +283,8 @@ mod tests {
     #[test]
     fn nonce_reuse_is_rejected() {
         let service = ServiceBinding([1; 16]);
-        let issuer = TokenIssuer::new(CryptographicRootSecret::new([7; 32]), 3, &[service]).unwrap();
+        let issuer =
+            TokenIssuer::new(CryptographicRootSecret::new([7; 32]), 3, &[service]).unwrap();
         issuer.issue_cover_frame(identity(service, 1)).unwrap();
         assert!(matches!(
             issuer.issue_cover_frame(identity(service, 1)),

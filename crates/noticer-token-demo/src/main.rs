@@ -1,8 +1,8 @@
 #![forbid(unsafe_code)]
 
 use noticer_aetp::{
-    required_claim, BucketId, ChannelSchedule, ClaimBound, PublicContext, PublicNetworkTape,
-    ScheduleRandomTape, ActionSemantics, ServiceBinding,
+    required_claim, ActionSemantics, BucketId, ChannelSchedule, ClaimBound, PublicContext,
+    PublicNetworkTape, ScheduleRandomTape, ServiceBinding,
 };
 use noticer_aetp_sim::{
     default_public_context, generate_action_equivalent_pairs, CounterfactualFamily,
@@ -27,9 +27,9 @@ use noticer_verifier::{
     InMemoryReplayStore, KeyRegistry, PolicyAllowlist, RevocationSnapshot, TokenVerifier,
     VerificationResult, VerifierContext,
 };
+use rand_core::RngCore;
 use serde::Deserialize;
 use serde_json::json;
-use rand_core::RngCore;
 use std::{
     collections::BTreeMap,
     env,
@@ -128,18 +128,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             context.network.public_epoch,
             &context.network.services,
         )?;
-        let left_trace = ActionEquivalentTraceShaper::shape(
-            &plan,
-            &context,
-            &pair.schedule_tape,
-            &left,
-        )?;
-        let right_trace = ActionEquivalentTraceShaper::shape(
-            &plan,
-            &context,
-            &pair.schedule_tape,
-            &right,
-        )?;
+        let left_trace =
+            ActionEquivalentTraceShaper::shape(&plan, &context, &pair.schedule_tape, &left)?;
+        let right_trace =
+            ActionEquivalentTraceShaper::shape(&plan, &context, &pair.schedule_tape, &right)?;
         let trace_equal = left_trace == right_trace;
         if !trace_equal {
             return Err("AETP full-token congruence failed".into());
@@ -174,7 +166,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         output_path.join("admission_bridge.json"),
         serde_json::to_string_pretty(&admission_bridge)?,
     )?;
-    let performance = benchmark_issuer(&context.network.services, config.seed, config.benchmark_frames)?;
+    let performance = benchmark_issuer(
+        &context.network.services,
+        config.seed,
+        config.benchmark_frames,
+    )?;
     fs::write(output_path.join("performance.csv"), performance)?;
     fs::write(
         output_path.join("manifest.json"),
@@ -282,7 +278,9 @@ fn admit_private_history(
                 return Ok(admit(permit, template)?);
             }
             EvidenceDecision::Reject(error) => {
-                return Err(format!("K1 evidence engine rejected private history: {error:?}").into());
+                return Err(
+                    format!("K1 evidence engine rejected private history: {error:?}").into(),
+                );
             }
             EvidenceDecision::NoPermit(_) => {}
         }
@@ -309,13 +307,7 @@ fn run_admission_bridge(config: &DemoConfig) -> Result<serde_json::Value, Box<dy
         local_policy_ceiling: claim,
     };
     let early = admit_private_history(&k1, context_key, 2, config.seed, template.clone())?;
-    let late = admit_private_history(
-        &k1,
-        context_key,
-        8,
-        config.seed.wrapping_add(1),
-        template,
-    )?;
+    let late = admit_private_history(&k1, context_key, 8, config.seed.wrapping_add(1), template)?;
     let early_plan = TokenPlan::from_admitted(vec![early], vec![service])?;
     let late_plan = TokenPlan::from_admitted(vec![late], vec![service])?;
     let public_actions_equal = early_plan == late_plan;
@@ -347,18 +339,10 @@ fn run_admission_bridge(config: &DemoConfig) -> Result<serde_json::Value, Box<dy
         public_context.network.public_epoch,
         &[service],
     )?;
-    let left_trace = ActionEquivalentTraceShaper::shape(
-        &early_plan,
-        &public_context,
-        &schedule,
-        &left_issuer,
-    )?;
-    let right_trace = ActionEquivalentTraceShaper::shape(
-        &late_plan,
-        &public_context,
-        &schedule,
-        &right_issuer,
-    )?;
+    let left_trace =
+        ActionEquivalentTraceShaper::shape(&early_plan, &public_context, &schedule, &left_issuer)?;
+    let right_trace =
+        ActionEquivalentTraceShaper::shape(&late_plan, &public_context, &schedule, &right_issuer)?;
     let token_traces_equal = left_trace == right_trace;
     if !token_traces_equal {
         return Err("K1-to-ATv2 counterfactual traces differ".into());
@@ -411,7 +395,10 @@ fn run_verifier_checks(
         .iter()
         .find(|frame| frame.bytes[5] == FrameKind::Action as u8)
         .ok_or("trace has no action token")?;
-    let obligation = semantics.obligations.first().ok_or("missing action semantics")?;
+    let obligation = semantics
+        .obligations
+        .first()
+        .ok_or("missing action semantics")?;
     let claim = required_claim(obligation.action);
     let make_registry = || -> Result<KeyRegistry, Box<dyn Error>> {
         let mut registry = KeyRegistry::default();
@@ -607,7 +594,8 @@ fn write_class_witnesses(
     output: &Path,
     witnesses: &BTreeMap<CounterfactualFamily, ClassWitness>,
 ) -> Result<(), Box<dyn Error>> {
-    let mut csv = String::from("family,equivalence_class,frames,frame_bytes,trace_equal,trace_sha256\n");
+    let mut csv =
+        String::from("family,equivalence_class,frames,frame_bytes,trace_equal,trace_sha256\n");
     for witness in witnesses.values() {
         writeln!(
             csv,

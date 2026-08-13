@@ -66,7 +66,10 @@ impl TokenPlan {
         Self::new(actions, services)
     }
 
-    fn new(mut actions: Vec<PlannedAction>, mut services: Vec<ServiceBinding>) -> Result<Self, PlanError> {
+    fn new(
+        mut actions: Vec<PlannedAction>,
+        mut services: Vec<ServiceBinding>,
+    ) -> Result<Self, PlanError> {
         services.sort_unstable();
         services.dedup();
         if services.is_empty() {

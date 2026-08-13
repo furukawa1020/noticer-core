@@ -93,7 +93,11 @@ pub fn derive_issuer_keys(
     let nonce_key = Zeroizing::new(expand(&root.0, b"NOTICER_AT_V2_NONCE_KEY", service, epoch)?);
     let alias_bytes = expand(&root.0, b"NOTICER_AT_V2_SERVICE_ALIAS", service, epoch)?;
     let alias = PairwiseServiceAlias(alias_bytes);
-    let key_id = make_key_id(&SigningKey::from_bytes(&signing_key).verifying_key(), service, epoch);
+    let key_id = make_key_id(
+        &SigningKey::from_bytes(&signing_key).verifying_key(),
+        service,
+        epoch,
+    );
     Ok(IssuerKeyMaterial {
         service,
         epoch,
@@ -172,11 +176,23 @@ impl IssuerKeyMaterial {
     }
 
     pub fn nonce(&self, public_bucket: u32, sequence: u32) -> [u8; 24] {
-        derive_nonce(&self.nonce_key, self.service, self.epoch, public_bucket, sequence)
+        derive_nonce(
+            &self.nonce_key,
+            self.service,
+            self.epoch,
+            public_bucket,
+            sequence,
+        )
     }
 
     pub fn token_id(&self, public_bucket: u32, sequence: u32) -> TokenId {
-        derive_token_id(&self.nonce_key, self.service, self.epoch, public_bucket, sequence)
+        derive_token_id(
+            &self.nonce_key,
+            self.service,
+            self.epoch,
+            public_bucket,
+            sequence,
+        )
     }
 
     pub fn seal(
@@ -188,7 +204,13 @@ impl IssuerKeyMaterial {
         let cipher = XChaCha20Poly1305::new_from_slice(self.aead_key.as_ref())
             .map_err(|_| CryptoError::InvalidKey)?;
         let sealed = cipher
-            .encrypt(XNonce::from_slice(nonce), Payload { msg: plaintext, aad })
+            .encrypt(
+                XNonce::from_slice(nonce),
+                Payload {
+                    msg: plaintext,
+                    aad,
+                },
+            )
             .map_err(|_| CryptoError::Authentication)?;
         sealed.try_into().map_err(|_| CryptoError::Authentication)
     }
@@ -212,7 +234,13 @@ impl VerifierKeyMaterial {
     }
 
     pub fn expected_nonce(&self, public_bucket: u32, sequence: u32) -> [u8; 24] {
-        derive_nonce(&self.nonce_key, self.service, self.epoch, public_bucket, sequence)
+        derive_nonce(
+            &self.nonce_key,
+            self.service,
+            self.epoch,
+            public_bucket,
+            sequence,
+        )
     }
 
     pub fn open(
@@ -224,7 +252,13 @@ impl VerifierKeyMaterial {
         let cipher = XChaCha20Poly1305::new_from_slice(self.aead_key.as_ref())
             .map_err(|_| CryptoError::InvalidKey)?;
         let opened = cipher
-            .decrypt(XNonce::from_slice(nonce), Payload { msg: ciphertext, aad })
+            .decrypt(
+                XNonce::from_slice(nonce),
+                Payload {
+                    msg: ciphertext,
+                    aad,
+                },
+            )
             .map_err(|_| CryptoError::Authentication)?;
         opened.try_into().map_err(|_| CryptoError::Authentication)
     }

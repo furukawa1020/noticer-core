@@ -3,13 +3,11 @@
 //! Counterfactual private-history generator for AETP witnesses.
 
 use noticer_aetp::{
-    action_equivalent, ActionObligation, ActionSemantics, BucketId, ChannelSchedule,
-    PublicContext, PublicNetworkTape, ScheduleRandomTape, ServiceBinding,
+    action_equivalent, ActionObligation, ActionSemantics, BucketId, ChannelSchedule, PublicContext,
+    PublicNetworkTape, ScheduleRandomTape, ServiceBinding,
 };
 use noticer_release::TokenPlan;
-use noticer_trace_shaper::{
-    ActionEquivalentTraceShaper, SimulationFrameIssuer, TraceShapeError,
-};
+use noticer_trace_shaper::{ActionEquivalentTraceShaper, SimulationFrameIssuer, TraceShapeError};
 use noticer_types::{ActionCode, LogicalSlot, PolicyHash};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -177,8 +175,8 @@ fn semantics_for_family(
 ) -> Result<ActionSemantics, SimulationError> {
     let class = family as u64;
     let bucket = 8 + class * 7;
-    let bucket_start = context.network.start_slot.0
-        + bucket * u64::from(context.schedule.slots_per_bucket);
+    let bucket_start =
+        context.network.start_slot.0 + bucket * u64::from(context.schedule.slots_per_bucket);
     let action = match class % 3 {
         0 => ActionCode::RenderAmbientPulse,
         1 => ActionCode::MenfuguInflateSoft,
@@ -281,7 +279,9 @@ mod tests {
     fn generator_makes_distinct_private_but_action_equivalent_pairs() {
         let pairs = generate_action_equivalent_pairs(60, 42, &default_public_context()).unwrap();
         assert_eq!(pairs.len(), 60);
-        assert!(pairs.iter().all(ActionEquivalentPair::private_histories_are_distinct));
+        assert!(pairs
+            .iter()
+            .all(ActionEquivalentPair::private_histories_are_distinct));
         assert_eq!(
             pairs
                 .iter()

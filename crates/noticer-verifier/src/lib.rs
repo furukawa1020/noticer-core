@@ -5,8 +5,8 @@
 use noticer_aetp::{required_claim, ClaimBound, ServiceBinding};
 use noticer_crypto::VerifierKeyMaterial;
 use noticer_protocol::{
-    parse_inner, AtypicalityTokenEnvelope, FrameKind, InnerBody, KeyId, TokenId,
-    WireServiceAlias, INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE,
+    parse_inner, AtypicalityTokenEnvelope, FrameKind, InnerBody, KeyId, TokenId, WireServiceAlias,
+    INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE,
 };
 use noticer_types::{ActionCode, PolicyHash};
 use serde::{Deserialize, Serialize};
@@ -66,11 +66,14 @@ impl PolicyAllowlist {
         maximum_claim: ClaimBound,
         semantics_tag: [u8; 16],
     ) -> Result<(), PolicyError> {
-        let entry = self.entries.entry(policy_hash).or_insert_with(|| PolicyEntry {
-            action,
-            maximum_claim,
-            semantics_tags: BTreeSet::new(),
-        });
+        let entry = self
+            .entries
+            .entry(policy_hash)
+            .or_insert_with(|| PolicyEntry {
+                action,
+                maximum_claim,
+                semantics_tags: BTreeSet::new(),
+            });
         if entry.action != action || entry.maximum_claim != maximum_claim {
             return Err(PolicyError::Conflict);
         }
@@ -359,12 +362,8 @@ mod tests {
             policy_hash,
         };
         let claim = required_claim(obligation.action);
-        let issuer = TokenIssuer::new(
-            CryptographicRootSecret::new([9; 32]),
-            5,
-            &[service],
-        )
-        .unwrap();
+        let issuer =
+            TokenIssuer::new(CryptographicRootSecret::new([9; 32]), 5, &[service]).unwrap();
         let identity = PublicFrameIdentity {
             service,
             public_epoch: 5,
@@ -377,7 +376,9 @@ mod tests {
             .issue_action_frame(identity, &obligation, claim)
             .unwrap();
         let mut registry = KeyRegistry::default();
-        registry.insert(issuer.verifier_material(service).unwrap()).unwrap();
+        registry
+            .insert(issuer.verifier_material(service).unwrap())
+            .unwrap();
         let mut policies = PolicyAllowlist::default();
         policies
             .allow(
@@ -423,7 +424,10 @@ mod tests {
         let (token, verifier, context, _) = fixture();
         let mut mutated = token.0;
         mutated[200] ^= 1;
-        assert_eq!(verifier.verify(&mutated, context), VerificationResult::Rejected);
+        assert_eq!(
+            verifier.verify(&mutated, context),
+            VerificationResult::Rejected
+        );
         let mut wrong_service = context;
         wrong_service.expected_service = ServiceBinding([8; 16]);
         assert_eq!(
@@ -478,12 +482,8 @@ mod tests {
     #[test]
     fn canonical_cover_has_no_privileged_action() {
         let service = ServiceBinding([3; 16]);
-        let issuer = TokenIssuer::new(
-            CryptographicRootSecret::new([9; 32]),
-            5,
-            &[service],
-        )
-        .unwrap();
+        let issuer =
+            TokenIssuer::new(CryptographicRootSecret::new([9; 32]), 5, &[service]).unwrap();
         let token = issuer
             .issue_cover_frame(PublicFrameIdentity {
                 service,

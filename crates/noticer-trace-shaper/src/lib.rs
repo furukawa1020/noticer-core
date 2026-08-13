@@ -81,7 +81,9 @@ impl ActionEquivalentTraceShaper {
         schedule_tape: &ScheduleRandomTape,
         issuer: &impl FrameIssuer,
     ) -> Result<NetworkTrace, TraceShapeError> {
-        context.validate().map_err(|_| TraceShapeError::InvalidPublicInput)?;
+        context
+            .validate()
+            .map_err(|_| TraceShapeError::InvalidPublicInput)?;
         if context.network.services != plan.services()
             || issuer.frame_length() != usize::from(context.schedule.fixed_ciphertext_size)
         {
@@ -133,7 +135,8 @@ impl ActionEquivalentTraceShaper {
                         .ok_or(TraceShapeError::InvalidPublicInput)?,
                 );
                 for service in &context.network.services {
-                    let sequence = u32::try_from(offset).map_err(|_| TraceShapeError::InvalidPublicInput)?;
+                    let sequence =
+                        u32::try_from(offset).map_err(|_| TraceShapeError::InvalidPublicInput)?;
                     let identity = PublicFrameIdentity {
                         service: *service,
                         public_epoch: context.network.public_epoch,
@@ -143,12 +146,10 @@ impl ActionEquivalentTraceShaper {
                         sequence,
                         absolute_slot,
                     };
-                    let bytes = if let Some(planned) = placements.get(&(*service, bucket, absolute_slot.0)) {
-                        issuer.issue_action(
-                            identity,
-                            planned.obligation(),
-                            planned.claim_bound(),
-                        )
+                    let bytes = if let Some(planned) =
+                        placements.get(&(*service, bucket, absolute_slot.0))
+                    {
+                        issuer.issue_action(identity, planned.obligation(), planned.claim_bound())
                     } else {
                         issuer.issue_cover(identity)
                     }
@@ -198,7 +199,11 @@ impl SimulationFrameIssuer {
             seed.update(b"ACTION");
             seed.update((obligation.action as u16).to_le_bytes());
             seed.update(obligation.policy_hash.0);
-            seed.update([bound.semantic as u8, bound.audience as u8, bound.impact as u8]);
+            seed.update([
+                bound.semantic as u8,
+                bound.audience as u8,
+                bound.impact as u8,
+            ]);
         } else {
             seed.update(b"COVER");
         }
@@ -281,7 +286,8 @@ mod tests {
             policy_hash: PolicyHash([3; 32]),
         }])
         .unwrap();
-        assert!(required_claim(ActionCode::RenderAmbientPulse).permits(required_claim(ActionCode::RenderAmbientPulse)));
+        assert!(required_claim(ActionCode::RenderAmbientPulse)
+            .permits(required_claim(ActionCode::RenderAmbientPulse)));
         let plan = TokenPlan::from_action_semantics(&semantics, vec![service]).unwrap();
         let tape = ScheduleRandomTape([5; 32]);
         let a = SimulationFrameIssuer::new([8; 32], 236);

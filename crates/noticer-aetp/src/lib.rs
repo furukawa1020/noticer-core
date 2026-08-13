@@ -161,8 +161,7 @@ impl ActionSemantics {
             validate_obligation(item)?;
         }
         for pair in obligations.windows(2) {
-            if pair[0].service == pair[1].service
-                && pair[0].public_bucket == pair[1].public_bucket
+            if pair[0].service == pair[1].service && pair[0].public_bucket == pair[1].public_bucket
             {
                 return Err(AetpError::AmbiguousActionSlot);
             }
