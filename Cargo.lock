@@ -1160,6 +1160,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-provenance-verifier"
+version = "0.1.0"
+dependencies = [
+ "noticer-nepp",
+ "noticer-provenance",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-release"
 version = "0.1.0"
 dependencies = [

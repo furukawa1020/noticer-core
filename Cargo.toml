@@ -29,6 +29,7 @@ members = [
     "crates/noticer-evidence-bridge",
     "crates/noticer-pipeline-measurement",
     "crates/noticer-nepp",
+    "crates/noticer-provenance-verifier",
 ]
 
 [workspace.package]
@@ -56,6 +57,7 @@ noticer-ppg-features = { path = "crates/noticer-ppg-features" }
 noticer-evidence-bridge = { path = "crates/noticer-evidence-bridge" }
 noticer-pipeline-measurement = { path = "crates/noticer-pipeline-measurement" }
 noticer-nepp = { path = "crates/noticer-nepp" }
+noticer-provenance-verifier = { path = "crates/noticer-provenance-verifier" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }

@@ -70,7 +70,7 @@ impl fmt::Debug for VerifierChallenge {
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct PairwiseServiceAlias(pub [u8; 16]);
 
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct CollectorKeyId([u8; 32]);
 
 impl CollectorKeyId {
