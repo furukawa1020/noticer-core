@@ -98,7 +98,7 @@ pub struct PermitAuthority {
 }
 
 impl PermitAuthority {
-    pub fn into_claim_parts(
+    pub fn into_admission_parts(
         self,
     ) -> (
         ActionCode,

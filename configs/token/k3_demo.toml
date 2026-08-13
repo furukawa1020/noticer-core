@@ -1,0 +1,4 @@
+seed = 42
+pair_count = 10000
+benchmark_frames = 1000
+evidence_config = "configs/evidence/k1_demo.toml"

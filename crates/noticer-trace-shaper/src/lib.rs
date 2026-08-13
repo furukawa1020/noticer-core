@@ -1,389 +1,299 @@
 #![forbid(unsafe_code)]
 
-use std::collections::{BTreeMap, BTreeSet};
+//! AETP schedule shaping separated from all production cryptographic keys.
 
-use chacha20poly1305::aead::{Aead, KeyInit};
-use chacha20poly1305::{Key, XChaCha20Poly1305, XNonce};
 use noticer_aetp::{
-    ActionSemantics, BucketId, PairwiseServiceAlias, PublicContext, RandomTape, ServiceBinding,
-    TransportStatus,
+    ActionObligation, ClaimBound, PublicContext, ScheduleRandomTape, ServiceBinding,
 };
-use noticer_types::{ActionCode, LogicalSlot};
+use noticer_release::TokenPlan;
+use noticer_types::LogicalSlot;
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use thiserror::Error;
 
-pub const FIXED_PLAINTEXT_SIZE: usize = 88;
-pub const FIXED_CIPHERTEXT_SIZE: usize = 104;
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum DecodedFrameKind {
-    Cover,
-    AuthorizedAction(ActionCode),
-    PublicFailure(PublicFailureCode),
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct PublicFrameIdentity {
+    pub service: ServiceBinding,
+    pub public_epoch: u32,
+    pub public_bucket: u32,
+    pub slot_in_bucket: u16,
+    pub sequence: u32,
+    pub absolute_slot: LogicalSlot,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum PublicFailureCode {
-    ProtocolVersion,
-    TransportUnavailable,
-    EndpointUnavailable,
+#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+#[error("frame issuance failed")]
+pub struct FrameIssueError;
+
+pub trait FrameIssuer: Sync {
+    fn frame_length(&self) -> usize;
+
+    fn issue_cover(&self, identity: PublicFrameIdentity) -> Result<Vec<u8>, FrameIssueError>;
+
+    fn issue_action(
+        &self,
+        identity: PublicFrameIdentity,
+        obligation: &ActionObligation,
+        claim_bound: ClaimBound,
+    ) -> Result<Vec<u8>, FrameIssueError>;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct NetworkFrameView {
-    pub slot: LogicalSlot,
-    pub service_alias: PairwiseServiceAlias,
-    pub packet_length: u16,
-    pub ciphertext: Box<[u8]>,
-    pub transport_status: TransportStatus,
+pub struct NetworkFrame {
+    pub identity: PublicFrameIdentity,
+    pub bytes: Box<[u8]>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NetworkTrace {
-    pub frames: Vec<NetworkFrameView>,
+    pub frames: Vec<NetworkFrame>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ServiceFrameView {
-    pub slot: LogicalSlot,
-    pub service: ServiceBinding,
-    pub decoded_kind: DecodedFrameKind,
-}
+impl NetworkTrace {
+    pub fn byte_stream(&self) -> impl Iterator<Item = &[u8]> {
+        self.frames.iter().map(|frame| frame.bytes.as_ref())
+    }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ServiceTrace {
-    pub service: ServiceBinding,
-    pub frames: Vec<ServiceFrameView>,
-}
+    pub fn service_view(&self, service: ServiceBinding) -> Vec<&[u8]> {
+        self.frames
+            .iter()
+            .filter(|frame| frame.identity.service == service)
+            .map(|frame| frame.bytes.as_ref())
+            .collect()
+    }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CollusionTrace {
-    pub services: Vec<ServiceTrace>,
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ShapedTrace {
-    pub network: NetworkTrace,
-    pub services: Vec<ServiceTrace>,
-    pub collusion: CollusionTrace,
+    pub fn digest(&self) -> [u8; 32] {
+        let mut digest = Sha256::new();
+        digest.update(b"NOTICER_AETP_NETWORK_TRACE_V2");
+        for frame in &self.frames {
+            digest.update(&frame.bytes);
+        }
+        digest.finalize().into()
+    }
 }
 
 pub struct ActionEquivalentTraceShaper;
 
 impl ActionEquivalentTraceShaper {
     pub fn shape(
-        semantics: &ActionSemantics,
+        plan: &TokenPlan,
         context: &PublicContext,
-        random_tape: &RandomTape,
-    ) -> Result<ShapedTrace, ShaperError> {
-        if usize::from(context.channel_schedule.fixed_plaintext_size) != FIXED_PLAINTEXT_SIZE
-            || usize::from(context.channel_schedule.fixed_ciphertext_size) != FIXED_CIPHERTEXT_SIZE
-            || context.channel_schedule.buckets == 0
-            || context.channel_schedule.slots_per_bucket == 0
+        schedule_tape: &ScheduleRandomTape,
+        issuer: &impl FrameIssuer,
+    ) -> Result<NetworkTrace, TraceShapeError> {
+        context
+            .validate()
+            .map_err(|_| TraceShapeError::InvalidPublicInput)?;
+        if context.network.services != plan.services()
+            || issuer.frame_length() != usize::from(context.schedule.fixed_ciphertext_size)
         {
-            return Err(ShaperError::InvalidSchedule);
+            return Err(TraceShapeError::InvalidPublicInput);
         }
-        semantics
-            .validate(context.channel_schedule)
-            .map_err(|_| ShaperError::InvalidSemantics)?;
-        let services: BTreeSet<_> = semantics
-            .obligations
-            .iter()
-            .map(|obligation| obligation.service)
-            .collect();
+        let slots_per_bucket = u64::from(context.schedule.slots_per_bucket);
         let mut placements = BTreeMap::new();
-        for (index, obligation) in semantics.obligations.iter().enumerate() {
-            let alias = service_alias(obligation.service, context.public_epoch);
-            let width = obligation.release_deadline.0 - obligation.release_window_start.0 + 1;
-            let offset = domain_u64(
-                b"NOTICER_AETP_SCHEDULE_V1",
-                random_tape,
-                context.public_epoch,
-                &alias.0,
-                obligation.public_bucket,
-                index as u64,
-            ) % width;
-            let slot = obligation.release_window_start.0 + offset;
-            let key = (obligation.service, slot);
-            if placements.insert(key, obligation).is_some() {
-                return Err(ShaperError::PlacementCollision);
+        for planned in plan.actions() {
+            let obligation = planned.obligation();
+            let bucket_start = context
+                .network
+                .start_slot
+                .0
+                .checked_add(obligation.public_bucket.0.saturating_mul(slots_per_bucket))
+                .ok_or(TraceShapeError::InvalidPublicInput)?;
+            let bucket_end = bucket_start
+                .checked_add(slots_per_bucket - 1)
+                .ok_or(TraceShapeError::InvalidPublicInput)?;
+            let start = obligation.release_window_start.0.max(bucket_start);
+            let end = obligation.release_deadline.0.min(bucket_end);
+            if start > end || obligation.public_bucket.0 >= u64::from(context.schedule.buckets) {
+                return Err(TraceShapeError::InvalidPublicInput);
             }
+            let width = end - start + 1;
+            let mut domain = Vec::with_capacity(24);
+            domain.extend_from_slice(&obligation.service.0);
+            domain.extend_from_slice(&obligation.public_bucket.0.to_le_bytes());
+            let chosen = start + schedule_tape.sample_u64(&domain, 0) % width;
+            placements.insert(
+                (obligation.service, obligation.public_bucket.0, chosen),
+                planned,
+            );
         }
 
-        let total_slots = u64::from(context.channel_schedule.buckets)
-            * u64::from(context.channel_schedule.slots_per_bucket);
-        let mut network_frames = Vec::new();
-        let mut service_frames: BTreeMap<ServiceBinding, Vec<ServiceFrameView>> = services
-            .iter()
-            .map(|service| (*service, Vec::new()))
-            .collect();
-        for slot in 0..total_slots {
-            for service in &services {
-                let alias = service_alias(*service, context.public_epoch);
-                let selected = placements.get(&(*service, slot));
-                let decoded_kind = selected.map_or(DecodedFrameKind::Cover, |obligation| {
-                    DecodedFrameKind::AuthorizedAction(obligation.action)
-                });
-                let bucket = BucketId(slot / u64::from(context.channel_schedule.slots_per_bucket));
-                let slot_in_bucket =
-                    (slot % u64::from(context.channel_schedule.slots_per_bucket)) as u16;
-                let plain = encode_plain_frame(
-                    context,
-                    bucket,
-                    slot_in_bucket,
-                    alias,
-                    decoded_kind,
-                    selected.map(|obligation| obligation.policy_hash.0),
+        let capacity = context
+            .schedule
+            .frame_count(context.network.services.len())
+            .map_err(|_| TraceShapeError::InvalidPublicInput)?;
+        let mut frames = Vec::with_capacity(capacity);
+        for bucket in 0..u64::from(context.schedule.buckets) {
+            for slot in 0..context.schedule.slots_per_bucket {
+                let offset = bucket * slots_per_bucket + u64::from(slot);
+                let absolute_slot = LogicalSlot(
+                    context
+                        .network
+                        .start_slot
+                        .0
+                        .checked_add(offset)
+                        .ok_or(TraceShapeError::InvalidPublicInput)?,
                 );
-                let ciphertext = seal(
-                    &plain,
-                    *service,
-                    alias,
-                    context.public_epoch,
-                    slot,
-                    random_tape,
-                )?;
-                let frame_index = network_frames.len();
-                let status = if context.public_network_tape.statuses.is_empty() {
-                    TransportStatus::Delivered
-                } else {
-                    context.public_network_tape.statuses
-                        [frame_index % context.public_network_tape.statuses.len()]
-                };
-                network_frames.push(NetworkFrameView {
-                    slot: LogicalSlot(slot),
-                    service_alias: alias,
-                    packet_length: FIXED_CIPHERTEXT_SIZE as u16,
-                    ciphertext: ciphertext.into_boxed_slice(),
-                    transport_status: status,
-                });
-                service_frames
-                    .get_mut(service)
-                    .ok_or(ShaperError::InvalidSemantics)?
-                    .push(ServiceFrameView {
-                        slot: LogicalSlot(slot),
+                for service in &context.network.services {
+                    let sequence =
+                        u32::try_from(offset).map_err(|_| TraceShapeError::InvalidPublicInput)?;
+                    let identity = PublicFrameIdentity {
                         service: *service,
-                        decoded_kind,
+                        public_epoch: context.network.public_epoch,
+                        public_bucket: u32::try_from(bucket)
+                            .map_err(|_| TraceShapeError::InvalidPublicInput)?,
+                        slot_in_bucket: slot,
+                        sequence,
+                        absolute_slot,
+                    };
+                    let bytes = if let Some(planned) =
+                        placements.get(&(*service, bucket, absolute_slot.0))
+                    {
+                        issuer.issue_action(identity, planned.obligation(), planned.claim_bound())
+                    } else {
+                        issuer.issue_cover(identity)
+                    }
+                    .map_err(|_| TraceShapeError::Issuance)?;
+                    if bytes.len() != issuer.frame_length() {
+                        return Err(TraceShapeError::Issuance);
+                    }
+                    frames.push(NetworkFrame {
+                        identity,
+                        bytes: bytes.into_boxed_slice(),
                     });
+                }
             }
         }
-        let services: Vec<_> = service_frames
-            .into_iter()
-            .map(|(service, frames)| ServiceTrace { service, frames })
-            .collect();
-        Ok(ShapedTrace {
-            network: NetworkTrace {
-                frames: network_frames,
-            },
-            collusion: CollusionTrace {
-                services: services.clone(),
-            },
-            services,
-        })
+        Ok(NetworkTrace { frames })
     }
 }
 
-pub fn service_alias(service: ServiceBinding, public_epoch: u64) -> PairwiseServiceAlias {
-    let mut hash = Sha256::new();
-    hash.update(b"NOTICER_AETP_SERVICE_V1");
-    hash.update(service.0);
-    hash.update(public_epoch.to_be_bytes());
-    PairwiseServiceAlias(hash.finalize().into())
+/// Deterministic simulation-only frame issuer. The secret is independent from
+/// `ScheduleRandomTape`; production token code lives in `noticer-token`.
+pub struct SimulationFrameIssuer {
+    secret: [u8; 32],
+    frame_length: usize,
 }
 
-pub fn trace_hash(trace: &NetworkTrace) -> [u8; 32] {
-    let mut hash = Sha256::new();
-    hash.update(b"NOTICER_AETP_TRACE_V1");
-    for frame in &trace.frames {
-        hash.update(frame.slot.0.to_be_bytes());
-        hash.update(frame.service_alias.0);
-        hash.update(frame.packet_length.to_be_bytes());
-        hash.update(&frame.ciphertext);
-        hash.update([frame.transport_status as u8]);
-    }
-    hash.finalize().into()
-}
-
-fn domain_u64(
-    domain: &[u8],
-    tape: &RandomTape,
-    epoch: u64,
-    alias: &[u8; 32],
-    bucket: BucketId,
-    index: u64,
-) -> u64 {
-    let mut hash = Sha256::new();
-    hash.update(domain);
-    hash.update(tape.0);
-    hash.update(epoch.to_be_bytes());
-    hash.update(alias);
-    hash.update(bucket.0.to_be_bytes());
-    hash.update(index.to_be_bytes());
-    let digest = hash.finalize();
-    u64::from_be_bytes(
-        digest[..8]
-            .try_into()
-            .expect("SHA-256 prefix has fixed size"),
-    )
-}
-
-fn encode_plain_frame(
-    context: &PublicContext,
-    bucket: BucketId,
-    slot: u16,
-    alias: PairwiseServiceAlias,
-    kind: DecodedFrameKind,
-    policy_hash: Option<[u8; 32]>,
-) -> [u8; FIXED_PLAINTEXT_SIZE] {
-    let mut frame = [0; FIXED_PLAINTEXT_SIZE];
-    frame[..2].copy_from_slice(&context.protocol_version.to_be_bytes());
-    frame[2..10].copy_from_slice(&context.public_epoch.to_be_bytes());
-    frame[10..18].copy_from_slice(&bucket.0.to_be_bytes());
-    frame[18..20].copy_from_slice(&slot.to_be_bytes());
-    frame[20..52].copy_from_slice(&alias.0);
-    match kind {
-        DecodedFrameKind::Cover => frame[52] = 0,
-        DecodedFrameKind::AuthorizedAction(action) => {
-            frame[52] = 1;
-            frame[53..55].copy_from_slice(&(action as u16).to_be_bytes());
-        }
-        DecodedFrameKind::PublicFailure(code) => {
-            frame[52] = 2;
-            frame[53..55].copy_from_slice(&(code as u16).to_be_bytes());
+impl SimulationFrameIssuer {
+    pub const fn new(secret: [u8; 32], frame_length: usize) -> Self {
+        Self {
+            secret,
+            frame_length,
         }
     }
-    if let Some(policy) = policy_hash {
-        frame[55..63].copy_from_slice(&policy[..8]);
+
+    fn frame(
+        &self,
+        identity: PublicFrameIdentity,
+        action: Option<(&ActionObligation, ClaimBound)>,
+    ) -> Vec<u8> {
+        let mut seed = Sha256::new();
+        seed.update(b"NOTICER_SIMULATION_FRAME_ONLY");
+        seed.update(self.secret);
+        seed.update(identity.service.0);
+        seed.update(identity.public_epoch.to_le_bytes());
+        seed.update(identity.public_bucket.to_le_bytes());
+        seed.update(identity.sequence.to_le_bytes());
+        if let Some((obligation, bound)) = action {
+            seed.update(b"ACTION");
+            seed.update((obligation.action as u16).to_le_bytes());
+            seed.update(obligation.policy_hash.0);
+            seed.update([
+                bound.semantic as u8,
+                bound.audience as u8,
+                bound.impact as u8,
+            ]);
+        } else {
+            seed.update(b"COVER");
+        }
+        let seed: [u8; 32] = seed.finalize().into();
+        let mut out = Vec::with_capacity(self.frame_length);
+        let mut counter = 0_u32;
+        while out.len() < self.frame_length {
+            let mut block = Sha256::new();
+            block.update(b"NOTICER_SIMULATION_FRAME_EXPAND");
+            block.update(seed);
+            block.update(counter.to_le_bytes());
+            out.extend_from_slice(&block.finalize());
+            counter += 1;
+        }
+        out.truncate(self.frame_length);
+        out
     }
-    frame
 }
 
-fn seal(
-    plaintext: &[u8; FIXED_PLAINTEXT_SIZE],
-    service: ServiceBinding,
-    alias: PairwiseServiceAlias,
-    epoch: u64,
-    slot: u64,
-    tape: &RandomTape,
-) -> Result<Vec<u8>, ShaperError> {
-    let mut key_hash = Sha256::new();
-    key_hash.update(b"NOTICER_AETP_SEAL_KEY_V1");
-    key_hash.update(tape.0);
-    key_hash.update(service.0);
-    let key_bytes: [u8; 32] = key_hash.finalize().into();
-    let cipher = XChaCha20Poly1305::new(Key::from_slice(&key_bytes));
-    let mut nonce_hash = Sha256::new();
-    nonce_hash.update(b"NOTICER_AETP_NONCE_V1");
-    nonce_hash.update(tape.0);
-    nonce_hash.update(alias.0);
-    nonce_hash.update(epoch.to_be_bytes());
-    nonce_hash.update(slot.to_be_bytes());
-    let digest = nonce_hash.finalize();
-    cipher
-        .encrypt(XNonce::from_slice(&digest[..24]), plaintext.as_slice())
-        .map_err(|_| ShaperError::SealingFailure)
-}
-
-pub fn reject_malformed_ciphertext(ciphertext: &[u8]) -> Result<(), ShaperError> {
-    if ciphertext.len() != FIXED_CIPHERTEXT_SIZE {
-        return Err(ShaperError::MalformedCiphertext);
+impl FrameIssuer for SimulationFrameIssuer {
+    fn frame_length(&self) -> usize {
+        self.frame_length
     }
-    Ok(())
+
+    fn issue_cover(&self, identity: PublicFrameIdentity) -> Result<Vec<u8>, FrameIssueError> {
+        Ok(self.frame(identity, None))
+    }
+
+    fn issue_action(
+        &self,
+        identity: PublicFrameIdentity,
+        obligation: &ActionObligation,
+        claim_bound: ClaimBound,
+    ) -> Result<Vec<u8>, FrameIssueError> {
+        Ok(self.frame(identity, Some((obligation, claim_bound))))
+    }
 }
 
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum ShaperError {
-    #[error("invalid fixed-rate schedule")]
-    InvalidSchedule,
-    #[error("invalid action semantics")]
-    InvalidSemantics,
-    #[error("two actions collide in one service slot")]
-    PlacementCollision,
-    #[error("frame sealing failed")]
-    SealingFailure,
-    #[error("malformed ciphertext")]
-    MalformedCiphertext,
+#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+pub enum TraceShapeError {
+    #[error("invalid public trace-shaping input")]
+    InvalidPublicInput,
+    #[error("fixed-width frame issuance failed")]
+    Issuance,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use noticer_aetp::{ActionObligation, ChannelSchedule, PublicNetworkTape};
-    use noticer_types::PolicyHash;
-    use proptest::prelude::*;
+    use noticer_aetp::{
+        required_claim, ActionSemantics, BucketId, ChannelSchedule, PublicNetworkTape,
+    };
+    use noticer_types::{ActionCode, PolicyHash};
 
-    fn fixture(ready_independent_window: (u64, u64)) -> (ActionSemantics, PublicContext) {
-        let schedule = ChannelSchedule {
-            buckets: 1,
-            slots_per_bucket: 32,
-            frame_interval_ms: 1_000,
-            fixed_plaintext_size: FIXED_PLAINTEXT_SIZE as u16,
-            fixed_ciphertext_size: FIXED_CIPHERTEXT_SIZE as u16,
-        };
-        (
-            ActionSemantics {
-                obligations: vec![ActionObligation {
-                    service: ServiceBinding::from_u64(1),
-                    action: ActionCode::MenfuguInflateSoft,
-                    public_bucket: BucketId(0),
-                    admission_cutoff: LogicalSlot(7),
-                    release_window_start: LogicalSlot(ready_independent_window.0),
-                    release_deadline: LogicalSlot(ready_independent_window.1),
-                    max_uses: 1,
-                    policy_hash: PolicyHash([3; 32]),
-                }],
+    #[test]
+    fn same_public_plan_and_schedule_make_identical_simulation_trace() {
+        let service = ServiceBinding([1; 16]);
+        let context = PublicContext {
+            schedule: ChannelSchedule {
+                buckets: 2,
+                slots_per_bucket: 4,
+                frame_interval_ms: 250,
+                fixed_plaintext_size: 160,
+                fixed_ciphertext_size: 236,
             },
-            PublicContext {
-                protocol_version: 1,
+            network: PublicNetworkTape {
+                services: vec![service],
                 public_epoch: 9,
-                channel_schedule: schedule,
-                public_network_tape: PublicNetworkTape { statuses: vec![] },
+                start_slot: LogicalSlot(100),
             },
-        )
-    }
-
-    proptest! {
-        #[test]
-        fn same_semantics_and_tape_are_pointwise_identical(seed in any::<[u8; 32]>()) {
-            let (semantics, context) = fixture((8, 31));
-            let first = ActionEquivalentTraceShaper::shape(&semantics, &context, &RandomTape(seed)).unwrap();
-            let second = ActionEquivalentTraceShaper::shape(&semantics, &context, &RandomTape(seed)).unwrap();
-            prop_assert_eq!(first, second);
-        }
-    }
-
-    #[test]
-    fn frame_length_cadence_and_utility_hold() {
-        let (semantics, context) = fixture((8, 31));
-        let trace =
-            ActionEquivalentTraceShaper::shape(&semantics, &context, &RandomTape([7; 32])).unwrap();
-        assert!(trace.network.frames.iter().all(|frame| {
-            frame.packet_length as usize == FIXED_CIPHERTEXT_SIZE
-                && frame.ciphertext.len() == FIXED_CIPHERTEXT_SIZE
-        }));
-        assert_eq!(
-            trace.services[0]
-                .frames
-                .iter()
-                .filter(|frame| matches!(frame.decoded_kind, DecodedFrameKind::AuthorizedAction(_)))
-                .count(),
-            1
-        );
-    }
-
-    #[test]
-    fn aliases_are_pairwise_and_epoch_scoped() {
-        let first = service_alias(ServiceBinding::from_u64(1), 1);
-        assert_eq!(first, service_alias(ServiceBinding::from_u64(1), 1));
-        assert_ne!(first, service_alias(ServiceBinding::from_u64(2), 1));
-        assert_ne!(first, service_alias(ServiceBinding::from_u64(1), 2));
-    }
-
-    #[test]
-    fn malformed_parser_never_accepts_wrong_length() {
-        for length in 0..256 {
-            let result = reject_malformed_ciphertext(&vec![0; length]);
-            assert_eq!(result.is_ok(), length == FIXED_CIPHERTEXT_SIZE);
-        }
+        };
+        let semantics = ActionSemantics::new(vec![ActionObligation {
+            service,
+            action: ActionCode::RenderAmbientPulse,
+            public_bucket: BucketId(1),
+            admission_cutoff: LogicalSlot(102),
+            release_window_start: LogicalSlot(104),
+            release_deadline: LogicalSlot(107),
+            max_uses: 1,
+            policy_hash: PolicyHash([3; 32]),
+        }])
+        .unwrap();
+        assert!(required_claim(ActionCode::RenderAmbientPulse)
+            .permits(required_claim(ActionCode::RenderAmbientPulse)));
+        let plan = TokenPlan::from_action_semantics(&semantics, vec![service]).unwrap();
+        let tape = ScheduleRandomTape([5; 32]);
+        let a = SimulationFrameIssuer::new([8; 32], 236);
+        let b = SimulationFrameIssuer::new([8; 32], 236);
+        let left = ActionEquivalentTraceShaper::shape(&plan, &context, &tape, &a).unwrap();
+        let right = ActionEquivalentTraceShaper::shape(&plan, &context, &tape, &b).unwrap();
+        assert_eq!(left, right);
     }
 }
