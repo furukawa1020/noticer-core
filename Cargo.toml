@@ -15,6 +15,7 @@ members = [
   "crates/noticer-aetp-demo",
     "crates/noticer-token",
     "crates/noticer-verifier",
+    "crates/noticer-token-demo",
 ]
 
 [workspace.package]

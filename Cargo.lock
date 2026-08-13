@@ -614,6 +614,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-token-demo"
+version = "0.1.0"
+dependencies = [
+ "noticer-aetp",
+ "noticer-aetp-sim",
+ "noticer-baseline",
+ "noticer-claim",
+ "noticer-crypto",
+ "noticer-evidence",
+ "noticer-protocol",
+ "noticer-release",
+ "noticer-token",
+ "noticer-trace-shaper",
+ "noticer-types",
+ "noticer-verifier",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "toml 0.8.23",
+]
+
+[[package]]
 name = "noticer-trace-shaper"
 version = "0.1.0"
 dependencies = [
