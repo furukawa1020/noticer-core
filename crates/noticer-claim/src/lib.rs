@@ -1,107 +1,112 @@
 #![forbid(unsafe_code)]
 
-use noticer_evidence::{EvidencePermit, GuaranteeMarker};
+//! The high-to-low admission boundary.
+//!
+//! `EvidencePermit` is consumed here. Private readiness, expiry, epoch, score,
+//! and evidence provenance are checked and then irreversibly erased before an
+//! `AdmittedAction` can cross into release planning.
+
+use noticer_aetp::{required_claim, validate_obligation, ActionObligation, ClaimBound, ServiceBinding};
+use noticer_evidence::{EvidenceEpochId, EvidencePermit, GuaranteeMarker};
 use noticer_types::{ActionCode, LogicalSlot, PolicyHash};
+use std::fmt;
 use thiserror::Error;
 
-#[derive(Clone, Debug)]
-pub struct ClaimPolicy {
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ActionTemplate {
+    pub service: ServiceBinding,
+    pub action: ActionCode,
+    pub public_bucket: noticer_aetp::BucketId,
+    pub admission_cutoff: LogicalSlot,
+    pub release_window_start: LogicalSlot,
+    pub release_deadline: LogicalSlot,
+    pub max_uses: u16,
     pub policy_hash: PolicyHash,
-    pub allowed_actions: Vec<ActionCode>,
-    pub maximum_ttl_slots: u64,
+    pub claim_bound: ClaimBound,
+    pub local_policy_ceiling: ClaimBound,
+}
+
+struct PrivateAdmissionCandidate {
+    action: ActionCode,
+    policy_hash: PolicyHash,
+    evidence_ready_slot: LogicalSlot,
+    evidence_expiry_slot: LogicalSlot,
+    evidence_epoch: EvidenceEpochId,
+    provenance: &'static str,
+}
+
+impl fmt::Debug for PrivateAdmissionCandidate {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("PrivateAdmissionCandidate(<redacted>)")
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ActionClaim {
-    action: ActionCode,
-    policy_hash: PolicyHash,
-    issued_slot: LogicalSlot,
-    expires_slot: LogicalSlot,
+pub struct AdmittedAction {
+    obligation: ActionObligation,
+    claim_bound: ClaimBound,
 }
 
-impl ActionClaim {
-    pub const fn action(&self) -> ActionCode {
-        self.action
+impl AdmittedAction {
+    pub const fn obligation(&self) -> &ActionObligation {
+        &self.obligation
     }
 
-    pub const fn policy_hash(&self) -> PolicyHash {
-        self.policy_hash
+    pub const fn claim_bound(&self) -> ClaimBound {
+        self.claim_bound
     }
 
-    pub const fn issued_slot(&self) -> LogicalSlot {
-        self.issued_slot
-    }
-
-    pub const fn expires_slot(&self) -> LogicalSlot {
-        self.expires_slot
+    pub fn into_public_parts(self) -> (ActionObligation, ClaimBound) {
+        (self.obligation, self.claim_bound)
     }
 }
 
-#[derive(Debug, Error, Eq, PartialEq)]
-pub enum ClaimViolation {
-    #[error("permit policy does not match the claim policy")]
-    PolicyMismatch,
-    #[error("permit action is not authorized by the claim policy")]
-    ActionNotAllowed,
-    #[error("permit lifetime is invalid or exceeds the claim policy")]
-    InvalidLifetime,
+pub fn admit<G: GuaranteeMarker>(
+    permit: EvidencePermit<G>,
+    template: ActionTemplate,
+) -> Result<AdmittedAction, AdmissionError> {
+    let (action, policy_hash, ready, expiry, epoch, provenance) =
+        permit.consume().into_admission_parts();
+    let private = PrivateAdmissionCandidate {
+        action,
+        policy_hash,
+        evidence_ready_slot: ready,
+        evidence_expiry_slot: expiry,
+        evidence_epoch: epoch,
+        provenance,
+    };
+    let required = required_claim(template.action);
+    if private.action != template.action
+        || private.policy_hash != template.policy_hash
+        || private.evidence_ready_slot > template.admission_cutoff
+        || private.evidence_expiry_slot < template.admission_cutoff
+        || !template.claim_bound.permits(required)
+        || !template.local_policy_ceiling.permits(template.claim_bound)
+    {
+        return Err(AdmissionError::Rejected);
+    }
+    let obligation = ActionObligation {
+        service: template.service,
+        action: template.action,
+        public_bucket: template.public_bucket,
+        admission_cutoff: template.admission_cutoff,
+        release_window_start: template.release_window_start,
+        release_deadline: template.release_deadline,
+        max_uses: template.max_uses,
+        policy_hash: template.policy_hash,
+    };
+    validate_obligation(&obligation).map_err(|_| AdmissionError::Rejected)?;
+    // These reads make the deliberate erasure point explicit without exposing
+    // any of the values in the low-side type or its Debug representation.
+    let _erased = (private.evidence_epoch, private.provenance);
+    Ok(AdmittedAction {
+        obligation,
+        claim_bound: template.claim_bound,
+    })
 }
 
-pub struct ClaimQuotient {
-    policy: ClaimPolicy,
-}
-
-impl ClaimQuotient {
-    pub fn new(policy: ClaimPolicy) -> Result<Self, ClaimViolation> {
-        if policy.maximum_ttl_slots == 0
-            || policy.allowed_actions.is_empty()
-            || policy.allowed_actions.contains(&ActionCode::NoAction)
-        {
-            return Err(ClaimViolation::ActionNotAllowed);
-        }
-        Ok(Self { policy })
-    }
-
-    pub fn declassify<G: GuaranteeMarker>(
-        &self,
-        permit: EvidencePermit<G>,
-    ) -> Result<ActionClaim, ClaimViolation> {
-        let (action, policy_hash, issued_slot, expires_slot, _, _) =
-            permit.consume().into_claim_parts();
-        if policy_hash != self.policy.policy_hash {
-            return Err(ClaimViolation::PolicyMismatch);
-        }
-        if !self.policy.allowed_actions.contains(&action) {
-            return Err(ClaimViolation::ActionNotAllowed);
-        }
-        let ttl = expires_slot
-            .0
-            .checked_sub(issued_slot.0)
-            .filter(|ttl| *ttl > 0)
-            .ok_or(ClaimViolation::InvalidLifetime)?;
-        if ttl > self.policy.maximum_ttl_slots {
-            return Err(ClaimViolation::InvalidLifetime);
-        }
-        Ok(ActionClaim {
-            action,
-            policy_hash,
-            issued_slot,
-            expires_slot,
-        })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn invalid_policy_is_rejected() {
-        let result = ClaimQuotient::new(ClaimPolicy {
-            policy_hash: PolicyHash([0; 32]),
-            allowed_actions: vec![ActionCode::NoAction],
-            maximum_ttl_slots: 10,
-        });
-        assert!(matches!(result, Err(ClaimViolation::ActionNotAllowed)));
-    }
+#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
+pub enum AdmissionError {
+    #[error("evidence was not admissible for the public action template")]
+    Rejected,
 }
