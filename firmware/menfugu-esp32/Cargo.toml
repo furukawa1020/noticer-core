@@ -1,0 +1,14 @@
+[package]
+name = "menfugu-esp32-adapter"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+noticer-menfugu-core = { path = "../../crates/noticer-menfugu-core" }
+noticer-menfugu-firmware = { path = "../../crates/noticer-menfugu-firmware" }
+
+[lib]
+path = "src/lib.rs"
