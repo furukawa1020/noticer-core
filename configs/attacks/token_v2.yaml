@@ -1,0 +1,18 @@
+seed: 42
+split_unit: pair_id
+test_fraction: 0.30
+observation_horizons: [1, 4, 16, 64]
+views: [observer, single_service, colluding_services]
+bootstrap_samples: 100
+mechanisms:
+  - ATv2
+  - ReadySlotToken
+  - ScoreBucketToken
+  - VariableLengthToken
+  - PerActionOnlyToken
+  - SharedServiceIdentifierToken
+models:
+  - logistic_regression
+  - decision_tree
+  - gaussian_nb
+  - linear_discriminant
