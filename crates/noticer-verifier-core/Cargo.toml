@@ -1,0 +1,12 @@
+[package]
+name = "noticer-verifier-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+noticer-aetp = { path = "../noticer-aetp" }
+noticer-crypto = { path = "../noticer-crypto" }
+noticer-protocol = { path = "../noticer-protocol" }
+noticer-types = { path = "../noticer-types" }

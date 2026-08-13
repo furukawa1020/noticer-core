@@ -13,9 +13,16 @@ members = [
   "crates/noticer-trace-shaper",
   "crates/noticer-aetp-sim",
   "crates/noticer-aetp-demo",
-    "crates/noticer-token",
-    "crates/noticer-verifier",
-    "crates/noticer-token-demo",
+  "crates/noticer-token",
+  "crates/noticer-verifier-core",
+  "crates/noticer-verifier",
+  "crates/noticer-token-demo",
+  "crates/noticer-transport-core",
+  "crates/noticer-transport-sim",
+  "crates/noticer-menfugu-core",
+  "crates/noticer-menfugu-firmware",
+  "crates/noticer-ble-host",
+  "crates/noticer-k4-demo",
 ]
 
 [workspace.package]

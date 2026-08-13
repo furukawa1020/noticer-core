@@ -1,0 +1,15 @@
+schema_version = 1
+seed = 4401
+public_epoch = 7
+public_bucket = 11
+sequence = 19
+execution_slot = 10
+start_tick = 1000
+cadence_ticks = 5
+reassembly_ttl_ticks = 500
+pump_ticks = 20
+maximum_pump_ticks = 30
+cooldown_slots = 4
+execution_period_slots = 4
+execution_offset_slots = 2
+loss_indices = [0, 5, 10, 15]

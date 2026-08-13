@@ -1,0 +1,13 @@
+[package]
+name = "noticer-transport-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+noticer-transport-core = { path = "../noticer-transport-core" }
+serde.workspace = true
+
+[dev-dependencies]
+noticer-protocol = { path = "../noticer-protocol" }

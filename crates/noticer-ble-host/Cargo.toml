@@ -1,0 +1,21 @@
+[package]
+name = "noticer-ble-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+btleplug-adapter = ["dep:btleplug", "dep:tokio"]
+
+[dependencies]
+noticer-aetp = { path = "../noticer-aetp" }
+noticer-menfugu-firmware = { path = "../noticer-menfugu-firmware" }
+noticer-protocol = { path = "../noticer-protocol" }
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-verifier = { path = "../noticer-verifier" }
+
+[target.'cfg(any(target_os = "windows", target_os = "macos"))'.dependencies]
+btleplug = { version = "0.11", optional = true }
+tokio = { version = "1", features = ["time"], optional = true }

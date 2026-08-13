@@ -1,0 +1,11 @@
+[package]
+name = "noticer-menfugu-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+noticer-protocol = { path = "../noticer-protocol" }
+noticer-types = { path = "../noticer-types" }
+noticer-verifier-core = { path = "../noticer-verifier-core" }
