@@ -5,6 +5,16 @@
 //! `EvidencePermit` is consumed here. Private readiness, expiry, epoch, score,
 //! and evidence provenance are checked and then irreversibly erased before an
 //! `AdmittedAction` can cross into release planning.
+//!
+//! Private readiness is intentionally not a field on the low-side value:
+//!
+//! ```compile_fail
+//! use noticer_claim::AdmittedAction;
+//!
+//! fn leak_private_readiness(action: &AdmittedAction) {
+//!     let _ = action.evidence_ready_slot;
+//! }
+//! ```
 
 use noticer_aetp::{required_claim, validate_obligation, ActionObligation, ClaimBound, ServiceBinding};
 use noticer_evidence::{EvidenceEpochId, EvidencePermit, GuaranteeMarker};
