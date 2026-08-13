@@ -119,6 +119,20 @@ impl CollectorKeyAssurance {
     pub const fn software() -> Self {
         Self(CollectorKeyRank::Software)
     }
+
+    /// Constructs the result of a successful TEE key appraisal. A raw profile
+    /// is not an authority token; production consumers require an opaque
+    /// appraiser result in addition to this value.
+    #[doc(hidden)]
+    pub const fn appraised_tee_backed() -> Self {
+        Self(CollectorKeyRank::TeeBacked)
+    }
+
+    /// See [`Self::appraised_tee_backed`].
+    #[doc(hidden)]
+    pub const fn appraised_strongbox_backed() -> Self {
+        Self(CollectorKeyRank::StrongBoxBacked)
+    }
 }
 
 assurance_axis!(
@@ -140,6 +154,13 @@ impl BootStateAssurance {
     pub const fn reported() -> Self {
         Self(BootStateRank::Reported)
     }
+
+    /// Constructs a locked boot-state result after certificate-chain and
+    /// reference-value appraisal.
+    #[doc(hidden)]
+    pub const fn appraised_hardware_locked() -> Self {
+        Self(BootStateRank::HardwareAttestedLocked)
+    }
 }
 
 assurance_axis!(
@@ -156,6 +177,19 @@ assurance_axis!(
 impl PipelineAssurance {
     pub const fn self_declared() -> Self {
         Self(PipelineRank::SelfDeclared)
+    }
+
+    /// Constructs a static manifest binding after app identity and pipeline
+    /// reference-value appraisal.
+    #[doc(hidden)]
+    pub const fn appraised_static_manifest_bound() -> Self {
+        Self(PipelineRank::StaticManifestBound)
+    }
+
+    /// Reserved for a future runtime proof verifier.
+    #[doc(hidden)]
+    pub const fn appraised_runtime_proof() -> Self {
+        Self(PipelineRank::RuntimeProofOfExecution)
     }
 }
 
@@ -177,6 +211,13 @@ impl FreshnessAssurance {
 
     pub const fn local_monotonic() -> Self {
         Self(FreshnessRank::LocalMonotonic)
+    }
+
+    /// Constructs challenge freshness only after one-shot verifier challenge
+    /// validation.
+    #[doc(hidden)]
+    pub const fn appraised_verifier_challenge() -> Self {
+        Self(FreshnessRank::VerifierChallenge)
     }
 }
 
