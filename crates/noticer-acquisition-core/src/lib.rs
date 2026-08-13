@@ -675,7 +675,15 @@ impl AcquisitionSession {
         .map_err(|_| AcquisitionError::FeatureExtractionFailed)?;
         let extracted = extract_private_features(input)
             .map_err(|_| AcquisitionError::FeatureExtractionFailed)?;
+        let phase = match self.state {
+            SessionState::Active(phase) => phase,
+            SessionState::Disconnected | SessionState::Faulted => {
+                return Err(AcquisitionError::SessionNotActive);
+            }
+        };
         let result = PrivateFeatureWindow {
+            session_id: self.id,
+            phase,
             ordinal: self.next_feature_ordinal,
             extracted,
         };
@@ -743,11 +751,21 @@ impl AcquisitionSession {
 /// fn leak(window: &PrivateFeatureWindow) -> u64 { window.window_start_ns() }
 /// ~~~
 pub struct PrivateFeatureWindow {
+    session_id: SessionId,
+    phase: SessionPhase,
     ordinal: u64,
     extracted: noticer_ppg_features::ExtractedPrivateFeatures,
 }
 
 impl PrivateFeatureWindow {
+    pub const fn session_id(&self) -> SessionId {
+        self.session_id
+    }
+
+    pub const fn phase(&self) -> SessionPhase {
+        self.phase
+    }
+
     pub const fn ordinal(&self) -> u64 {
         self.ordinal
     }
@@ -773,6 +791,8 @@ impl fmt::Debug for PrivateFeatureWindow {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("PrivateFeatureWindow")
+            .field("session_id", &self.session_id)
+            .field("phase", &self.phase)
             .field("ordinal", &self.ordinal)
             .field("schema", &self.schema())
             .field("quality", &self.quality())

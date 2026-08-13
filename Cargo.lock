@@ -963,6 +963,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-evidence-bridge"
+version = "0.1.0"
+dependencies = [
+ "noticer-acquisition-core",
+ "noticer-baseline",
+ "noticer-evidence",
+ "noticer-ppg-features",
+ "noticer-types",
+ "rand_core 0.6.4",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-evidence-demo"
 version = "0.1.0"
 dependencies = [
