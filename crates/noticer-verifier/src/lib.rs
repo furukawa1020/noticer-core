@@ -2,13 +2,15 @@
 
 //! Fail-closed, one-shot ATv2 verification with atomic replay state.
 
-use noticer_aetp::{required_claim, ClaimBound, ServiceBinding};
+use noticer_aetp::{required_claim, ClaimBound};
 use noticer_crypto::VerifierKeyMaterial;
-use noticer_protocol::{
-    parse_inner, AtypicalityTokenEnvelope, FrameKind, InnerBody, KeyId, TokenId, WireServiceAlias,
-    INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE,
-};
+use noticer_protocol::{InnerBody, KeyId, TokenId, WireServiceAlias};
 use noticer_types::{ActionCode, PolicyHash};
+use noticer_verifier_core::{
+    self as verifier_core, KeySource as CoreKeySource, PolicySource as CorePolicySource,
+    ReplayGuard as CoreReplayGuard, RevocationSource as CoreRevocationSource,
+};
+pub use noticer_verifier_core::{AuthorizedAction, VerificationResult, VerifierContext};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -37,6 +39,17 @@ impl KeyRegistry {
         epoch: u32,
     ) -> Option<&VerifierKeyMaterial> {
         self.entries.get(&(alias, key_id, epoch))
+    }
+}
+
+impl CoreKeySource for KeyRegistry {
+    fn get(
+        &self,
+        alias: WireServiceAlias,
+        key_id: KeyId,
+        epoch: u32,
+    ) -> Option<&VerifierKeyMaterial> {
+        self.get(alias, key_id, epoch)
     }
 }
 
@@ -91,6 +104,12 @@ impl PolicyAllowlist {
     }
 }
 
+impl CorePolicySource for PolicyAllowlist {
+    fn permits(&self, body: &InnerBody) -> bool {
+        self.permits(body)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum PolicyError {
     #[error("conflicting policy allowlist entry")]
@@ -121,9 +140,27 @@ impl RevocationSnapshot {
     }
 }
 
+impl CoreRevocationSource for RevocationSnapshot {
+    fn key_is_revoked(&self, key_id: KeyId) -> bool {
+        self.key_is_revoked(key_id)
+    }
+
+    fn policy_is_revoked(&self, policy_hash: PolicyHash) -> bool {
+        self.policy_is_revoked(policy_hash)
+    }
+}
+
 pub trait ReplayStore: Send + Sync {
     /// Atomically returns true only for the first `(epoch, token_id)` use.
     fn accept_once(&self, epoch: u32, token_id: TokenId) -> bool;
+}
+
+struct ReplayAdapter<'a>(&'a dyn ReplayStore);
+
+impl CoreReplayGuard for ReplayAdapter<'_> {
+    fn accept_once(&self, epoch: u32, token_id: TokenId) -> bool {
+        self.0.accept_once(epoch, token_id)
+    }
 }
 
 #[derive(Default)]
@@ -193,26 +230,6 @@ pub enum SnapshotError {
     Duplicate,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct VerifierContext {
-    pub expected_service: ServiceBinding,
-    pub expected_epoch: u32,
-    pub now_slot: u32,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct AuthorizedAction {
-    pub action: ActionCode,
-    pub token_id: TokenId,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum VerificationResult {
-    Cover,
-    Authorized(AuthorizedAction),
-    Rejected,
-}
-
 pub struct TokenVerifier {
     registry: KeyRegistry,
     policies: PolicyAllowlist,
@@ -238,106 +255,25 @@ impl TokenVerifier {
     /// Returns a deliberately normalized external result. Detailed failures are
     /// retained only inside `verify_detailed` to avoid a verifier oracle.
     pub fn verify(&self, bytes: &[u8], context: VerifierContext) -> VerificationResult {
-        self.verify_detailed(bytes, context)
-            .unwrap_or(VerificationResult::Rejected)
+        let replay = ReplayAdapter(self.replay.as_ref());
+        verifier_core::verify(
+            bytes,
+            context,
+            &self.registry,
+            &self.policies,
+            &self.revocations,
+            &replay,
+        )
+        .unwrap_or(VerificationResult::Rejected)
     }
-
-    fn verify_detailed(
-        &self,
-        bytes: &[u8],
-        context: VerifierContext,
-    ) -> Result<VerificationResult, VerifyError> {
-        let envelope =
-            AtypicalityTokenEnvelope::from_slice(bytes).map_err(|_| VerifyError::Framing)?;
-        let outer = envelope.outer().map_err(|_| VerifyError::Framing)?;
-        if outer.public_epoch != context.expected_epoch {
-            return Err(VerifyError::Binding);
-        }
-        let material = self
-            .registry
-            .get(outer.service_alias, outer.key_id, outer.public_epoch)
-            .ok_or(VerifyError::UnknownKey)?;
-        if material.service() != context.expected_service
-            || material.epoch() != context.expected_epoch
-        {
-            return Err(VerifyError::Binding);
-        }
-        if material.expected_nonce(outer.public_bucket, outer.sequence) != outer.nonce {
-            return Err(VerifyError::Nonce);
-        }
-        let outer_bytes = outer.encode();
-        let plaintext = material
-            .open(&outer.nonce, &outer_bytes, envelope.ciphertext())
-            .map_err(|_| VerifyError::Authentication)?;
-        let inner_bytes: [u8; INNER_BODY_SIZE] = plaintext[..INNER_BODY_SIZE]
-            .try_into()
-            .map_err(|_| VerifyError::Framing)?;
-        let signature: [u8; SIGNATURE_SIZE] = plaintext[INNER_BODY_SIZE..]
-            .try_into()
-            .map_err(|_| VerifyError::Framing)?;
-        let mut signed_message = [0_u8; OUTER_HEADER_SIZE + INNER_BODY_SIZE];
-        signed_message[..OUTER_HEADER_SIZE].copy_from_slice(&outer_bytes);
-        signed_message[OUTER_HEADER_SIZE..].copy_from_slice(&inner_bytes);
-        material
-            .verify(&signed_message, &signature)
-            .map_err(|_| VerifyError::Signature)?;
-        let body = parse_inner(&inner_bytes, outer.kind).map_err(|_| VerifyError::Body)?;
-        if self.revocations.key_is_revoked(outer.key_id) {
-            return Err(VerifyError::Revoked);
-        }
-        if outer.kind == FrameKind::Cover {
-            return Ok(VerificationResult::Cover);
-        }
-        if context.now_slot < body.valid_from || context.now_slot > body.valid_until {
-            return Err(VerifyError::Freshness);
-        }
-        if self.revocations.policy_is_revoked(body.policy_hash) {
-            return Err(VerifyError::Revoked);
-        }
-        if !self.policies.permits(&body) {
-            return Err(VerifyError::ClaimOrPolicy);
-        }
-        if !self.replay.accept_once(outer.public_epoch, body.token_id) {
-            return Err(VerifyError::Replay);
-        }
-        Ok(VerificationResult::Authorized(AuthorizedAction {
-            action: body.action,
-            token_id: body.token_id,
-        }))
-    }
-}
-
-#[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
-enum VerifyError {
-    #[error("framing")]
-    Framing,
-    #[error("unknown key")]
-    UnknownKey,
-    #[error("service or epoch binding")]
-    Binding,
-    #[error("nonce")]
-    Nonce,
-    #[error("authentication")]
-    Authentication,
-    #[error("signature")]
-    Signature,
-    #[error("body")]
-    Body,
-    #[error("freshness")]
-    Freshness,
-    #[error("revoked")]
-    Revoked,
-    #[error("claim or policy")]
-    ClaimOrPolicy,
-    #[error("replay")]
-    Replay,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use noticer_aetp::{required_claim, ActionObligation, BucketId};
+    use noticer_aetp::{required_claim, ActionObligation, BucketId, ServiceBinding};
     use noticer_crypto::CryptographicRootSecret;
+    use noticer_protocol::AtypicalityTokenEnvelope;
     use noticer_token::{semantics_tag, TokenIssuer};
     use noticer_trace_shaper::PublicFrameIdentity;
     use noticer_types::LogicalSlot;

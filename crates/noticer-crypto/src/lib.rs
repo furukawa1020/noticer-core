@@ -1,18 +1,20 @@
+#![no_std]
 #![forbid(unsafe_code)]
 
 //! Domain-separated ATv2 cryptographic key schedule and operations.
 
-use chacha20poly1305::{
-    aead::{Aead, Payload},
-    KeyInit, XChaCha20Poly1305, XNonce,
-};
+#[cfg(test)]
+#[macro_use]
+extern crate std;
+
+use chacha20poly1305::{aead::AeadInPlace, KeyInit, Tag, XChaCha20Poly1305, XNonce};
+use core::fmt;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use hkdf::Hkdf;
 use hmac::{Hmac, Mac};
 use noticer_aetp::{PairwiseServiceAlias, ServiceBinding};
 use noticer_protocol::{KeyId, TokenId, WireServiceAlias, CIPHERTEXT_SIZE, SIGNED_PLAINTEXT_SIZE};
 use sha2::{Digest, Sha256};
-use std::fmt;
 use thiserror::Error;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -116,12 +118,18 @@ fn expand(
     epoch: u32,
 ) -> Result<[u8; 32], CryptoError> {
     let hkdf = Hkdf::<Sha256>::new(Some(b"NOTICER_AT_V2_HKDF_SALT"), root);
-    let mut info = Vec::with_capacity(domain.len() + 20);
-    info.extend_from_slice(domain);
-    info.extend_from_slice(&service.0);
-    info.extend_from_slice(&epoch.to_le_bytes());
+    let info_len = domain.len() + service.0.len() + core::mem::size_of::<u32>();
+    if info_len > 64 {
+        return Err(CryptoError::KeyDerivation);
+    }
+    let mut info = [0_u8; 64];
+    info[..domain.len()].copy_from_slice(domain);
+    let service_start = domain.len();
+    let epoch_start = service_start + service.0.len();
+    info[service_start..epoch_start].copy_from_slice(&service.0);
+    info[epoch_start..info_len].copy_from_slice(&epoch.to_le_bytes());
     let mut output = [0_u8; 32];
-    hkdf.expand(&info, &mut output)
+    hkdf.expand(&info[..info_len], &mut output)
         .map_err(|_| CryptoError::KeyDerivation)?;
     Ok(output)
 }
@@ -203,16 +211,17 @@ impl IssuerKeyMaterial {
     ) -> Result<[u8; CIPHERTEXT_SIZE], CryptoError> {
         let cipher = XChaCha20Poly1305::new_from_slice(self.aead_key.as_ref())
             .map_err(|_| CryptoError::InvalidKey)?;
-        let sealed = cipher
-            .encrypt(
+        let mut sealed = [0_u8; CIPHERTEXT_SIZE];
+        sealed[..SIGNED_PLAINTEXT_SIZE].copy_from_slice(plaintext);
+        let tag = cipher
+            .encrypt_in_place_detached(
                 XNonce::from_slice(nonce),
-                Payload {
-                    msg: plaintext,
-                    aad,
-                },
+                aad,
+                &mut sealed[..SIGNED_PLAINTEXT_SIZE],
             )
             .map_err(|_| CryptoError::Authentication)?;
-        sealed.try_into().map_err(|_| CryptoError::Authentication)
+        sealed[SIGNED_PLAINTEXT_SIZE..].copy_from_slice(&tag);
+        Ok(sealed)
     }
 }
 
@@ -249,18 +258,18 @@ impl VerifierKeyMaterial {
         aad: &[u8],
         ciphertext: &[u8],
     ) -> Result<[u8; SIGNED_PLAINTEXT_SIZE], CryptoError> {
+        if ciphertext.len() != CIPHERTEXT_SIZE {
+            return Err(CryptoError::Authentication);
+        }
         let cipher = XChaCha20Poly1305::new_from_slice(self.aead_key.as_ref())
             .map_err(|_| CryptoError::InvalidKey)?;
-        let opened = cipher
-            .decrypt(
-                XNonce::from_slice(nonce),
-                Payload {
-                    msg: ciphertext,
-                    aad,
-                },
-            )
+        let mut opened = [0_u8; SIGNED_PLAINTEXT_SIZE];
+        opened.copy_from_slice(&ciphertext[..SIGNED_PLAINTEXT_SIZE]);
+        let tag = Tag::from_slice(&ciphertext[SIGNED_PLAINTEXT_SIZE..]);
+        cipher
+            .decrypt_in_place_detached(XNonce::from_slice(nonce), aad, &mut opened, tag)
             .map_err(|_| CryptoError::Authentication)?;
-        opened.try_into().map_err(|_| CryptoError::Authentication)
+        Ok(opened)
     }
 
     pub fn verify(&self, message: &[u8], signature: &[u8; 64]) -> Result<(), CryptoError> {
