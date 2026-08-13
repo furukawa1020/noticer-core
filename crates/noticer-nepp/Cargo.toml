@@ -1,0 +1,15 @@
+[package]
+name = "noticer-nepp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+noticer-provenance.workspace = true
+p256.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
