@@ -23,6 +23,7 @@ members = [
   "crates/noticer-menfugu-firmware",
   "crates/noticer-ble-host",
   "crates/noticer-k4-demo",
+  "crates/noticer-provenance",
 ]
 
 [workspace.package]
@@ -44,6 +45,7 @@ noticer-trace-shaper = { path = "crates/noticer-trace-shaper" }
 noticer-aetp-sim = { path = "crates/noticer-aetp-sim" }
 noticer-token = { path = "crates/noticer-token" }
 noticer-verifier = { path = "crates/noticer-verifier" }
+noticer-provenance = { path = "crates/noticer-provenance" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 hkdf = "0.12"
