@@ -25,6 +25,7 @@ members = [
   "crates/noticer-k4-demo",
     "crates/noticer-provenance",
     "crates/noticer-acquisition-core",
+    "crates/noticer-ppg-features",
 ]
 
 [workspace.package]
@@ -48,6 +49,7 @@ noticer-token = { path = "crates/noticer-token" }
 noticer-verifier = { path = "crates/noticer-verifier" }
 noticer-provenance = { path = "crates/noticer-provenance" }
 noticer-acquisition-core = { path = "crates/noticer-acquisition-core" }
+noticer-ppg-features = { path = "crates/noticer-ppg-features" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 hkdf = "0.12"

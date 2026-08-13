@@ -852,6 +852,7 @@ dependencies = [
 name = "noticer-acquisition-core"
 version = "0.1.0"
 dependencies = [
+ "noticer-ppg-features",
  "noticer-provenance",
  "proptest",
  "serde",
@@ -1017,6 +1018,15 @@ dependencies = [
  "noticer-protocol",
  "noticer-transport-core",
  "noticer-verifier-core",
+]
+
+[[package]]
+name = "noticer-ppg-features"
+version = "0.1.0"
+dependencies = [
+ "noticer-baseline",
+ "proptest",
+ "thiserror 2.0.20",
 ]
 
 [[package]]
