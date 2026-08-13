@@ -1034,6 +1034,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-pipeline-measurement"
+version = "0.1.0"
+dependencies = [
+ "hmac",
+ "noticer-provenance",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-ppg-features"
 version = "0.1.0"
 dependencies = [
