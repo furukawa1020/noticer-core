@@ -13,7 +13,8 @@ members = [
   "crates/noticer-trace-shaper",
   "crates/noticer-aetp-sim",
   "crates/noticer-aetp-demo",
-  "crates/noticer-token",
+    "crates/noticer-token",
+    "crates/noticer-verifier",
 ]
 
 [workspace.package]
@@ -34,6 +35,7 @@ noticer-aetp = { path = "crates/noticer-aetp" }
 noticer-trace-shaper = { path = "crates/noticer-trace-shaper" }
 noticer-aetp-sim = { path = "crates/noticer-aetp-sim" }
 noticer-token = { path = "crates/noticer-token" }
+noticer-verifier = { path = "crates/noticer-verifier" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 hkdf = "0.12"

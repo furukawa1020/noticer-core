@@ -629,6 +629,21 @@ name = "noticer-types"
 version = "0.1.0"
 
 [[package]]
+name = "noticer-verifier"
+version = "0.1.0"
+dependencies = [
+ "noticer-aetp",
+ "noticer-crypto",
+ "noticer-protocol",
+ "noticer-token",
+ "noticer-trace-shaper",
+ "noticer-types",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
