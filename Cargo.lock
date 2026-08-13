@@ -1018,6 +1018,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-provenance"
+version = "0.1.0"
+dependencies = [
+ "noticer-types",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-release"
 version = "0.1.0"
 dependencies = [
