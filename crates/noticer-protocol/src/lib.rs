@@ -16,6 +16,7 @@ pub const SIGNED_PLAINTEXT_SIZE: usize = INNER_BODY_SIZE + SIGNATURE_SIZE;
 pub const CIPHERTEXT_SIZE: usize = SIGNED_PLAINTEXT_SIZE + 16;
 pub const ENVELOPE_SIZE: usize = OUTER_HEADER_SIZE + CIPHERTEXT_SIZE;
 const _: [(); 236] = [(); ENVELOPE_SIZE];
+const _: () = assert!(ENVELOPE_SIZE <= 244);
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct KeyId(pub [u8; 8]);
@@ -230,7 +231,6 @@ mod tests {
     #[test]
     fn envelope_is_ble_att_compatible_and_fixed() {
         assert_eq!(ENVELOPE_SIZE, 236);
-        assert!(ENVELOPE_SIZE <= 244);
     }
 
     proptest! {

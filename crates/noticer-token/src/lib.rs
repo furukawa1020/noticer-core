@@ -43,10 +43,12 @@ use std::{
 };
 use thiserror::Error;
 
+type NonceIdentity = (ServiceBinding, u32, u32, [u8; 24]);
+
 pub struct TokenIssuer {
     epoch: u32,
     keys: BTreeMap<ServiceBinding, IssuerKeyMaterial>,
-    used_nonces: Mutex<BTreeSet<(ServiceBinding, u32, u32, [u8; 24])>>,
+    used_nonces: Mutex<BTreeSet<NonceIdentity>>,
 }
 
 impl TokenIssuer {

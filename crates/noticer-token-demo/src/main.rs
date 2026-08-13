@@ -103,7 +103,6 @@ struct ClassWitness {
 fn main() -> Result<(), Box<dyn Error>> {
     let (config_path, output_path) = arguments()?;
     let config: DemoConfig = toml::from_str(&fs::read_to_string(config_path)?)?;
-    let output_path = PathBuf::from(output_path);
     fs::create_dir_all(&output_path)?;
 
     let context = default_public_context();
