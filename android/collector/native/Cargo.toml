@@ -1,0 +1,15 @@
+[package]
+name = "noticer-android-bridge"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Bounded JNI ingress for Noticer's private Android acquisition path"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+jni = { version = "0.21.1", default-features = false }
+
+[workspace]
+
