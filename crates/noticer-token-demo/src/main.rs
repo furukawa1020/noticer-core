@@ -177,6 +177,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             "schema": "noticer-k3-artifact-v1",
             "primitive": "Action-Equivalent Trace Privacy",
             "protocol": "Atypicality Token v2",
+            "provenance_mode": "LAB_UNATTESTED",
             "pair_count": pairs.len(),
             "equivalence_classes": EQUIVALENCE_CLASS_COUNT,
             "full_crypto_trace_classes": class_witnesses.len(),

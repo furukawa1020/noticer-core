@@ -2,8 +2,10 @@
 
 //! Fixed-size, signed, encrypted ATv2 frame issuance.
 //!
-//! The issuer accepts only low-side public frame identities and admitted action
-//! obligations. Biosignal histories and `EvidencePermit` are not dependencies.
+//! `ProductionTokenIssuer` is the production entry point. It emits an action
+//! only after consuming the opaque conjunction of a K1 evidence permit and a
+//! validated NPL1 lease. The low-level `TokenIssuer` can issue actions only
+//! when the explicit `lab-unattested` feature is enabled.
 //!
 //! Schedule randomness cannot be substituted for cryptographic root material:
 //!
@@ -25,16 +27,30 @@
 //!     let _ = issuer.issue_action_frame(permit);
 //! }
 //! ```
+//!
+//! A production caller cannot directly issue an action without first arming
+//! the issuer with a sealed production admission:
+//!
+//! ```compile_fail
+//! use noticer_token::ProductionTokenIssuer;
+//!
+//! fn bypass(issuer: &ProductionTokenIssuer) {
+//!     let _ = issuer.issue_action_frame();
+//! }
+//! ```
 
 use noticer_aetp::{ActionObligation, ClaimBound, ServiceBinding};
 use noticer_crypto::{
     derive_issuer_keys, CryptoError, CryptographicRootSecret, IssuerKeyMaterial,
     VerifierKeyMaterial,
 };
+use noticer_evidence_bridge::ProductionAdmission;
+use noticer_nepp::PairwiseServiceAlias;
 use noticer_protocol::{
     AtypicalityTokenEnvelope, FrameKind, InnerBody, OuterHeader, CIPHERTEXT_SIZE, ENVELOPE_SIZE,
     INNER_BODY_SIZE, OUTER_HEADER_SIZE, SIGNATURE_SIZE, SIGNED_PLAINTEXT_SIZE,
 };
+use noticer_provenance::{dominates, AssuranceProfile, PipelineMeasurementHash, ProvenanceMode};
 use noticer_trace_shaper::{FrameIssueError, FrameIssuer, PublicFrameIdentity};
 use sha2::{Digest, Sha256};
 use std::{
@@ -89,7 +105,7 @@ impl TokenIssuer {
         self.issue(identity, None)
     }
 
-    pub fn issue_action_frame(
+    fn issue_action_frame_authorized(
         &self,
         identity: PublicFrameIdentity,
         obligation: &ActionObligation,
@@ -105,6 +121,23 @@ impl TokenIssuer {
             return Err(TokenIssueError::InvalidPublicInput);
         }
         self.issue(identity, Some((obligation, claim_bound)))
+    }
+
+    /// Research-only action issuance. Enabling this feature must be recorded
+    /// as `LAB_UNATTESTED` in every generated artifact.
+    #[cfg(feature = "lab-unattested")]
+    pub fn issue_action_frame(
+        &self,
+        identity: PublicFrameIdentity,
+        obligation: &ActionObligation,
+        claim_bound: ClaimBound,
+    ) -> Result<AtypicalityTokenEnvelope, TokenIssueError> {
+        self.issue_action_frame_authorized(identity, obligation, claim_bound)
+    }
+
+    #[cfg(feature = "lab-unattested")]
+    pub const fn provenance_artifact_label(&self) -> &'static str {
+        "LAB_UNATTESTED"
     }
 
     fn issue(
@@ -183,6 +216,200 @@ impl TokenIssuer {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ProductionBindings {
+    pub service: ServiceBinding,
+    pub lease_service_alias: PairwiseServiceAlias,
+    pub public_epoch: u32,
+    pub pipeline: PipelineMeasurementHash,
+    pub policy_hash: noticer_types::PolicyHash,
+    pub minimum_assurance: AssuranceProfile,
+}
+
+pub struct ProductionTokenIssuer {
+    inner: TokenIssuer,
+    bindings: ProductionBindings,
+    atv2_issuer_key_id: [u8; 8],
+    pending: Mutex<Option<ArmedAdmission>>,
+}
+
+impl ProductionTokenIssuer {
+    pub fn new(
+        root: CryptographicRootSecret,
+        bindings: ProductionBindings,
+    ) -> Result<Self, TokenIssueError> {
+        let inner = TokenIssuer::new(root, bindings.public_epoch, &[bindings.service])?;
+        let atv2_issuer_key_id = inner
+            .verifier_material(bindings.service)
+            .ok_or(TokenIssueError::InvalidPublicInput)?
+            .key_id()
+            .0;
+        Ok(Self {
+            inner,
+            bindings,
+            atv2_issuer_key_id,
+            pending: Mutex::new(None),
+        })
+    }
+
+    pub const fn mode(&self) -> ProvenanceMode {
+        ProvenanceMode::ProductionRequired
+    }
+
+    pub const fn provenance_artifact_label(&self) -> &'static str {
+        "PRODUCTION_REQUIRED"
+    }
+
+    pub fn verifier_material(&self) -> Option<VerifierKeyMaterial> {
+        self.inner.verifier_material(self.bindings.service)
+    }
+
+    pub fn issue_cover_frame(
+        &self,
+        identity: PublicFrameIdentity,
+    ) -> Result<AtypicalityTokenEnvelope, TokenIssueError> {
+        self.inner.issue_cover_frame(identity)
+    }
+
+    pub fn arm(&self, admission: ProductionAdmission) -> Result<(), ProductionGuardError> {
+        let claims = admission.lease_claims();
+        if claims.service_alias != self.bindings.lease_service_alias {
+            return Err(ProductionGuardError::WrongService);
+        }
+        if claims.public_epoch != self.bindings.public_epoch {
+            return Err(ProductionGuardError::WrongEpoch);
+        }
+        if claims.atv2_issuer_key_id != self.atv2_issuer_key_id {
+            return Err(ProductionGuardError::WrongAtv2Key);
+        }
+        if claims.pipeline != self.bindings.pipeline {
+            return Err(ProductionGuardError::WrongPipeline);
+        }
+        if claims.policy_hash != self.bindings.policy_hash.0
+            || admission.policy_hash() != self.bindings.policy_hash
+        {
+            return Err(ProductionGuardError::WrongPolicy);
+        }
+        if claims.assurance != admission.actual_assurance().digest()
+            || !dominates(
+                &admission.actual_assurance(),
+                &self.bindings.minimum_assurance,
+            )
+        {
+            return Err(ProductionGuardError::AssuranceBelowMinimum);
+        }
+        let armed = ArmedAdmission {
+            action: admission.action(),
+            policy_hash: admission.policy_hash(),
+            evidence_issued_slot: admission.issued_slot(),
+            evidence_expires_slot: admission.expires_slot(),
+            lease_issued_slot: claims.issued_public_slot,
+            lease_expires_slot: claims.expires_public_slot,
+        };
+        let mut pending = self
+            .pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if pending.is_some() {
+            return Err(ProductionGuardError::AdmissionAlreadyArmed);
+        }
+        *pending = Some(armed);
+        Ok(())
+    }
+
+    pub fn has_pending_admission(&self) -> bool {
+        self.pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .is_some()
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ArmedAdmission {
+    action: noticer_types::ActionCode,
+    policy_hash: noticer_types::PolicyHash,
+    evidence_issued_slot: noticer_types::LogicalSlot,
+    evidence_expires_slot: noticer_types::LogicalSlot,
+    lease_issued_slot: u32,
+    lease_expires_slot: u32,
+}
+
+impl ArmedAdmission {
+    fn permits(self, identity: PublicFrameIdentity, obligation: &ActionObligation) -> bool {
+        let Ok(public_bucket) = u32::try_from(obligation.public_bucket.0) else {
+            return false;
+        };
+        let Ok(public_slot) = u32::try_from(identity.absolute_slot.0) else {
+            return false;
+        };
+        identity.service == obligation.service
+            && identity.public_epoch > 0
+            && identity.public_bucket == public_bucket
+            && identity.absolute_slot >= obligation.release_window_start
+            && identity.absolute_slot <= obligation.release_deadline
+            && obligation.max_uses == 1
+            && obligation.action == self.action
+            && obligation.policy_hash == self.policy_hash
+            && identity.absolute_slot >= self.evidence_issued_slot
+            && identity.absolute_slot <= self.evidence_expires_slot
+            && public_slot >= self.lease_issued_slot
+            && public_slot < self.lease_expires_slot
+    }
+}
+
+impl FrameIssuer for ProductionTokenIssuer {
+    fn frame_length(&self) -> usize {
+        ENVELOPE_SIZE
+    }
+
+    fn issue_cover(&self, identity: PublicFrameIdentity) -> Result<Vec<u8>, FrameIssueError> {
+        self.inner
+            .issue_cover_frame(identity)
+            .map(|token| token.0.to_vec())
+            .map_err(|_| FrameIssueError)
+    }
+
+    fn issue_action(
+        &self,
+        identity: PublicFrameIdentity,
+        obligation: &ActionObligation,
+        claim_bound: ClaimBound,
+    ) -> Result<Vec<u8>, FrameIssueError> {
+        let admission = self
+            .pending
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .take();
+        if admission.is_none_or(|armed| !armed.permits(identity, obligation)) {
+            return self.issue_cover(identity);
+        }
+        self.inner
+            .issue_action_frame_authorized(identity, obligation, claim_bound)
+            .map(|token| token.0.to_vec())
+            .map_err(|_| FrameIssueError)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+pub enum ProductionGuardError {
+    #[error("NPL1 service binding does not match the production issuer")]
+    WrongService,
+    #[error("NPL1 epoch does not match the production issuer")]
+    WrongEpoch,
+    #[error("NPL1 ATv2 key does not match the production issuer")]
+    WrongAtv2Key,
+    #[error("NPL1 pipeline does not match production policy")]
+    WrongPipeline,
+    #[error("K1/NPL1 policy does not match production policy")]
+    WrongPolicy,
+    #[error("appraised assurance is below production policy")]
+    AssuranceBelowMinimum,
+    #[error("an unconsumed production admission is already armed")]
+    AdmissionAlreadyArmed,
+}
+
+#[cfg(feature = "lab-unattested")]
 impl FrameIssuer for TokenIssuer {
     fn frame_length(&self) -> usize {
         ENVELOPE_SIZE
@@ -272,7 +499,7 @@ mod tests {
             policy_hash: PolicyHash([4; 32]),
         };
         let action = issuer
-            .issue_action_frame(
+            .issue_action_frame_authorized(
                 identity(service, 2),
                 &obligation,
                 required_claim(obligation.action),

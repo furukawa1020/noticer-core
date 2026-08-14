@@ -15,5 +15,5 @@ serde_json = "1"
 thiserror.workspace = true
 
 [dev-dependencies]
-noticer-token.workspace = true
+noticer-token = { workspace = true, features = ["lab-unattested"] }
 noticer-trace-shaper.workspace = true

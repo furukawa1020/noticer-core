@@ -4,16 +4,36 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+default = []
+lab-unattested = []
+
 [dependencies]
 noticer-aetp.workspace = true
 noticer-crypto.workspace = true
+noticer-evidence-bridge.workspace = true
+noticer-nepp.workspace = true
 noticer-protocol.workspace = true
+noticer-provenance.workspace = true
 noticer-trace-shaper.workspace = true
 noticer-types.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+noticer-acquisition-core.workspace = true
+noticer-baseline.workspace = true
+noticer-ble-host = { path = "../noticer-ble-host" }
 noticer-evidence.workspace = true
+noticer-menfugu-core = { path = "../noticer-menfugu-core" }
+noticer-menfugu-firmware = { path = "../noticer-menfugu-firmware" }
+noticer-ppg-features.workspace = true
+noticer-provenance-lease.workspace = true
+noticer-provenance-verifier.workspace = true
+noticer-release.workspace = true
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-transport-sim = { path = "../noticer-transport-sim" }
+noticer-verifier.workspace = true
 proptest.workspace = true
+rand_core.workspace = true
 trybuild.workspace = true

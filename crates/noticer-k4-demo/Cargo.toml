@@ -14,7 +14,7 @@ noticer-crypto = { path = "../noticer-crypto" }
 noticer-menfugu-core = { path = "../noticer-menfugu-core" }
 noticer-menfugu-firmware = { path = "../noticer-menfugu-firmware" }
 noticer-protocol = { path = "../noticer-protocol" }
-noticer-token = { path = "../noticer-token" }
+noticer-token = { path = "../noticer-token", features = ["lab-unattested"] }
 noticer-trace-shaper = { path = "../noticer-trace-shaper" }
 noticer-transport-core = { path = "../noticer-transport-core" }
 noticer-transport-sim = { path = "../noticer-transport-sim" }
