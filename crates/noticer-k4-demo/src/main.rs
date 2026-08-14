@@ -69,6 +69,7 @@ struct Summary {
     both_authorized: bool,
     execution_trace_equal: bool,
     replay_rejected_without_actuation: bool,
+    provenance_mode: &'static str,
     tier_a: &'static str,
     tier_b: &'static str,
 }
@@ -227,6 +228,7 @@ fn run() -> Result<(), String> {
         both_authorized: receiver_a.authorized && receiver_b.authorized,
         execution_trace_equal: execution_equal,
         replay_rejected_without_actuation: receiver_a.replay_rejected && receiver_b.replay_rejected,
+        provenance_mode: issuer_a.provenance_artifact_label(),
         tier_a: "VERIFIED",
         tier_b: "NOT_VERIFIED",
     };

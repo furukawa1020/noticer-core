@@ -13,10 +13,12 @@ use std::fmt;
 use noticer_acquisition_core::{PrivateFeatureWindow, SessionId, SessionPhase};
 use noticer_baseline::{ContextKey, PrivateObservation, SignalQuality};
 use noticer_evidence::{
-    EmpiricalOnly, EvidenceDecision, EvidenceEngine, EvidencePermit, ExchangeabilityAssumed,
-    NoPermitReason,
+    EmpiricalOnly, EvidenceDecision, EvidenceEngine, EvidenceEpochId, EvidencePermit,
+    ExchangeabilityAssumed, NoPermitReason,
 };
-use noticer_types::LogicalSlot;
+use noticer_provenance::AssuranceProfile;
+use noticer_provenance_lease::{LeaseClaims, ValidatedProvenanceLease};
+use noticer_types::{ActionCode, LogicalSlot, PolicyHash};
 use rand_core::RngCore;
 use thiserror::Error;
 
@@ -166,6 +168,48 @@ impl EvidenceBridge {
     pub const fn has_pending_internal_permit(&self) -> bool {
         self.pending_permit.is_some()
     }
+
+    /// Consumes both the private K1 permit and an already validated NPL1 lease.
+    /// Neither input can be recovered or reused after this call.
+    pub fn take_production_admission(
+        &mut self,
+        lease: ValidatedProvenanceLease,
+        actual_assurance: AssuranceProfile,
+    ) -> Result<ProductionAdmission, ProductionAdmissionError> {
+        let pending = self
+            .pending_permit
+            .take()
+            .ok_or(ProductionAdmissionError::MissingEvidencePermit)?;
+        let (action, policy_hash, issued_slot, expires_slot, evidence_epoch, guarantee) =
+            pending.into_admission_parts();
+        let lease_claims = lease.claims();
+        if action == ActionCode::NoAction {
+            return Err(ProductionAdmissionError::InvalidEvidenceAuthority);
+        }
+        if policy_hash.0 != lease_claims.policy_hash {
+            return Err(ProductionAdmissionError::PolicyMismatch);
+        }
+        if actual_assurance.digest() != lease_claims.assurance {
+            return Err(ProductionAdmissionError::AssuranceDigestMismatch);
+        }
+        if issued_slot.0 > expires_slot.0
+            || issued_slot.0 >= u64::from(lease_claims.expires_public_slot)
+            || u64::from(lease_claims.issued_public_slot) > expires_slot.0
+        {
+            return Err(ProductionAdmissionError::DisjointValidityWindow);
+        }
+        Ok(ProductionAdmission {
+            action,
+            policy_hash,
+            issued_slot,
+            expires_slot,
+            evidence_epoch,
+            guarantee,
+            lease_claims,
+            actual_assurance,
+            _private: (),
+        })
+    }
 }
 
 impl fmt::Debug for EvidenceBridge {
@@ -203,6 +247,99 @@ impl PendingEvidencePermit {
             Self::Empirical(_) => "empirical_only",
         }
     }
+
+    fn into_admission_parts(
+        self,
+    ) -> (
+        ActionCode,
+        PolicyHash,
+        LogicalSlot,
+        LogicalSlot,
+        EvidenceEpochId,
+        &'static str,
+    ) {
+        match self {
+            Self::AssumptionBound(permit) => permit.consume().into_admission_parts(),
+            Self::Empirical(permit) => permit.consume().into_admission_parts(),
+        }
+    }
+}
+
+/// Opaque, single-owner authority proving that K1 evidence and a validated
+/// provenance lease agreed on the allowed action policy.
+#[must_use]
+pub struct ProductionAdmission {
+    action: ActionCode,
+    policy_hash: PolicyHash,
+    issued_slot: LogicalSlot,
+    expires_slot: LogicalSlot,
+    evidence_epoch: EvidenceEpochId,
+    guarantee: &'static str,
+    lease_claims: LeaseClaims,
+    actual_assurance: AssuranceProfile,
+    _private: (),
+}
+
+impl ProductionAdmission {
+    pub const fn action(&self) -> ActionCode {
+        self.action
+    }
+
+    pub const fn policy_hash(&self) -> PolicyHash {
+        self.policy_hash
+    }
+
+    pub const fn issued_slot(&self) -> LogicalSlot {
+        self.issued_slot
+    }
+
+    pub const fn expires_slot(&self) -> LogicalSlot {
+        self.expires_slot
+    }
+
+    pub const fn evidence_epoch(&self) -> EvidenceEpochId {
+        self.evidence_epoch
+    }
+
+    pub const fn guarantee_class(&self) -> &'static str {
+        self.guarantee
+    }
+
+    pub const fn lease_claims(&self) -> LeaseClaims {
+        self.lease_claims
+    }
+
+    pub const fn actual_assurance(&self) -> AssuranceProfile {
+        self.actual_assurance
+    }
+}
+
+impl fmt::Debug for ProductionAdmission {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ProductionAdmission")
+            .field("action", &self.action)
+            .field("issued_slot", &self.issued_slot)
+            .field("expires_slot", &self.expires_slot)
+            .field("guarantee", &self.guarantee)
+            .field("provenance", &"VALIDATED")
+            .field("private_evidence", &"REDACTED")
+            .finish()
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
+pub enum ProductionAdmissionError {
+    #[error("no unconsumed K1 evidence permit is available")]
+    MissingEvidencePermit,
+    #[error("K1 evidence authority cannot authorize an action")]
+    InvalidEvidenceAuthority,
+    #[error("K1 and NPL1 policy bindings differ")]
+    PolicyMismatch,
+    #[error("the supplied assurance profile does not match NPL1")]
+    AssuranceDigestMismatch,
+    #[error("K1 and NPL1 validity windows do not overlap")]
+    DisjointValidityWindow,
 }
 
 #[derive(Clone, Copy, Debug, Eq, Error, PartialEq)]
@@ -223,7 +360,6 @@ mod tests {
     };
     use noticer_evidence::{ContextConfig, EngineConfig, EvidenceConfig, PersistenceConfig};
     use noticer_ppg_features::FeatureSchema;
-    use noticer_types::{ActionCode, PolicyHash};
     use rand_core::impls;
 
     struct FixedRng(u64);
