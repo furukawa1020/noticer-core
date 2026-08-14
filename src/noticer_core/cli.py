@@ -20,6 +20,7 @@ from noticer_core.attacks.aetp import AetpAttackResult, run_aetp_attack
 from noticer_core.attacks.identity import AttackResult, run_identity_attack
 from noticer_core.data.aetp_synthetic import AetpSyntheticConfig, generate_aetp_dataset
 from noticer_core.data.synthetic import SyntheticConfig, generate_identity_dataset
+from noticer_core.evaluation.provenance_attacks import run_provenance_experiment
 from noticer_core.evaluation.splits import aetp_session_disjoint_split, session_disjoint_split
 
 
@@ -186,6 +187,9 @@ def build_parser() -> argparse.ArgumentParser:
     aetp = attack.add_parser("aetp")
     aetp.add_argument("--config", type=Path, required=True)
     aetp.add_argument("--output-dir", type=Path)
+    provenance = attack.add_parser("provenance")
+    provenance.add_argument("--config", type=Path, required=True)
+    provenance.add_argument("--output-dir", type=Path)
     return parser
 
 
@@ -195,8 +199,10 @@ def main(argv: list[str] | None = None) -> int:
         args = build_parser().parse_args(argv)
         if args.attack == "identity":
             result = run_identity_experiment(args.config, args.output_dir)
-        else:
+        elif args.attack == "aetp":
             result = run_aetp_experiment(args.config, args.output_dir)
+        else:
+            result = run_provenance_experiment(args.config, args.output_dir)
     except (KeyError, TypeError, ValueError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -207,11 +213,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"primary balanced accuracy: {result['primary']['balanced_accuracy']:.6f}")
         print(f"control balanced accuracy: {result['control']['balanced_accuracy']:.6f}")
         print(f"chance accuracy: {result['primary']['chance_accuracy']:.6f}")
-    else:
+    elif args.attack == "aetp":
         print(f"counterfactual pairs: {result['summary']['n_pairs']}")
         print(f"AETP ROC-AUC: {result['metrics']['aetp']['roc_auc']:.6f}")
         print(f"AETP excess AUC: {result['metrics']['aetp']['excess_auc']:.6f}")
         print(f"all criteria passed: {result['metrics']['protocol']['all_criteria_passed']}")
+    else:
+        print(f"counterfactual pairs: {result['summary']['n_pairs']}")
+        print(f"leaky baselines passing: {result['criteria']['leaky_baselines_passing']}")
+        print(f"AEPA maximum upper CI: {result['criteria']['aepa_max_auc_ci_high']:.6f}")
+        print(f"unauthorized actions: {result['criteria']['unauthorized_action_count']}")
+        print(f"all criteria passed: {result['criteria']['all_criteria_passed']}")
     print(f"artifact directory: {result['directory']}")
     return 0
 

@@ -1,0 +1,15 @@
+experiment:
+  seed: 250811
+  artifact_root: artifacts/k5_provenance_attacks
+synthetic:
+  n_pairs: 96
+attack:
+  validation_fraction: 0.2
+  test_fraction: 0.2
+  bootstrap_samples: 100
+  source_trials: 64
+criteria:
+  leaky_baseline_min_auc: 0.80
+  aepa_max_auc_ci_high: 0.60
+output:
+  note: synthetic implementation smoke only; not scientific deployment evidence
