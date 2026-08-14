@@ -1175,6 +1175,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-provenance-sim"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "csv",
+ "noticer-acquisition-core",
+ "noticer-aetp",
+ "noticer-baseline",
+ "noticer-crypto",
+ "noticer-evidence",
+ "noticer-evidence-bridge",
+ "noticer-nepp",
+ "noticer-ppg-features",
+ "noticer-protocol",
+ "noticer-provenance",
+ "noticer-provenance-lease",
+ "noticer-provenance-verifier",
+ "noticer-release",
+ "noticer-token",
+ "noticer-trace-shaper",
+ "noticer-transport-core",
+ "noticer-transport-sim",
+ "noticer-types",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-provenance-verifier"
 version = "0.1.0"
 dependencies = [

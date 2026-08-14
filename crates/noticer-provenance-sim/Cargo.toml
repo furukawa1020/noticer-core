@@ -1,0 +1,33 @@
+[package]
+name = "noticer-provenance-sim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+clap.workspace = true
+csv.workspace = true
+noticer-acquisition-core.workspace = true
+noticer-aetp.workspace = true
+noticer-baseline.workspace = true
+noticer-crypto.workspace = true
+noticer-evidence.workspace = true
+noticer-evidence-bridge.workspace = true
+noticer-nepp.workspace = true
+noticer-ppg-features.workspace = true
+noticer-protocol.workspace = true
+noticer-provenance.workspace = true
+noticer-provenance-lease.workspace = true
+noticer-provenance-verifier.workspace = true
+noticer-release.workspace = true
+noticer-token.workspace = true
+noticer-trace-shaper.workspace = true
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-transport-sim = { path = "../noticer-transport-sim" }
+noticer-types.workspace = true
+rand_core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
