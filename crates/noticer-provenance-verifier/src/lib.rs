@@ -241,6 +241,7 @@ impl ProvenanceAppraiser {
             service_alias: verified.claims().service_alias,
             epoch: verified.claims().epoch,
             atv2_issuer_key_id: verified.claims().atv2_issuer_key_id,
+            collector_session_public_key_hash: verified.claims().collector_session_public_key_hash,
             policy_hash: verified.claims().policy_hash,
             created_public_slot: verified.claims().created_public_slot,
             expires_public_slot: verified.claims().expires_public_slot,
@@ -386,6 +387,7 @@ pub struct AppraisedProvenance {
     service_alias: PairwiseServiceAlias,
     epoch: u64,
     atv2_issuer_key_id: [u8; 8],
+    collector_session_public_key_hash: [u8; 32],
     policy_hash: [u8; 32],
     created_public_slot: u64,
     expires_public_slot: u64,
@@ -417,6 +419,10 @@ impl AppraisedProvenance {
         self.atv2_issuer_key_id
     }
 
+    pub const fn collector_session_public_key_hash(&self) -> [u8; 32] {
+        self.collector_session_public_key_hash
+    }
+
     pub const fn policy_hash(&self) -> [u8; 32] {
         self.policy_hash
     }
@@ -440,6 +446,7 @@ impl fmt::Debug for AppraisedProvenance {
             .field("service_alias", &self.service_alias)
             .field("epoch", &self.epoch)
             .field("atv2_issuer_key_id", &self.atv2_issuer_key_id)
+            .field("collector_session_public_key_hash", &"REDACTED")
             .field("policy_hash", &"REDACTED")
             .field("created_public_slot", &self.created_public_slot)
             .field("expires_public_slot", &self.expires_public_slot)

@@ -1,0 +1,18 @@
+[package]
+name = "noticer-provenance-lease"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ed25519-dalek.workspace = true
+noticer-nepp.workspace = true
+noticer-provenance.workspace = true
+noticer-provenance-verifier.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+

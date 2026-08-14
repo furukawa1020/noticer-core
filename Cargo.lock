@@ -1160,6 +1160,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-provenance-lease"
+version = "0.1.0"
+dependencies = [
+ "ed25519-dalek",
+ "noticer-nepp",
+ "noticer-provenance",
+ "noticer-provenance-verifier",
+ "proptest",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "noticer-provenance-verifier"
 version = "0.1.0"
 dependencies = [
