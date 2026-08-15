@@ -54,9 +54,7 @@ class PolarBleSdkAdapter(context: Context) : PolarSdkPort {
             )
         }
 
-    override suspend fun stop(deviceId: String, kind: StreamKind) {
-        api.stopStreaming(deviceId, kind.toPolarType())
-    }
+    override suspend fun stop(deviceId: String, kind: StreamKind) = Unit
 
     override suspend fun disconnect(deviceId: String) {
         api.disconnectFromDevice(deviceId)
@@ -87,4 +85,3 @@ class PolarBleSdkAdapter(context: Context) : PolarSdkPort {
         },
     )
 }
-
