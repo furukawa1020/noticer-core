@@ -33,6 +33,7 @@ members = [
   "crates/noticer-provenance-lease",
     "crates/noticer-provenance-sim",
     "crates/noticer-k5-demo",
+    "crates/quotient-forge-syntax",
 ]
 
 [workspace.package]
@@ -63,6 +64,7 @@ noticer-nepp = { path = "crates/noticer-nepp" }
 noticer-provenance-verifier = { path = "crates/noticer-provenance-verifier" }
 noticer-provenance-lease = { path = "crates/noticer-provenance-lease" }
 noticer-provenance-sim = { path = "crates/noticer-provenance-sim" }
+quotient-forge-syntax = { path = "crates/quotient-forge-syntax" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }
