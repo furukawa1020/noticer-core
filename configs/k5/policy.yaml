@@ -1,0 +1,18 @@
+schema: noticer-k5-policy-v1
+production_requires:
+  - evidence_permit
+  - validated_npl1
+  - active_lease
+  - profile_binding
+  - key_binding
+scenarios:
+  - valid
+  - no_lease
+  - expired
+  - downgrade
+  - wrong_key
+  - replay
+  - lab_unattested
+invalid_behavior: rejected_cover
+authorized_action_limit: 1
+

@@ -31,7 +31,8 @@ members = [
     "crates/noticer-nepp",
     "crates/noticer-provenance-verifier",
   "crates/noticer-provenance-lease",
-  "crates/noticer-provenance-sim",
+    "crates/noticer-provenance-sim",
+    "crates/noticer-k5-demo",
 ]
 
 [workspace.package]

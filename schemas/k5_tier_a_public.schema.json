@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k5_tier_a_public.schema.json",
+  "title": "Noticer K5 Tier A public artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "seed",
+    "tier_a",
+    "decision",
+    "source_profile",
+    "private_field_count",
+    "all_software_gates_passed",
+    "all_scenarios_passed",
+    "pipeline",
+    "scenarios",
+    "lease_inspection",
+    "pipeline_inspection",
+    "hardware_tiers"
+  ],
+  "properties": {
+    "schema": {"const": "noticer-k5-tier-a-public-v1"},
+    "seed": {"type": "integer", "minimum": 0},
+    "tier_a": {"enum": ["VERIFIED", "FAILED"]},
+    "decision": {"enum": ["GO_TIER_A", "PIVOT", "KILL"]},
+    "source_profile": {"const": "synthetic-paired-commercial-sensor-v1"},
+    "private_field_count": {"const": 0},
+    "all_software_gates_passed": {"type": "boolean"},
+    "all_scenarios_passed": {"type": "boolean"},
+    "pipeline": {"type": "array", "minItems": 7},
+    "scenarios": {"type": "array", "minItems": 7, "maxItems": 7},
+    "lease_inspection": {"type": "object"},
+    "pipeline_inspection": {"type": "object"},
+    "hardware_tiers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["tier", "status", "evidence"],
+        "properties": {
+          "tier": {"enum": ["B", "C", "D"]},
+          "status": {"const": "NOT_VERIFIED"},
+          "evidence": {"type": "string"}
+        }
+      }
+    }
+  }
+}
+

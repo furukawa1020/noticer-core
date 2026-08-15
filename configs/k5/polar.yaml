@@ -1,0 +1,10 @@
+schema: noticer-k5-polar-profile-v1
+sdk_version: 8.1.0
+device_family: Polar Verity Sense
+source_ceiling: PairedCommercialSensor
+ppg_rate_hz: 55
+acc_rate_hz: 52
+sensor_signed_claim: forbidden
+skin_contact_as_sole_worn_detector: false
+hardware_status: NOT_VERIFIED
+

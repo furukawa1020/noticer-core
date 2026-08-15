@@ -1,0 +1,9 @@
+schema: noticer-k5-hardware-example-v1
+device_model: Polar Verity Sense
+device_id_env: NOTICER_POLAR_DEVICE_ID
+android_package: org.noticer.collector
+tier_b: NOT_VERIFIED
+tier_c: NOT_VERIFIED
+tier_d: NOT_VERIFIED
+notes: Replace only through local environment variables; never commit device identifiers or evidence.
+
