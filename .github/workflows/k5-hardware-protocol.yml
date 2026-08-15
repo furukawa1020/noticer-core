@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install test tools
-        run: python -m pip install pytest ruff
+        run: python -m pip install -e . pytest ruff
       - name: Test bounded artifact contract
         run: python -m pytest tests/test_k5_hardware_evidence.py
       - name: Lint protocol implementation
