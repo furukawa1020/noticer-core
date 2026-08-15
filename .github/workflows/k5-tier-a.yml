@@ -1,0 +1,53 @@
+name: K5 Tier A
+
+on:
+  pull_request:
+    paths:
+      - "crates/noticer-k5-demo/**"
+      - "crates/noticer-provenance-sim/**"
+      - "configs/k5/**"
+      - "configs/k4/**"
+      - "schemas/k5_tier_a_public.schema.json"
+      - "tools/run_k5_provenance.py"
+      - "tests/test_k5_runner.py"
+      - ".github/workflows/k5-tier-a.yml"
+  push:
+    branches: [main]
+    paths:
+      - "crates/noticer-k5-demo/**"
+      - "configs/k5/**"
+      - "tools/run_k5_provenance.py"
+      - ".github/workflows/k5-tier-a.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  tier-a:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install Python test dependencies
+        run: python -m pip install --disable-pip-version-check pytest PyYAML
+      - name: Test K5 demo crate
+        run: cargo test -p noticer-k5-demo
+      - name: Test runner contracts
+        run: python -m pytest tests/test_k5_runner.py
+      - name: Run reproducible Tier A pipeline
+        run: python tools/run_k5_provenance.py --output artifacts/k5/tier_a/ci
+      - name: Assert generated artifacts are not tracked
+        shell: bash
+        run: |
+          if git ls-files --error-unmatch artifacts/k5/tier_a/ci >/dev/null 2>&1; then
+            echo "generated Tier A artifacts must not be tracked"
+            exit 1
+          fi
+
