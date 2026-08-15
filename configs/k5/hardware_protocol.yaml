@@ -1,0 +1,103 @@
+protocol:
+  schema: noticer-k5-hardware-public-v1
+  version: K5-HW-1.0
+  default_status: NOT_VERIFIED
+  states:
+    - NOT_VERIFIED
+    - VERIFIED
+    - FAILED
+  ci_allowed_states:
+    - NOT_VERIFIED
+  verified_evidence_origin: PHYSICAL_MEASUREMENT
+
+preflight:
+  - equipment_available
+  - toolchain_ready
+  - consent_recorded
+  - safety_protocol_approved
+  - private_storage_ready
+  - stop_conditions_recorded
+
+privacy:
+  public_private_field_count: 0
+  forbidden_public_fields:
+    - raw_ppg
+    - ppg_samples
+    - raw_acc
+    - acc_samples
+    - baseline_values
+    - private_history
+    - device_id
+    - participant_id
+    - attestation_chain
+    - certificate_chain
+    - permit_signature
+    - lease_bytes
+    - token_bytes
+    - key_material
+    - consent_document
+
+tiers:
+  B:
+    issue: 39
+    status: NOT_VERIFIED
+    purpose: live Polar PPG and ACC acquisition
+    required_measurements:
+      - duration_seconds
+      - ppg_rate_hz
+      - acc_rate_hz
+      - polar_sdk_version
+      - firmware_recorded
+      - gap_count
+      - rollback_count
+      - window_count
+      - quality_pass_rate
+      - latency_ms_p95
+      - peak_memory_mb
+      - mean_cpu_percent
+      - battery_drop_percent
+      - k1_decision_count
+      - k1_live_input_confirmed
+  C:
+    issue: 37
+    status: NOT_VERIFIED
+    purpose: Android hardware attestation and production lease
+    required_measurements:
+      - fresh_challenge_used
+      - attestation_chain_validated
+      - security_level
+      - verified_boot
+      - device_locked
+      - app_identity_validated
+      - revocation_checked
+      - production_lease_issued
+      - stale_challenge_rejected
+      - replay_rejected
+      - downgrade_rejected
+      - wrong_app_rejected
+  D:
+    issue: 40
+    status: NOT_VERIFIED
+    purpose: live end-to-end action execution
+    required_measurements:
+      - live_ppg_received
+      - evidence_permit_issued
+      - production_lease_validated
+      - atv2_emitted
+      - aplot_verified
+      - menfugu_action_count
+      - replay_rejected
+      - unauthorized_action_count
+      - latency_ms_p95
+  S3:
+    issue: 41
+    status: NOT_VERIFIED
+    purpose: safe physical optical spoof evaluation
+    required_measurements:
+      - ethics_approved
+      - safe_fixture_used
+      - stop_conditions_observed
+      - safe_scenario_count
+      - false_permit_count
+      - false_action_count
+      - latency_ms_p95

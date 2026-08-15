@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/k5_hardware_evidence_public.schema.json",
+  "title": "K5 public hardware evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "protocol_version",
+    "tier",
+    "status",
+    "evidence_origin",
+    "public_run_id",
+    "private_field_count",
+    "preflight",
+    "measurements",
+    "measurement_bundle_sha256",
+    "status_reason"
+  ],
+  "properties": {
+    "schema": {"const": "noticer-k5-hardware-public-v1"},
+    "protocol_version": {"const": "K5-HW-1.0"},
+    "tier": {"enum": ["B", "C", "D", "S3"]},
+    "status": {"enum": ["NOT_VERIFIED", "VERIFIED", "FAILED"]},
+    "evidence_origin": {"enum": ["NONE", "CI", "PHYSICAL_MEASUREMENT"]},
+    "public_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+    },
+    "private_field_count": {"const": 0},
+    "preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "equipment_available",
+        "toolchain_ready",
+        "consent_recorded",
+        "safety_protocol_approved",
+        "private_storage_ready",
+        "stop_conditions_recorded"
+      ],
+      "properties": {
+        "equipment_available": {"type": "boolean"},
+        "toolchain_ready": {"type": "boolean"},
+        "consent_recorded": {"type": "boolean"},
+        "safety_protocol_approved": {"type": "boolean"},
+        "private_storage_ready": {"type": "boolean"},
+        "stop_conditions_recorded": {"type": "boolean"}
+      }
+    },
+    "measurements": {"type": "object"},
+    "measurement_bundle_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "status_reason": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "VERIFIED"}}},
+      "then": {
+        "properties": {
+          "evidence_origin": {"const": "PHYSICAL_MEASUREMENT"},
+          "measurement_bundle_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "status_reason": {"type": "null"}
+        }
+      }
+    }
+  ]
+}
