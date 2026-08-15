@@ -1,0 +1,45 @@
+contract_version = 1
+language_version = 1
+time_model = "public_logical_slots"
+default_optimization = "lexicographic"
+
+[limits]
+max_source_bytes = 1000000
+max_states = 256
+max_transitions = 100000
+max_horizon = 512
+max_observers = 16
+max_cegis_iterations = 10000
+max_solver_seconds = 300
+max_memory_mb = 4096
+
+[hard_constraints]
+action_quotient_noninterference = true
+authorized_action_delivery = true
+deadline_preservation = true
+unauthorized_action_count_zero = true
+bounded_fault_utility = true
+
+[hash_domains]
+ast = "QUOTIENT_FORGE_AST_V1"
+typed_ast = "QUOTIENT_FORGE_TYPED_AST_V1"
+ir = "QUOTIENT_FORGE_IR_V1"
+plant = "QUOTIENT_FORGE_PLANT_V1"
+quotient = "QUOTIENT_FORGE_QUOTIENT_V1"
+observer = "QUOTIENT_FORGE_OBSERVER_V1"
+utility = "QUOTIENT_FORGE_UTILITY_V1"
+fault = "QUOTIENT_FORGE_FAULT_V1"
+transducer = "QUOTIENT_FORGE_TRANSDUCER_V1"
+certificate = "QUOTIENT_FORGE_CERTIFICATE_V1"
+checker_contract = "QUOTIENT_FORGE_CHECKER_CONTRACT_V1"
+
+[outcomes]
+success = ["CERTIFICATE_VALID"]
+bounded_negative = ["UNSAT_AT_BOUND", "UNREALIZABLE_WITHIN_BOUNDS"]
+inconclusive = ["TIMEOUT", "RESOURCE_LIMIT", "SOLVER_UNAVAILABLE"]
+invalid = [
+  "INVALID_SPEC",
+  "INVALID_CANDIDATE",
+  "INVALID_CERTIFICATE",
+  "MALFORMED_SOLVER_OUTPUT",
+]
