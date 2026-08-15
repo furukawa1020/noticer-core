@@ -1,0 +1,8 @@
+schema: noticer-k5-synthetic-v1
+seed: 20260814
+source_profile: synthetic-paired-commercial-sensor-v1
+counterfactual_families: [P0, P1, P2, P3, P4, P5]
+public_epochs: [1, 4, 16, 64]
+service_count: 3
+private_values_in_public_artifact: false
+
