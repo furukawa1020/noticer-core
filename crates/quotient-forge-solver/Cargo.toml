@@ -1,0 +1,11 @@
+[package]
+name = "quotient-forge-solver"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Canonical SMT-LIB and explicit solver backends for QuotientForge"
+
+[dependencies]
+quotient-forge-check.workspace = true
+quotient-forge-synth.workspace = true
