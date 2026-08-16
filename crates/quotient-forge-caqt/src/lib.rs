@@ -1,0 +1,41 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+#![forbid(unsafe_code)]
+
+//! Certificate for Action-Quotient Transducers (CAQT).
+//!
+//! The core parser and checker use only `core` and `alloc`. Solver libraries,
+//! synthesis engines, platform I/O, and private acquisition types are outside
+//! the trusted checker boundary.
+
+extern crate alloc;
+
+mod checker;
+mod format;
+mod sha256;
+
+pub use checker::{
+    local_checker_contract_hash, recompute_cost, recompute_hashes, verify, CanonicalViolation,
+    CertificateVerdict, ExpectedContract, IncompatibleReason, InvalidReason, UtilityViolation,
+    ValidationReport,
+};
+pub use format::{
+    Certificate, CertificateLimits, CostVector, Digest, DomainHashes, HashDomain, ObserverRecord,
+    OutputRecord, ParseError, RelationPair, TransitionRecord, FORMAT_VERSION,
+};
+
+#[cfg(feature = "ir-compat")]
+use core::marker::PhantomData;
+
+/// Compile-time marker for the K6-03 canonical IR. It is omitted from the
+/// minimal no-default-features checker build.
+#[cfg(feature = "ir-compat")]
+#[derive(Clone, Copy, Debug, Default)]
+pub struct IrCompatibility(PhantomData<fn() -> quotient_forge_ir::CompiledModel>);
+
+#[cfg(feature = "ir-compat")]
+impl IrCompatibility {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self(PhantomData)
+    }
+}

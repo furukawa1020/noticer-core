@@ -1,0 +1,15 @@
+[package]
+name = "quotient-forge-caqt"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Independent no_std checker for CAQT certificates"
+
+[features]
+default = ["std", "ir-compat"]
+std = []
+ir-compat = ["dep:quotient-forge-ir"]
+
+[dependencies]
+quotient-forge-ir = { workspace = true, optional = true }
