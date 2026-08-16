@@ -1,0 +1,17 @@
+experiment:
+  seed: 260817
+  artifact_root: artifacts/k6_quotient_forge_benchmark
+synthetic:
+  pairs_per_case: 24
+split:
+  unit: counterfactual_pair_id
+  validation_fraction: 0.2
+  test_fraction: 0.2
+  row_random_split_allowed: false
+scalability:
+  timeout_work_units: 800
+criteria:
+  protected_max_auc: 0.60
+  control_min_auc: 0.90
+output:
+  note: synthetic protocol smoke only; not scientific deployment evidence
