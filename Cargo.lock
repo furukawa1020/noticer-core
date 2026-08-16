@@ -1573,6 +1573,13 @@ name = "quotient-forge-syntax"
 version = "0.1.0"
 
 [[package]]
+name = "quotient-forge-synth"
+version = "0.1.0"
+dependencies = [
+ "quotient-forge-check",
+]
+
+[[package]]
 name = "quotient-forge-types"
 version = "0.1.0"
 dependencies = [
