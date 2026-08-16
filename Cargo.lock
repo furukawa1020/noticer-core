@@ -1546,6 +1546,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-forge-check"
+version = "0.1.0"
+dependencies = [
+ "quotient-forge-ir",
+]
+
+[[package]]
 name = "quotient-forge-ir"
 version = "0.1.0"
 dependencies = [
