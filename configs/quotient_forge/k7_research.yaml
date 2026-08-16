@@ -1,0 +1,157 @@
+schema: noticer-k7-research-contract-v1
+contract_version: 1
+state: FROZEN
+amendment_policy: new_version_required
+hypothesis: action_quotient_full_trace_with_hard_utility_is_a_useful_bounded_synthesis_problem
+
+evaluation:
+  split_unit: spec_family
+  row_random_split_allowed: false
+  warmup_runs: 1
+  repetitions: 5
+  metrics:
+    - checker_status
+    - solver_status
+    - wall_time_ms
+    - cpu_time_ms
+    - peak_rss_mb
+    - candidates
+    - checker_nodes
+    - solver_calls
+    - pointwise_divergences
+    - utility_violations
+    - attack_auc
+    - attack_advantage
+    - excess_advantage
+    - cost_vector
+  outcomes:
+    success:
+      - CERTIFICATE_VALID
+    bounded_negative:
+      - UNSAT_AT_BOUND
+      - UNREALIZABLE_WITHIN_BOUNDS
+    inconclusive:
+      - TIMEOUT
+      - RESOURCE_LIMIT
+      - SOLVER_UNAVAILABLE
+      - SOLVER_UNKNOWN
+      - CHECKER_INCONCLUSIVE
+    invalid:
+      - INVALID_SPEC
+      - INVALID_CANDIDATE
+      - INVALID_CERTIFICATE
+      - MALFORMED_SOLVER_OUTPUT
+  stop_conditions:
+    - solver_timeout
+    - checker_timeout
+    - memory_limit
+    - candidate_limit
+    - checker_node_limit
+    - public_artifact_violation
+
+seeds:
+  catalog: 42001
+  synthesis: 42002
+  attack: 42003
+  split: 42004
+  mutation: 42005
+
+limits:
+  solver_seconds: 300
+  checker_seconds: 60
+  memory_mb: 4096
+  max_candidates: 1000000
+  max_checker_nodes: 10000000
+  max_artifact_bytes: 65536
+
+gates:
+  scalability:
+    min_plant_states: 12
+    min_machine_states: 8
+    min_horizon: 64
+    min_observers: 4
+  discovery:
+    min_held_out_valid: 1
+    reject_template_equivalence: true
+  oracle:
+    min_mutants_detected: 10
+  translation:
+    max_cross_target_mismatches: 0
+  attack:
+    confidence_level: 0.95
+    min_pair_groups: 200
+    max_excess_advantage: 0.05
+    min_leaky_control_advantage: 0.30
+
+benchmark:
+  template_equivalence_check: true
+  splits:
+    train:
+      - noticer_aets_fixed_cadence
+      - noticer_aplot_bounded_loss
+      - noticer_atv2_action_window
+      - generic_delayed_notification
+      - generic_fixed_size_release
+      - generic_public_retry
+      - negative_missing_authorized_output
+      - negative_secret_dependent_retry
+    development:
+      - noticer_aepa_public_context
+      - noticer_service_separation
+      - noticer_reconnect_normalization
+      - generic_private_scheduler
+      - generic_medical_alert
+      - negative_impossible_deadline
+      - negative_failure_leak
+      - negative_quotient_merge
+    held_out:
+      - noticer_multiservice_collusion
+      - noticer_longitudinal_handoff
+      - generic_smart_home_actuator
+      - generic_activity_actuator
+      - generic_fault_tolerant_alarm
+      - negative_private_carryover
+      - negative_observer_omission
+      - negative_unauthorized_cover_action
+
+artifact:
+  schema: noticer-k7-research-manifest-v1
+  schema_path: schemas/k7_research_manifest_public.schema.json
+  public_allowlist:
+    - benchmark_catalog_sha256
+    - contract_sha256
+    - contract_version
+    - family_counts
+    - gate_registry_sha256
+    - limit_registry_sha256
+    - outcomes
+    - private_field_count
+    - row_random_split_allowed
+    - schema
+    - seed_registry_sha256
+    - split_sha256
+    - split_unit
+    - state
+  forbidden_keys:
+    - acc_samples
+    - attestation_chain
+    - baseline_values
+    - certificate_chain
+    - consent_document
+    - device_id
+    - key_material
+    - lease_bytes
+    - participant_id
+    - permit_signature
+    - ppg_samples
+    - private_history
+    - raw_acc
+    - raw_ppg
+    - stable_identifier
+    - token_bytes
+
+change_history:
+  - version: 1
+    date: "2026-08-17"
+    reason: initial preregistration before K7 implementation experiments
+
