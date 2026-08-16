@@ -1560,6 +1560,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-forge-codegen"
+version = "0.1.0"
+dependencies = [
+ "quotient-forge-caqt",
+]
+
+[[package]]
 name = "quotient-forge-ir"
 version = "0.1.0"
 dependencies = [
