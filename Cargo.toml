@@ -39,6 +39,7 @@ members = [
     "crates/quotient-forge-check",
     "crates/quotient-forge-caqt",
     "crates/quotient-forge-synth",
+    "crates/quotient-forge-solver",
 ]
 
 [workspace.package]
@@ -75,6 +76,7 @@ quotient-forge-ir = { path = "crates/quotient-forge-ir" }
 quotient-forge-check = { path = "crates/quotient-forge-check" }
 quotient-forge-caqt = { path = "crates/quotient-forge-caqt" }
 quotient-forge-synth = { path = "crates/quotient-forge-synth" }
+quotient-forge-solver = { path = "crates/quotient-forge-solver" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }

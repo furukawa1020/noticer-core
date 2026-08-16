@@ -1,0 +1,22 @@
+#![forbid(unsafe_code)]
+
+//! Canonical SMT-LIB 2.6 generation and explicit solver orchestration.
+//!
+//! External solvers propose candidate transducers. The independent product
+//! checker remains the security oracle and every counterexample becomes a hard
+//! CEGIS blocking constraint.
+
+mod backend;
+mod parser;
+mod smtlib;
+
+pub use backend::{
+    solve, BackendConfig, BackendError, BackendResult, BackendStatus, DetectionRecord,
+    PhaseArtifact, RuntimeError, RuntimeOutput, SolverArtifact, SolverKind, SolverRuntime,
+    SolverSelection, StandardRuntime,
+};
+pub use parser::{parse_solver_output, ParseModelError, ParsedSolverOutput};
+pub use smtlib::{
+    encode_smtlib, expected_variable_names, ConstraintKind, HardBlocker, ObjectiveCost,
+    SmtEncoding, SmtEncodingError, SmtPhase,
+};
