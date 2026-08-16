@@ -1,0 +1,23 @@
+{
+  "name": "quotient-forge-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "check": "astro check",
+    "build": "npm run build:wasm && astro build",
+    "dev": "npm run build:wasm && astro dev"
+  },
+  "dependencies": {
+    "astro": "7.2.2",
+    "monaco-editor": "0.56.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "dompurify": "3.4.13"
+  }
+}

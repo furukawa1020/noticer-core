@@ -1620,6 +1620,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-forge-studio-wasm"
+version = "0.1.0"
+
+[[package]]
 name = "quotient-forge-syntax"
 version = "0.1.0"
 

@@ -30,6 +30,26 @@ jobs:
       - run: python -m ruff check .
       - run: python -m pytest -q
 
+  studio:
+    runs-on: ubuntu-latest
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - run: rustup target add wasm32-unknown-unknown
+        working-directory: .
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+
   solver-optional:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_solver }}
     continue-on-error: true
