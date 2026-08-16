@@ -1576,6 +1576,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-forge-noticer"
+version = "0.1.0"
+dependencies = [
+ "noticer-aetp",
+ "noticer-menfugu-core",
+ "noticer-protocol",
+ "noticer-provenance",
+ "noticer-token",
+ "noticer-trace-shaper",
+ "noticer-transport-core",
+ "noticer-transport-sim",
+ "quotient-forge-caqt",
+ "quotient-forge-check",
+]
+
+[[package]]
 name = "quotient-forge-repair"
 version = "0.1.0"
 dependencies = [

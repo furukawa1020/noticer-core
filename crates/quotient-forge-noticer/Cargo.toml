@@ -1,0 +1,19 @@
+[package]
+name = "quotient-forge-noticer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Public Noticer adapters and handwritten benchmarks for QuotientForge"
+
+[dependencies]
+noticer-aetp = { path = "../noticer-aetp" }
+noticer-menfugu-core = { path = "../noticer-menfugu-core" }
+noticer-protocol = { path = "../noticer-protocol" }
+noticer-provenance = { path = "../noticer-provenance" }
+noticer-token = { path = "../noticer-token" }
+noticer-trace-shaper = { path = "../noticer-trace-shaper" }
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-transport-sim = { path = "../noticer-transport-sim" }
+quotient-forge-caqt.workspace = true
+quotient-forge-check.workspace = true
