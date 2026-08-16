@@ -20,3 +20,12 @@ python tools/run_quotient_forge.py --config configs/quotient_forge/cli_smoke.tom
 
 Each command directory contains a canonical `manifest.json` with the command, seed,
 tool/compiler/solver versions, status, and a public-only file inventory.
+
+K6-12 benchmark, attack, scalability, and ablation results are generated with:
+
+```bash
+python tools/run_quotient_forge_benchmark.py \
+  --config configs/quotient_forge/benchmark_smoke.yaml
+```
+
+These outputs are synthetic protocol-smoke evidence, not scientific deployment results.
