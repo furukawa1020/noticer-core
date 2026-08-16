@@ -1560,6 +1560,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-forge-cli"
+version = "0.1.0"
+dependencies = [
+ "quotient-forge-caqt",
+ "quotient-forge-check",
+ "quotient-forge-codegen",
+ "quotient-forge-noticer",
+ "quotient-forge-repair",
+ "quotient-forge-synth",
+]
+
+[[package]]
 name = "quotient-forge-codegen"
 version = "0.1.0"
 dependencies = [

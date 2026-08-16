@@ -37,6 +37,7 @@ members = [
     "crates/quotient-forge-types",
     "crates/quotient-forge-ir",
     "crates/quotient-forge-check",
+    "crates/quotient-forge-cli",
     "crates/quotient-forge-caqt",
     "crates/quotient-forge-synth",
     "crates/quotient-forge-solver",
