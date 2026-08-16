@@ -1,0 +1,8 @@
+schema_version = 1
+seed = 0
+solver = "off"
+commands = ["check", "synthesize", "repair", "verify", "frontier", "generate"]
+
+[artifact]
+root = "artifacts/k6_quotient_forge"
+privacy_contract = "public-only-v1"
