@@ -1,0 +1,210 @@
+---
+import "../styles/global.css";
+
+const frontier = [
+  { index: "A", title: "Cadence lock", note: "Lowest payload cost", tone: "mint" },
+  { index: "B", title: "Bucket + cover", note: "Lower added latency", tone: "amber" },
+  { index: "C", title: "Delayed window", note: "Smallest state machine", tone: "blue" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Interactive small-model workbench for QuotientForge counterexamples, repairs, certificates, and generated Rust."
+    />
+    <title>QuotientForge Studio</title>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar reveal" style="--delay: 0ms">
+        <a class="wordmark" href="#top" aria-label="QuotientForge Studio home">
+          <span class="wordmark-mark">QF</span>
+          <span>QuotientForge <strong>Studio</strong></span>
+        </a>
+        <div class="topbar-meta">
+          <span class="mode-pill"><i></i> WASM small-model mode</span>
+          <a href="#method">Method note</a>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero reveal" style="--delay: 70ms">
+          <div class="hero-kicker">Counterexample-driven security compiler</div>
+          <h1>Break the trace.<br /><em>Forge the quotient.</em></h1>
+          <p>
+            Edit a violating release contract, inspect the shortest witness, then carry a bounded
+            repair through its frontier, certificate, and generated Rust.
+          </p>
+          <div class="hero-index" aria-hidden="true">13</div>
+        </section>
+
+        <section class="status-rail reveal" style="--delay: 130ms" aria-label="Studio status">
+          <span><b>ENGINE</b><i id="wasm-status" class="loading">loading wasm</i></span>
+          <span><b>BOUND</b><i>horizon &le; 8</i></span>
+          <span><b>SOLVER</b><i>none / exhaustive</i></span>
+          <span><b>TRUST</b><i>browser demonstration</i></span>
+        </section>
+
+        <section class="workbench reveal" style="--delay: 190ms">
+          <article class="panel editor-panel">
+            <header class="panel-head">
+              <div>
+                <span class="step">01 / SPEC</span>
+                <h2>Release contract</h2>
+              </div>
+              <div class="editor-actions">
+                <button id="reset-spec" class="button ghost" type="button">Reset</button>
+                <button id="run-check" class="button primary" type="button" disabled>
+                  Run checker
+                </button>
+              </div>
+            </header>
+            <div id="editor" class="editor" aria-label="QuotientForge specification editor"></div>
+            <footer class="editor-foot">
+              <span>Monaco syntax diagnostics</span>
+              <span id="syntax-count">0 errors</span>
+            </footer>
+          </article>
+
+          <aside class="diagnostic-column">
+            <article class="panel verdict-card">
+              <span class="step">02 / VERDICT</span>
+              <div id="verdict-seal" class="verdict-seal pending">WAIT</div>
+              <h2 id="verdict-title">WASM checker is loading</h2>
+              <p id="verdict-detail">
+                The browser runs a bounded Rust kernel. No external solver or network call is used.
+              </p>
+              <dl class="metric-pairs">
+                <div><dt>Explored pairs</dt><dd id="pair-count">--</dd></div>
+                <div><dt>First causal slot</dt><dd id="causal-slot">--</dd></div>
+                <div><dt>Kernel version</dt><dd id="kernel-version">--</dd></div>
+              </dl>
+            </article>
+
+            <article class="panel compiler-note">
+              <span class="annotation">Small-model boundary</span>
+              <p>
+                The Studio is an explanatory surface, not the research contribution or deployment
+                trust anchor. Native CAQT verification remains authoritative.
+              </p>
+            </article>
+          </aside>
+        </section>
+
+        <section class="evidence-grid reveal" style="--delay: 250ms">
+          <article class="panel graph-panel">
+            <header class="panel-head compact">
+              <div>
+                <span class="step">03 / WITNESS</span>
+                <h2>Counterexample graph</h2>
+              </div>
+              <span id="witness-kind" class="tag danger">not evaluated</span>
+            </header>
+            <div id="counterexample-graph" class="trace-graph" aria-live="polite">
+              <div class="graph-empty">Run the checker to materialize a paired trace.</div>
+            </div>
+          </article>
+
+          <article class="panel repair-panel">
+            <header class="panel-head compact">
+              <div>
+                <span class="step">04 / REPAIR</span>
+                <h2>Before / after</h2>
+              </div>
+              <button id="synthesize-repair" class="button signal" type="button" disabled>
+                Synthesize repair
+              </button>
+            </header>
+            <div class="diff-grid">
+              <div>
+                <span class="diff-label remove">violating</span>
+                <pre id="before-code">No witness selected.</pre>
+              </div>
+              <div>
+                <span class="diff-label add">candidate</span>
+                <pre id="after-code">No repair synthesized.</pre>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="frontier-section reveal" style="--delay: 310ms">
+          <header class="section-heading">
+            <div>
+              <span class="step">05 / PARETO SET</span>
+              <h2>Cost frontier</h2>
+            </div>
+            <p>Non-dominated small-model repairs. Cost is illustrative and bounded.</p>
+          </header>
+          <div class="frontier-grid">
+            {frontier.map((point, position) => (
+              <button class={`frontier-card ${point.tone}`} data-frontier={position} type="button">
+                <span class="frontier-index">{point.index}</span>
+                <h3>{point.title}</h3>
+                <p>{point.note}</p>
+                <div class="cost-line"><span>cost</span><strong data-cost>--</strong></div>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section class="output-grid reveal" style="--delay: 370ms">
+          <article class="panel code-panel">
+            <header class="panel-head compact">
+              <div>
+                <span class="step">06 / GENERATED</span>
+                <h2>Rust preview</h2>
+              </div>
+              <span class="tag neutral">no_std shape</span>
+            </header>
+            <pre id="rust-preview" class="rust-preview"><code>// Synthesize a repair to preview generated Rust.</code></pre>
+          </article>
+
+          <article class="panel certificate-panel">
+            <header class="panel-head compact">
+              <div>
+                <span class="step">07 / CERTIFICATE</span>
+                <h2>Tamper rejection</h2>
+              </div>
+              <span id="certificate-status" class="tag neutral">not issued</span>
+            </header>
+            <div class="certificate-paper">
+              <span>CAQT / STUDIO DEMO</span>
+              <b id="certificate-digest">--------</b>
+              <small>Independent native verification is required.</small>
+            </div>
+            <button id="tamper-certificate" class="button tamper" type="button" disabled>
+              Tamper one bit
+            </button>
+            <p id="tamper-note" class="tamper-note">
+              This interaction demonstrates rejection semantics, not a cryptographic claim.
+            </p>
+          </article>
+        </section>
+
+        <section id="method" class="method-note reveal" style="--delay: 430ms">
+          <span>METHOD / K6-13</span>
+          <p>
+            QuotientForge Studio connects a deliberately restricted Rust WASM checker to a visual
+            explanation flow. It does not replace the native product checker, solver backend,
+            certificate checker, benchmark protocol, or literature review.
+          </p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>Noticer Core / QuotientForge</span>
+        <span>Bounded evidence, explicit limits.</span>
+      </footer>
+    </div>
+
+    <script>
+      import "../scripts/studio";
+    </script>
+  </body>
+</html>
