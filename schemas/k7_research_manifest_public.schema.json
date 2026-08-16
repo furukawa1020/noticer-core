@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.invalid/schemas/k7_research_manifest_public.schema.json",
+  "title": "Noticer K7 public research manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "benchmark_catalog_sha256",
+    "contract_sha256",
+    "contract_version",
+    "family_counts",
+    "gate_registry_sha256",
+    "limit_registry_sha256",
+    "outcomes",
+    "private_field_count",
+    "row_random_split_allowed",
+    "schema",
+    "seed_registry_sha256",
+    "split_sha256",
+    "split_unit",
+    "state"
+  ],
+  "properties": {
+    "schema": {
+      "const": "noticer-k7-research-manifest-v1"
+    },
+    "contract_version": {
+      "const": 1
+    },
+    "state": {
+      "const": "FROZEN"
+    },
+    "contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "benchmark_catalog_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "split_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "seed_registry_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "limit_registry_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "gate_registry_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "split_unit": {
+      "const": "spec_family"
+    },
+    "row_random_split_allowed": {
+      "const": false
+    },
+    "outcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "bounded_negative", "inconclusive", "invalid"],
+      "properties": {
+        "success": {"type": "array", "items": {"type": "string"}},
+        "bounded_negative": {"type": "array", "items": {"type": "string"}},
+        "inconclusive": {"type": "array", "items": {"type": "string"}},
+        "invalid": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "family_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generic", "negative", "noticer", "total"],
+      "properties": {
+        "generic": {"const": 8},
+        "negative": {"const": 8},
+        "noticer": {"const": 8},
+        "total": {"const": 24}
+      }
+    },
+    "private_field_count": {
+      "const": 0
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
+
