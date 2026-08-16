@@ -1,0 +1,21 @@
+[package]
+name = "quotient-forge-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "quotient_forge_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "quotient-forge"
+path = "src/main.rs"
+
+[dependencies]
+quotient-forge-caqt.workspace = true
+quotient-forge-check.workspace = true
+quotient-forge-codegen.workspace = true
+quotient-forge-noticer.workspace = true
+quotient-forge-repair.workspace = true
+quotient-forge-synth.workspace = true
