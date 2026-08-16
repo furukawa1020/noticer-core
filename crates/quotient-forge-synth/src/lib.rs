@@ -1,0 +1,20 @@
+#![forbid(unsafe_code)]
+
+//! Deterministic exhaustive synthesis for small AQRS models.
+//!
+//! This crate is the solver-free reference backend. It enumerates canonical
+//! finite-state release machines and delegates every security decision to the
+//! independent K6-04 product checker.
+
+mod model;
+mod search;
+
+pub use model::{
+    MachineCell, PlantPair, PlantState, PlantTransition, ProblemError, ReleaseMachine,
+    SynthesisCost, SynthesisProblem,
+};
+pub use search::{
+    blocking_clause_from_counterexample, find_feasible, optimize_cost, BlockingClause,
+    DecisionAssignment, InconclusiveReason, SearchStats, SynthesisError, SynthesisLimits,
+    SynthesisOutcome, SynthesisReport, UnrealizableReport,
+};
