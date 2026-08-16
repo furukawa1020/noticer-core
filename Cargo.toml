@@ -36,6 +36,7 @@ members = [
     "crates/quotient-forge-syntax",
     "crates/quotient-forge-types",
     "crates/quotient-forge-ir",
+    "crates/quotient-forge-check",
 ]
 
 [workspace.package]
@@ -69,6 +70,7 @@ noticer-provenance-sim = { path = "crates/noticer-provenance-sim" }
 quotient-forge-syntax = { path = "crates/quotient-forge-syntax" }
 quotient-forge-types = { path = "crates/quotient-forge-types" }
 quotient-forge-ir = { path = "crates/quotient-forge-ir" }
+quotient-forge-check = { path = "crates/quotient-forge-check" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }

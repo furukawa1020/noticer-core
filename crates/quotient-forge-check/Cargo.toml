@@ -1,0 +1,10 @@
+[package]
+name = "quotient-forge-check"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Solver-independent bounded product checker for QuotientForge"
+
+[dependencies]
+quotient-forge-ir.workspace = true
