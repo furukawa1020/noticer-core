@@ -47,6 +47,7 @@ members = [
     "crates/quotient-forge-studio-wasm",
     "crates/quotient-seal-abi",
     "crates/quotient-seal-context",
+    "crates/quotient-seal-resource",
     "crates/quotient-seal-target-ir",
     "crates/quotient-seal-small-step",
     "crates/quotient-seal-relation",
@@ -92,6 +93,7 @@ quotient-forge-codegen = { path = "crates/quotient-forge-codegen" }
 quotient-forge-noticer = { path = "crates/quotient-forge-noticer" }
 quotient-seal-abi = { path = "crates/quotient-seal-abi" }
 quotient-seal-context = { path = "crates/quotient-seal-context" }
+quotient-seal-resource = { path = "crates/quotient-seal-resource" }
 quotient-seal-target-ir = { path = "crates/quotient-seal-target-ir" }
 quotient-seal-small-step = { path = "crates/quotient-seal-small-step" }
 quotient-seal-relation = { path = "crates/quotient-seal-relation" }

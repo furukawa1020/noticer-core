@@ -1,0 +1,54 @@
+version: 1
+contract: QUOTIENT_SEAL_RESOURCE_V1
+default_mode: strict
+hardware_status: NOT_VERIFIED
+
+resource_axes:
+  - opcode
+  - branch
+  - memory_address
+  - import
+  - fuel
+  - memory_pages
+
+quotient_pad:
+  allowed_operations:
+    - public_no_op
+    - bounded_loop
+    - branch_fuel
+    - fixed_scratch
+    - failure_return_path
+  forbidden_effects:
+    - dummy_action
+    - private_output
+    - utility_change
+    - deadline_violation
+    - unbounded_padding
+
+limits:
+  max_cases: 4096
+  max_events_per_trace: 1000000
+  max_operations: 65536
+  max_added_instructions: 1000000
+  max_added_fuel: 1000000
+  max_loop_iterations: 100000
+  max_scratch_bytes: 1048576
+
+verdicts:
+  - strict
+  - normalized
+  - counterexample
+  - inconclusive
+
+required_post_gates:
+  - k8_05_relation_valid
+  - k8_06_context_accept
+  - public_projection_unchanged
+  - utility_preserved
+  - deadlines_preserved
+  - exact_resource_trace_equality
+
+artifacts:
+  - quotient_pad_candidate_digest
+  - resource_counterexample_digest
+  - normalization_overhead
