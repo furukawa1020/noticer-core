@@ -11,6 +11,8 @@ pub use machine::{
     MemoryAccessKind, ProgramCounter, PublicHostFault, PublicHostTape, ResourceExhaustion,
     TrapCode, Value, WasmMachine, WasmState,
 };
+#[cfg(feature = "checker-internals")]
+pub use machine::{CheckerMemoryPatch, CheckerSeed, CheckerSeedError};
 
 pub const QUOTIENT_SEAL_SMALL_STEP_V1: &str = "QUOTIENT_SEAL_SMALL_STEP_V1";
 pub const INSTRUCTION_FUEL_COST: u64 = 1;

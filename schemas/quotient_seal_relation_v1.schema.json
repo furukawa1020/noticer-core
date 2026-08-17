@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_relation_v1.schema.json",
+  "title": "QUOTIENT_SEAL_RELATION_V1 contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "gates", "relation", "simulation", "reject", "counterexample", "non_claims"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "required": ["id", "format_version", "status", "issue", "parent_issue", "dependencies"],
+      "properties": {
+        "id": {"const": "QUOTIENT_SEAL_RELATION_V1"},
+        "format_version": {"const": 1},
+        "status": {"const": "FROZEN"},
+        "issue": {"const": 100},
+        "parent_issue": {"const": 95},
+        "dependencies": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "gates": {
+      "type": "object",
+      "required": ["k7_translation", "inductive_certificate", "parser_consensus", "target_execution"],
+      "properties": {
+        "k7_translation": {"const": "VALID"},
+        "inductive_certificate": {"const": "VALID"},
+        "parser_consensus": {"const": "VALID"},
+        "target_execution": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "relation": {"type": "object"},
+    "simulation": {
+      "type": "object",
+      "required": ["axes", "entry_export", "source_state_as_public_argument", "action_deadline_steps", "lifecycle_exports"],
+      "properties": {
+        "axes": {"const": ["quotient", "public", "fault"]},
+        "entry_export": {"const": "tick"},
+        "source_state_as_public_argument": {"const": false},
+        "action_deadline_steps": {"const": 0},
+        "lifecycle_exports": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "reject": {"type": "array", "minItems": 15, "uniqueItems": true},
+    "counterexample": {"type": "object"},
+    "non_claims": {
+      "type": "array",
+      "contains": {"const": "hardware-verification"}
+    }
+  }
+}

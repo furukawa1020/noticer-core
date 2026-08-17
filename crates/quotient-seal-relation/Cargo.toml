@@ -1,0 +1,11 @@
+[package]
+name = "quotient-seal-relation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+quotient-forge-caqt = { path = "../quotient-forge-caqt" }
+quotient-forge-codegen = { path = "../quotient-forge-codegen" }
+quotient-seal-small-step = { path = "../quotient-seal-small-step", features = ["checker-internals"] }
+quotient-seal-target-ir = { path = "../quotient-seal-target-ir" }
