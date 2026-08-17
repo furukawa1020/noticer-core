@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_resource_v1.schema.json",
+  "title": "QuotientSeal resource-trace result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "verdict",
+    "pre_binding",
+    "checked_cases",
+    "checked_resource_events",
+    "hardware_status"
+  ],
+  "properties": {
+    "contract": { "const": "QUOTIENT_SEAL_RESOURCE_V1" },
+    "verdict": {
+      "enum": ["strict", "normalized", "counterexample", "inconclusive"]
+    },
+    "pre_binding": { "$ref": "#/$defs/relation_binding" },
+    "post_binding": { "$ref": "#/$defs/relation_binding" },
+    "checked_cases": { "type": "integer", "minimum": 0 },
+    "checked_resource_events": { "type": "integer", "minimum": 0 },
+    "candidate_digest": { "$ref": "#/$defs/digest" },
+    "counterexample_digest": { "$ref": "#/$defs/digest" },
+    "normalization_overhead": { "$ref": "#/$defs/overhead" },
+    "inconclusive_reason": { "type": "string", "minLength": 1 },
+    "hardware_status": { "const": "NOT_VERIFIED" }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "relation_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation_digest", "inductive_digest", "target_ir_digest"],
+      "properties": {
+        "relation_digest": { "$ref": "#/$defs/digest" },
+        "inductive_digest": { "$ref": "#/$defs/digest" },
+        "target_ir_digest": { "$ref": "#/$defs/digest" }
+      }
+    },
+    "overhead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_count",
+        "added_instructions",
+        "added_fuel",
+        "bounded_loop_iterations",
+        "fixed_scratch_bytes"
+      ],
+      "properties": {
+        "operation_count": { "type": "integer", "minimum": 0 },
+        "added_instructions": { "type": "integer", "minimum": 0 },
+        "added_fuel": { "type": "integer", "minimum": 0 },
+        "bounded_loop_iterations": { "type": "integer", "minimum": 0 },
+        "fixed_scratch_bytes": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
