@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_target_ir_v1.schema.json",
+  "title": "QUOTIENT_SEAL_TARGET_IR_V1 contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "hash", "parser", "target_ir", "consensus", "limits", "non_claims"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "required": ["id", "status", "issue", "parent_issue", "predecessor"],
+      "properties": {
+        "id": {"const": "QUOTIENT_SEAL_TARGET_IR_V1"},
+        "status": {"const": "FROZEN"},
+        "issue": {"const": 99},
+        "parent_issue": {"const": 95},
+        "predecessor": {
+          "type": "object",
+          "required": ["abi", "issue"],
+          "properties": {
+            "abi": {"const": "QUOTIENT_SEAL_ABI_V1"},
+            "issue": {"const": 98}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "hash": {"type": "object"},
+    "parser": {
+      "type": "object",
+      "required": ["input", "trust_manifest_claims", "canonical_leb128", "utf8_names", "reject"],
+      "properties": {
+        "input": {"const": "actual-wasm-binary"},
+        "trust_manifest_claims": {"const": false},
+        "canonical_leb128": {"const": "required"},
+        "utf8_names": {"const": "strict"},
+        "reject": {"type": "array", "minItems": 20, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "target_ir": {"type": "object"},
+    "consensus": {
+      "type": "object",
+      "required": ["required_parsers", "all_accept", "all_reject", "all_resource_bound", "disagreement", "unavailable_tool"],
+      "properties": {
+        "required_parsers": {
+          "const": ["quotient-seal", "wasmparser", "wasm-tools"]
+        },
+        "all_accept": {"const": "VALID"},
+        "all_reject": {"const": "INVALID"},
+        "all_resource_bound": {"const": "RESOURCE_BOUND"},
+        "disagreement": {"const": "UNRESOLVED"},
+        "unavailable_tool": {"const": "UNRESOLVED"}
+      },
+      "additionalProperties": false
+    },
+    "limits": {"type": "object"},
+    "non_claims": {
+      "type": "array",
+      "contains": {"const": "hardware-verification"}
+    }
+  }
+}

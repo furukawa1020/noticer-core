@@ -1,0 +1,97 @@
+contract:
+  id: QUOTIENT_SEAL_TARGET_IR_V1
+  status: FROZEN
+  issue: 99
+  parent_issue: 95
+  predecessor:
+    abi: QUOTIENT_SEAL_ABI_V1
+    issue: 98
+
+hash:
+  function: quotient_forge_caqt.artifact_digest
+  domain: noticer-core/quotient-seal/target-ir/v1
+  encoding:
+    byte_order: little-endian
+    integer_width: fixed-u32-u64
+    custom_sections: validated-then-erased
+    exports: lexicographically-sorted
+    data_segments: offset-sorted
+
+parser:
+  input: actual-wasm-binary
+  trust_manifest_claims: false
+  canonical_leb128: required
+  utf8_names: strict
+  reject:
+    - unknown-section
+    - duplicate-standard-section
+    - duplicate-custom-name
+    - out-of-order-section
+    - trailing-section-bytes
+    - float
+    - SIMD
+    - threads
+    - atomics
+    - memory.grow
+    - memory.size
+    - call_indirect
+    - WASI
+    - imported-memory
+    - exported-memory
+    - shared-memory
+    - memory64
+    - passive-data
+    - reference-types
+    - multi-value
+
+target_ir:
+  values: [i32, i64]
+  calls: direct-only
+  control:
+    structured: true
+    statically_depth_bounded: true
+  memory:
+    count: 1
+    ownership: local
+    minimum_equals_maximum: true
+    maximum_pages: 16
+  data:
+    mode: active-memory-zero
+    overlapping: reject
+
+consensus:
+  required_parsers:
+    - quotient-seal
+    - wasmparser
+    - wasm-tools
+  all_accept: VALID
+  all_reject: INVALID
+  all_resource_bound: RESOURCE_BOUND
+  disagreement: UNRESOLVED
+  unavailable_tool: UNRESOLVED
+
+limits:
+  module_bytes: 1048576
+  sections: 32
+  types: 256
+  imports: 16
+  functions: 512
+  globals: 128
+  exports: 32
+  name_bytes: 128
+  local_groups: 64
+  locals_per_function: 1024
+  function_body_bytes: 65536
+  instructions_per_function: 16384
+  control_depth: 128
+  data_segments: 256
+  data_bytes: 262144
+
+non_claims:
+  - full-WebAssembly-validation
+  - arbitrary-Rust-or-WASM
+  - malicious-runtime-security
+  - operating-system-compromise
+  - microarchitectural-side-channels
+  - hardware-verification
+  - research-priority
