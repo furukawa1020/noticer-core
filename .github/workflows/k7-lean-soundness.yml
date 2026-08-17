@@ -1,0 +1,58 @@
+name: K7 Lean soundness
+
+on:
+  pull_request:
+    paths:
+      - "formal/aqrs/**"
+      - "docs/aqrs_lean_soundness.md"
+      - ".github/workflows/k7-lean-soundness.yml"
+  push:
+    branches: [main]
+    paths:
+      - "formal/aqrs/**"
+      - "docs/aqrs_lean_soundness.md"
+      - ".github/workflows/k7-lean-soundness.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bounded-aqni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Reject proof escape hatches
+        shell: bash
+        run: |
+          if grep -REn \
+            '(^|[^[:alnum:]_])(sorry|axiom|opaque|unsafe)([^[:alnum:]_]|$)' \
+            formal/aqrs --include='*.lean'; then
+            echo "Lean proof escape hatch detected"
+            exit 1
+          fi
+      - name: Build and independently check Lean environment
+        uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1
+        with:
+          lake-package-directory: formal/aqrs
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: false
+          leanchecker: true
+          nanoda: true
+          nanoda-allow-sorry: false
+      - name: Assert theorem axiom surface
+        working-directory: formal/aqrs
+        shell: bash
+        run: |
+          audit="$(lake env lean AQRS/Audit.lean 2>&1)"
+          printf '%s\n' "$audit"
+          if grep -Eq 'Classical\.choice|Quot\.sound|sorryAx' <<<"$audit"; then
+            echo "unexpected theorem axiom dependency"
+            exit 1
+          fi
+          grep -Fq \
+            "'AQRS.boundedCheckerSound' depends on axioms: [propext]" \
+            <<<"$audit"
