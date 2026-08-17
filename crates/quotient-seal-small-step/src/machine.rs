@@ -1040,10 +1040,17 @@ impl WasmMachine {
         }) {
             return;
         }
-        self.advance();
         match outcome {
-            HostOutcome::Continue => {}
+            HostOutcome::Continue => {
+                for result in function_type.results() {
+                    if !self.push(Value::zero(*result)) {
+                        return;
+                    }
+                }
+                self.advance();
+            }
             HostOutcome::Terminate => {
+                self.advance();
                 let pc = self.state.pc;
                 if self.record(ExecutionEvent::Termination { pc }) {
                     self.state.status = MachineStatus::Terminated;
@@ -1649,7 +1656,12 @@ fn validate_imports(module: &CanonicalTargetIr) -> Result<(), InstantiationError
             .types()
             .get(import.type_index() as usize)
             .ok_or(InstantiationError::InvalidType)?;
-        if !function_type.results().is_empty() {
+        if function_type.results().len() > 1
+            || function_type
+                .results()
+                .first()
+                .is_some_and(|result| *result != ValueType::I32)
+        {
             return Err(InstantiationError::ImportHasResult);
         }
     }
