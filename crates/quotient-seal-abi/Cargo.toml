@@ -1,0 +1,10 @@
+[package]
+name = "quotient-seal-abi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Capability-separated public WASM ABI contract for QuotientSeal"
+
+[dependencies]
+quotient-forge-caqt = { path = "../quotient-forge-caqt", default-features = false }
