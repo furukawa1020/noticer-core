@@ -1,0 +1,335 @@
+schema: noticer-k8-raqtr-contract-v1
+contract_version: 1
+state: FROZEN
+freeze_date: "2026-08-17"
+parent_issue: 95
+implementation_issue: 96
+amendment_policy: new_version_required
+hypothesis: action_quotient_security_and_utility_survive_translation_to_restricted_wasm_under_adversarial_contexts
+
+dependencies:
+  k7_02:
+    issue: 76
+    requirement: bounded_aqni_soundness
+    status: MERGED
+    merge_commit: 9ae3b9819b6fd90abea22c466d3fb7ece16999d0
+  k7_03:
+    issue: 77
+    requirement: inductive_caqt_certificate
+    status: REQUIRED_UNMERGED
+    merge_commit: null
+  k7_10:
+    issue: 85
+    requirement: no_std_wasm_translation_validation
+    status: REQUIRED_UNMERGED
+    merge_commit: null
+
+reuse:
+  action_equivalence:
+    source: docs/aetp_security_definition.md
+    symbol: "H0 ~=_A,C H1"
+  source_certificate:
+    source: configs/quotient_forge/k7_research.yaml
+    producer: K7_CAQT
+  generated_runtime:
+    issue: 85
+    producer: K7_CODEGEN
+  copy_unmerged_k7_types_allowed: false
+  redefine_k7_manifest_allowed: false
+  redefine_k7_certificate_allowed: false
+
+security:
+  notion: robust_action_quotient_trace_refinement
+  abbreviation: RAQTR
+  artifact: quotient_sealed_module
+  artifact_abbreviation: QSM
+  artifact_extension: .qseal
+  guarantees:
+    - robust_action_quotient_noninterference
+    - restricted_context_trace_refinement
+    - utility_preservation
+  observer_profiles:
+    - id: O0_API
+      events:
+        - import_call_sequence
+        - export_return_sequence
+        - public_output_bytes
+        - public_error_code
+    - id: O1_TRAP
+      events:
+        - return_kind
+        - trap_kind
+        - termination
+        - bounded_nontermination
+    - id: O2_CONTROL
+      events:
+        - branch_outcomes
+        - direct_call_sequence
+        - loop_iterations
+    - id: O3_INSTRUCTION
+      events:
+        - opcode_sequence
+        - opcode_count
+        - opcode_histogram
+    - id: O4_MEMORY
+      events:
+        - memory_address
+        - access_width
+        - access_kind
+        - memory_page_count
+    - id: O5_SERVICE
+      events:
+        - all_declared_profiles
+        - service_alias
+        - public_slot
+        - reset_handoff_order
+    - id: O6_COLLUSION
+      events:
+        - combined_module_instance_trace
+  adversary:
+    class: capability_scoped_language_level
+    allowed:
+      - arbitrary_public_call_order
+      - adaptive_public_input
+      - adaptive_public_fault
+      - reset
+      - handoff
+      - malformed_input_length
+      - unknown_enum
+      - expired_public_slot
+      - repeated_calls
+      - observation_adaptive_calls
+      - public_randomness
+      - multiservice_context
+    forbidden:
+      - direct_linear_memory_read
+      - private_capability_acquisition
+      - hidden_private_function_call
+      - runtime_bytecode_mutation
+      - engine_semantics_violation
+      - root_os_process_memory_read
+      - direct_microarchitectural_cache_observation
+  utility:
+    - authorized_action_exactly_once
+    - public_deadline_preserved
+    - unauthorized_action_zero
+    - duplicate_action_zero
+    - recoverable_fault_preserved
+    - invalid_call_fails_closed
+  tcb:
+    - k7_source_certificate_checker
+    - trusted_private_wrapper
+    - restricted_wasm_parser
+    - deterministic_target_semantics
+    - translation_validator
+    - context_product_checker
+    - qsm_independent_checker
+    - lean_preservation_theorem
+  untrusted:
+    - rustc
+    - wasm_opt
+    - wasm_engine
+    - adversarial_public_context
+    - compiler_manifest
+    - studio
+    - benchmark_generator
+    - attack_classifier
+  nonclaims:
+    - native_machine_cycle_equality
+    - cpu_cache_equality
+    - branch_predictor_equality
+    - speculative_execution_safety
+    - power_side_channel_safety
+    - electromagnetic_side_channel_safety
+    - jit_machine_code_safety
+    - os_scheduler_equality
+    - malicious_runtime_security
+    - general_secure_compilation
+    - full_abstraction
+    - arbitrary_rust
+    - arbitrary_wasm
+    - physical_hardware_verification
+
+evaluation:
+  split_unit: module_family
+  row_random_split_allowed: false
+  splits:
+    - train
+    - development
+    - held_out
+  warmup_runs: 1
+  repetitions: 5
+  gates:
+    min_module_families: 16
+    min_compiler_configs: 12
+    min_mutants: 30
+    min_context_families: 12
+    min_engines: 2
+    min_explicit_call_prefix: 256
+    min_noticer_modules: 5
+    min_generic_families: 8
+    min_negative_families: 8
+    max_source_target_mismatches: 0
+    max_accepted_mutant_leaks: 0
+    held_out_mutation_detection: 1.0
+  outcomes:
+    success:
+      - QSM_VALID
+    counterexample:
+      - RAQTR_COUNTEREXAMPLE
+      - TRACE_REFINEMENT_COUNTEREXAMPLE
+      - UTILITY_COUNTEREXAMPLE
+      - RESOURCE_TRACE_COUNTEREXAMPLE
+    inconclusive:
+      - TIMEOUT
+      - RESOURCE_BOUND
+      - PARSER_DISAGREEMENT
+      - ENGINE_DISAGREEMENT
+      - CHECKER_UNAVAILABLE
+      - COMPILER_UNAVAILABLE
+    invalid:
+      - INVALID_SOURCE_CERTIFICATE
+      - INVALID_WASM
+      - UNSUPPORTED_WASM_FEATURE
+      - INVALID_ABI
+      - INVALID_RELATION
+      - INVALID_CAPSULE
+      - UNSUPPORTED_VERSION
+      - MALFORMED_ARTIFACT
+  stop_conditions:
+    - parser_limit
+    - validator_timeout
+    - context_checker_timeout
+    - memory_limit
+    - product_state_limit
+    - fuel_limit
+    - artifact_limit
+    - parser_disagreement
+    - engine_disagreement
+  metrics:
+    - validator_status
+    - context_status
+    - observer_profile
+    - first_divergence
+    - source_target_mismatches
+    - utility_violations
+    - product_states
+    - call_prefix
+    - opcode_trace_equal
+    - branch_trace_equal
+    - memory_trace_equal
+    - import_trace_equal
+    - fuel_equal
+    - mutation_detected
+    - engine_agreement
+    - attack_auc
+    - attack_advantage
+    - wall_time_ms
+    - peak_rss_mb
+    - capsule_bytes
+
+seeds:
+  compiler_matrix: 48001
+  mutation: 48002
+  context: 48003
+  engine: 48004
+  attack: 48005
+  performance: 48006
+  split: 48007
+  capsule: 48008
+
+limits:
+  parser_seconds: 30
+  validator_seconds: 300
+  context_checker_seconds: 600
+  memory_mb: 8192
+  max_module_bytes: 2097152
+  max_capsule_bytes: 16777216
+  max_functions: 1024
+  max_instructions: 1000000
+  max_context_states: 4096
+  max_product_states: 5000000
+  explicit_call_prefix: 256
+  fuel_per_call: 1000000
+
+artifacts:
+  root: artifacts/k8_quotient_seal
+  contract_schema_path: schemas/k8_raqtr_contract.schema.json
+  generated_committed: false
+  private_field_count: 0
+  required_outputs:
+    - frozen_contract.json
+    - compiler_matrix.csv
+    - mutation_results.csv
+    - cross_engine_results.csv
+    - robust_context_results.csv
+    - resource_results.csv
+    - attack_results.csv
+    - performance_results.csv
+    - ablation_results.csv
+    - invariant_report.json
+    - run.log
+  forbidden_keys:
+    - raw_ppg
+    - raw_acc
+    - biosignal
+    - baseline_values
+    - private_history
+    - private_margin
+    - private_ready_time
+    - participant_id
+    - device_id
+    - stable_identifier
+    - key_material
+    - token_bytes
+    - permit_signature
+    - lease_bytes
+
+decision:
+  go_all:
+    - k7_final_not_kill
+    - lean_theorem_without_sorry
+    - independent_checker_accepts_valid_qsm
+    - required_mutants_rejected
+    - held_out_mutation_detection_100_percent
+    - source_target_refinement_100_percent
+    - vulnerable_baseline_context_counterexample
+    - no_full_qseal_counterexample_within_bound
+    - private_ingress_resource_trace_equal
+    - two_engines_agree
+    - three_compiler_configs_accept
+    - five_noticer_modules_validate
+    - four_generic_families_validate
+    - materially_exceeds_k7_one_step
+    - resource_only_leak_detected
+    - arbitrary_finite_prefix_theorem_checked
+  pivot_any:
+    - sealed_admission_too_hard
+    - exact_opcode_trace_too_strong
+    - memory_trace_too_expensive
+    - general_context_synthesis_too_large
+    - rustc_output_outside_subset
+    - cross_engine_subset_disagreement
+    - quotient_pad_only_bounded
+    - lean_target_semantics_must_reduce
+    - generic_benchmark_too_weak
+  kill_any:
+    - only_repeats_k7_state_output_comparison
+    - adversarial_context_missing
+    - target_only_surface_ignored
+    - private_api_publicly_reachable
+    - accepted_mutant_leaks
+    - checker_trusts_manifest_without_binary_parse
+    - hardcoded_module_relation
+    - capsule_validation_is_test_execution_only
+    - resource_claim_uses_wall_clock_only
+    - unsupported_wasm_silently_accepted
+    - optimizer_breakage_undetected
+    - malicious_context_breaks_utility
+    - preservation_theorem_contains_sorry
+    - no_contribution_beyond_k7
+
+change_history:
+  - version: 1
+    date: "2026-08-17"
+    reason: initial preregistration before QuotientSeal implementation results
