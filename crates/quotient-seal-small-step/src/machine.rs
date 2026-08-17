@@ -118,6 +118,28 @@ pub struct PublicHostTape {
     cursor: usize,
 }
 
+#[cfg(feature = "checker-internals")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CheckerMemoryPatch {
+    pub offset: u32,
+    pub bytes: Vec<u8>,
+}
+
+#[cfg(feature = "checker-internals")]
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct CheckerSeed {
+    pub globals: Vec<(u32, Value)>,
+    pub memory: Vec<CheckerMemoryPatch>,
+}
+
+#[cfg(feature = "checker-internals")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CheckerSeedError {
+    GlobalIndex,
+    GlobalType,
+    MemoryBounds,
+}
+
 impl PublicHostTape {
     #[must_use]
     pub fn new(directives: Vec<HostDirective>) -> Self {
@@ -525,6 +547,47 @@ impl WasmMachine {
             limits,
             host_calls: 0,
         })
+    }
+
+    #[cfg(feature = "checker-internals")]
+    pub fn instantiate_for_checker(
+        module: &CanonicalTargetIr,
+        export: &str,
+        arguments: Vec<Value>,
+        initial_fuel: u64,
+        host_tape: PublicHostTape,
+        limits: InterpreterLimits,
+        seed: &CheckerSeed,
+    ) -> Result<Self, CheckerSeedError> {
+        let mut machine =
+            Self::instantiate(module, export, arguments, initial_fuel, host_tape, limits)
+                .map_err(|_| CheckerSeedError::GlobalIndex)?;
+        for (index, value) in &seed.globals {
+            let index = usize::try_from(*index).map_err(|_| CheckerSeedError::GlobalIndex)?;
+            let target = machine
+                .state
+                .globals
+                .get_mut(index)
+                .ok_or(CheckerSeedError::GlobalIndex)?;
+            if core::mem::discriminant(target) != core::mem::discriminant(value) {
+                return Err(CheckerSeedError::GlobalType);
+            }
+            *target = *value;
+        }
+        for patch in &seed.memory {
+            let start =
+                usize::try_from(patch.offset).map_err(|_| CheckerSeedError::MemoryBounds)?;
+            let end = start
+                .checked_add(patch.bytes.len())
+                .ok_or(CheckerSeedError::MemoryBounds)?;
+            let target = machine
+                .state
+                .memory
+                .get_mut(start..end)
+                .ok_or(CheckerSeedError::MemoryBounds)?;
+            target.copy_from_slice(&patch.bytes);
+        }
+        Ok(machine)
     }
 
     #[must_use]
