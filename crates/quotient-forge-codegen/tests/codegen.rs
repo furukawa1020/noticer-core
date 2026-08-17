@@ -118,7 +118,7 @@ fn generated_no_std_crate_compiles_and_matches_every_vector() {
         temporary.path(),
     )
     .unwrap();
-    assert_eq!(package.files.len(), 6);
+    assert_eq!(package.files.len(), 7);
     assert_eq!(package.transition_vectors, 2);
 
     let target = temporary.path().join("target");
@@ -224,6 +224,7 @@ fn generation_is_byte_reproducible() {
         "certificate.caqt",
         "codegen-manifest.toml",
         "test-vectors.tsv",
+        "wasm-validation.mjs",
     ] {
         assert_eq!(
             fs::read(first.path().join(relative)).unwrap(),
