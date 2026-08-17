@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QuotientSeal capability-separated WASM ABI v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "contract_version",
+    "status",
+    "parent_semantics",
+    "canonical_hash",
+    "capabilities",
+    "host_imports",
+    "public_exports",
+    "public_wire",
+    "profiles",
+    "verdicts"
+  ],
+  "properties": {
+    "schema_version": {"const": "quotient-seal-abi-contract-v1"},
+    "contract_id": {"const": "quotient-seal-capability-separated-wasm-abi"},
+    "contract_version": {"const": 1},
+    "status": {"const": "FROZEN"},
+    "parent_semantics": {"const": "configs/quotient_seal/k8_semantics.yaml"},
+    "canonical_hash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "domain", "descriptor_symbol", "hash_function"],
+      "properties": {
+        "algorithm": {"const": "SHA-256"},
+        "domain": {"const": "quotient-seal-abi-v1"},
+        "descriptor_symbol": {"const": "QUOTIENT_SEAL_ABI_V1_DESCRIPTOR"},
+        "hash_function": {"const": "quotient_seal_abi_v1_hash"}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "private_only",
+        "public",
+        "private_export_policy",
+        "private_import_policy",
+        "private_wire_policy"
+      ],
+      "properties": {
+        "private_only": {
+          "type": "array",
+          "items": {"const": "qseal.private.ingest"},
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "public": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "qseal.public.tick",
+              "qseal.public.reset",
+              "qseal.public.handoff",
+              "qseal.public.status"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "private_export_policy": {"const": "FORBIDDEN"},
+        "private_import_policy": {"const": "FORBIDDEN"},
+        "private_wire_policy": {"const": "UNREPRESENTABLE"}
+      }
+    },
+    "host_imports": {"$ref": "#/$defs/symbols"},
+    "public_exports": {"$ref": "#/$defs/symbols"},
+    "public_wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "magic",
+        "version",
+        "bytes",
+        "byte_order",
+        "service_alias",
+        "public_slot",
+        "faults",
+        "malformed_length",
+        "unknown_method",
+        "unknown_fault",
+        "noncanonical_reserved"
+      ],
+      "properties": {
+        "magic": {"const": "QSAB"},
+        "version": {"const": 1},
+        "bytes": {"const": 24},
+        "byte_order": {"const": "LITTLE_ENDIAN"},
+        "service_alias": {"const": "NONZERO_U32"},
+        "public_slot": {"const": "U64"},
+        "faults": {
+          "type": "array",
+          "items": {"enum": ["NONE", "TIMEOUT", "RECONNECT", "LOSS"]},
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "malformed_length": {"const": "REJECT"},
+        "unknown_method": {"const": "REJECT"},
+        "unknown_fault": {"const": "REJECT"},
+        "noncanonical_reserved": {"const": "REJECT"}
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": {"enum": ["P0_PUBLIC_QUOTIENT_ONLY", "P1_SEALED_ADMISSION"]},
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true
+    },
+    "verdicts": {
+      "type": "array",
+      "items": {"enum": ["VALID", "INVALID", "INCOMPATIBLE", "RESOURCE_BOUND"]},
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "symbols": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "signature"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "signature": {"type": "string", "minLength": 1}
+        }
+      },
+      "minItems": 3,
+      "uniqueItems": true
+    }
+  }
+}

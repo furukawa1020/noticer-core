@@ -45,6 +45,7 @@ members = [
     "crates/quotient-forge-codegen",
     "crates/quotient-forge-noticer",
     "crates/quotient-forge-studio-wasm",
+    "crates/quotient-seal-abi",
 ]
 
 [workspace.package]
@@ -85,6 +86,7 @@ quotient-forge-solver = { path = "crates/quotient-forge-solver" }
 quotient-forge-repair = { path = "crates/quotient-forge-repair" }
 quotient-forge-codegen = { path = "crates/quotient-forge-codegen" }
 quotient-forge-noticer = { path = "crates/quotient-forge-noticer" }
+quotient-seal-abi = { path = "crates/quotient-seal-abi" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }
