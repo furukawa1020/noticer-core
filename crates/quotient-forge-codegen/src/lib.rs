@@ -7,8 +7,18 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use quotient_forge_caqt::{
-    verify, Certificate, CertificateLimits, CertificateVerdict, Digest, ExpectedContract,
-    OutputRecord,
+    artifact_digest, verify, Certificate, CertificateLimits, CertificateVerdict, Digest,
+    ExpectedContract, OutputRecord,
+};
+
+mod translation;
+
+pub use translation::{
+    reference_transcript, validate_translation, BuildContext, BuildEvidence, ExecutionStatus,
+    IncompatibleReason as TranslationIncompatibleReason, InvalidProbeKind, InvalidProbeObservation,
+    LifecycleObservation, ReferenceError, StepObservation, TargetKind, TranslationLimits,
+    TranslationMismatch, TranslationReport, TranslationResourceBound, TranslationTranscript,
+    TranslationVerdict,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -39,6 +49,7 @@ pub struct GeneratedPackage {
     pub root: PathBuf,
     pub files: Vec<PathBuf>,
     pub certificate_digest: Digest,
+    pub manifest_digest: Digest,
     pub transition_vectors: usize,
 }
 
@@ -91,11 +102,24 @@ pub fn generate_package(
         .map_err(|error| CodegenError::CertificateParse(error.to_string()))?;
     validate_certificate(&certificate, config)?;
 
-    let cargo_toml = generate_cargo_toml(config);
-    let runtime = generate_runtime(&certificate, config, report.certificate_digest)?;
-    let vectors = generate_vectors(&certificate, config)?;
     let manifest = generate_manifest(&certificate, config, report.certificate_digest);
+    let manifest_digest =
+        artifact_digest(b"quotient-forge-codegen-manifest-v2", manifest.as_bytes());
+    let cargo_toml = generate_cargo_toml(config);
+    let runtime = generate_runtime(
+        &certificate,
+        config,
+        report.certificate_digest,
+        manifest_digest,
+    )?;
+    let vectors = generate_vectors(&certificate, config)?;
     let vector_table = generate_vector_table(&certificate, config)?;
+    let wasm_validation = generate_wasm_validation(
+        &certificate,
+        config,
+        report.certificate_digest,
+        manifest_digest,
+    )?;
 
     let source = target.join("src");
     fs::create_dir_all(&source)?;
@@ -106,6 +130,7 @@ pub fn generate_package(
         target.join("certificate.caqt"),
         target.join("codegen-manifest.toml"),
         target.join("test-vectors.tsv"),
+        target.join("wasm-validation.mjs"),
     ];
     fs::write(&files[0], cargo_toml)?;
     fs::write(&files[1], runtime)?;
@@ -113,11 +138,13 @@ pub fn generate_package(
     fs::write(&files[3], certificate_bytes)?;
     fs::write(&files[4], manifest)?;
     fs::write(&files[5], vector_table)?;
+    fs::write(&files[6], wasm_validation)?;
 
     Ok(GeneratedPackage {
         root: target.to_path_buf(),
         files,
         certificate_digest: report.certificate_digest,
+        manifest_digest,
         transition_vectors: certificate.transitions.len(),
     })
 }
@@ -185,7 +212,7 @@ fn validate_certificate(
 
 fn generate_cargo_toml(config: &CodegenConfig) -> String {
     format!(
-        "[package]\nname = \"{}\"\nversion = \"0.0.0\"\nedition = \"2021\"\npublish = false\n\n[lib]\npath = \"src/lib.rs\"\n",
+        "[package]\nname = \"{}\"\nversion = \"0.0.0\"\nedition = \"2021\"\npublish = false\n\n[lib]\npath = \"src/lib.rs\"\ncrate-type = [\"rlib\"]\n",
         config.package_name
     )
 }
@@ -194,6 +221,7 @@ fn generate_runtime(
     certificate: &Certificate,
     config: &CodegenConfig,
     certificate_digest: Digest,
+    manifest_digest: Digest,
 ) -> Result<String, CodegenError> {
     let max_payload = certificate
         .outputs
@@ -219,7 +247,16 @@ fn generate_runtime(
     let crate_name = config.package_name.replace('-', "_");
     let mut source = String::new();
     writeln!(source, "#![no_std]").unwrap();
-    writeln!(source, "#![forbid(unsafe_code)]").unwrap();
+    writeln!(
+        source,
+        "#![cfg_attr(not(target_arch = \"wasm32\"), forbid(unsafe_code))]"
+    )
+    .unwrap();
+    writeln!(
+        source,
+        "#![cfg_attr(target_arch = \"wasm32\", deny(unsafe_code))]"
+    )
+    .unwrap();
     writeln!(source, "//! Generated from a VALID CAQT certificate.").unwrap();
     writeln!(source, "//! ```compile_fail").unwrap();
     writeln!(source, "//! use {crate_name}::PrivateInput;").unwrap();
@@ -244,6 +281,12 @@ fn generate_runtime(
         source,
         "pub const CERTIFICATE_DIGEST: [u8; 32] = {};",
         byte_array(certificate_digest.as_bytes(), 32)
+    )
+    .unwrap();
+    writeln!(
+        source,
+        "pub const MANIFEST_DIGEST: [u8; 32] = {};",
+        byte_array(manifest_digest.as_bytes(), 32)
     )
     .unwrap();
     writeln!(
@@ -299,7 +342,7 @@ fn generate_runtime(
         "#[derive(Clone, Copy, Debug, Eq, PartialEq)] pub struct FaultInput(pub u16);"
     )
     .unwrap();
-    writeln!(source, "#[derive(Clone, Copy, Debug, Eq, PartialEq)] pub enum StepError {{ InputOutOfRange, ArithmeticOverflow, InvalidState, InvalidOutput }}").unwrap();
+    writeln!(source, "#[derive(Clone, Copy, Debug, Eq, PartialEq)] pub enum StepError {{ InputOutOfRange, ArithmeticOverflow, InvalidState, InvalidOutput, CertificateMismatch }}").unwrap();
     writeln!(source).unwrap();
     writeln!(source, "#[derive(Clone, Copy, Debug, Eq, PartialEq)]").unwrap();
     writeln!(source, "pub struct EncodedOutput {{ pub emitted: bool, pub payload_len: u16, pub payload: [u8; MAX_PAYLOAD], pub action_len: u16, pub actions: [u32; MAX_ACTIONS] }}").unwrap();
@@ -360,6 +403,7 @@ fn generate_runtime(
     writeln!(source, "];\n").unwrap();
     writeln!(source, "mod sealed {{ pub trait Sealed {{}} }}").unwrap();
     writeln!(source, "pub trait CertifiedAdapter: sealed::Sealed {{}}").unwrap();
+    writeln!(source, "#[derive(Clone, Copy, Debug, Eq, PartialEq)] pub struct Handoff {{ state: u16, certificate_digest: [u8; 32], manifest_digest: [u8; 32] }}").unwrap();
     writeln!(
         source,
         "#[derive(Clone, Copy, Debug, Eq, PartialEq)] pub struct Runtime {{ state: u16 }}"
@@ -375,6 +419,19 @@ fn generate_runtime(
         "impl Default for Runtime {{ fn default() -> Self {{ Self::new() }} }}"
     )
     .unwrap();
+    writeln!(source, "fn table_offset(state: usize, input: usize) -> Result<usize, StepError> {{ state.checked_mul(INPUT_COUNT).and_then(|value| value.checked_add(input)).ok_or(StepError::ArithmeticOverflow) }}").unwrap();
+    writeln!(source, "fn transition_for(state: usize, quotient: usize, public: usize, fault: usize) -> Result<(Transition, EncodedOutput), StepError> {{").unwrap();
+    writeln!(source, "    if quotient >= QUOTIENT_INPUTS || public >= PUBLIC_INPUTS || fault >= FAULT_INPUTS {{ return Err(StepError::InputOutOfRange); }}").unwrap();
+    writeln!(
+        source,
+        "    if state >= STATE_COUNT {{ return Err(StepError::InvalidState); }}"
+    )
+    .unwrap();
+    writeln!(source, "    let input = quotient.checked_mul(PUBLIC_INPUTS).and_then(|value| value.checked_add(public)).and_then(|value| value.checked_mul(FAULT_INPUTS)).and_then(|value| value.checked_add(fault)).ok_or(StepError::ArithmeticOverflow)?;").unwrap();
+    writeln!(source, "    let transition = *TRANSITIONS.get(table_offset(state, input)?).ok_or(StepError::InvalidState)?;").unwrap();
+    writeln!(source, "    if usize::from(transition.next) >= STATE_COUNT {{ return Err(StepError::InvalidState); }}").unwrap();
+    writeln!(source, "    let output = *OUTPUTS.get(usize::from(transition.output)).ok_or(StepError::InvalidOutput)?; Ok((transition, output))").unwrap();
+    writeln!(source, "}}").unwrap();
     writeln!(source, "impl Runtime {{").unwrap();
     writeln!(
         source,
@@ -386,20 +443,29 @@ fn generate_runtime(
         "    #[must_use] pub const fn state(&self) -> u16 {{ self.state }}"
     )
     .unwrap();
-    writeln!(source, "    pub fn step(&mut self, quotient: QuotientInput, public: PublicInput, fault: FaultInput) -> Result<EncodedOutput, StepError> {{").unwrap();
-    writeln!(source, "        let quotient = usize::from(quotient.0); let public = usize::from(public.0); let fault = usize::from(fault.0);").unwrap();
-    writeln!(source, "        if quotient >= QUOTIENT_INPUTS || public >= PUBLIC_INPUTS || fault >= FAULT_INPUTS {{ return Err(StepError::InputOutOfRange); }}").unwrap();
-    writeln!(source, "        let input = quotient.checked_mul(PUBLIC_INPUTS).and_then(|value| value.checked_add(public)).and_then(|value| value.checked_mul(FAULT_INPUTS)).and_then(|value| value.checked_add(fault)).ok_or(StepError::ArithmeticOverflow)?;").unwrap();
-    writeln!(source, "        let table = usize::from(self.state).checked_mul(INPUT_COUNT).and_then(|value| value.checked_add(input)).ok_or(StepError::ArithmeticOverflow)?;").unwrap();
-    writeln!(
-        source,
-        "        let transition = *TRANSITIONS.get(table).ok_or(StepError::InvalidState)?;"
-    )
-    .unwrap();
-    writeln!(source, "        let output = *OUTPUTS.get(usize::from(transition.output)).ok_or(StepError::InvalidOutput)?;").unwrap();
-    writeln!(source, "        if usize::from(transition.next) >= STATE_COUNT {{ return Err(StepError::InvalidState); }} self.state = transition.next; Ok(output)").unwrap();
-    writeln!(source, "    }}").unwrap();
+    writeln!(source, "    pub fn reset(&mut self) {{ self.state = 0; }}").unwrap();
+    writeln!(source, "    #[must_use] pub const fn handoff(&self) -> Handoff {{ Handoff {{ state: self.state, certificate_digest: CERTIFICATE_DIGEST, manifest_digest: MANIFEST_DIGEST }} }}").unwrap();
+    writeln!(source, "    pub fn restore(handoff: Handoff) -> Result<Self, StepError> {{ if handoff.certificate_digest != CERTIFICATE_DIGEST || handoff.manifest_digest != MANIFEST_DIGEST {{ return Err(StepError::CertificateMismatch); }} if usize::from(handoff.state) >= STATE_COUNT {{ return Err(StepError::InvalidState); }} Ok(Self {{ state: handoff.state }}) }}").unwrap();
+    writeln!(source, "    pub fn step(&mut self, quotient: QuotientInput, public: PublicInput, fault: FaultInput) -> Result<EncodedOutput, StepError> {{ let (transition, output) = transition_for(usize::from(self.state), usize::from(quotient.0), usize::from(public.0), usize::from(fault.0))?; self.state = transition.next; Ok(output) }}").unwrap();
     writeln!(source, "}}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] fn wasm_step(state: u32, quotient: u32, public: u32, fault: u32) -> Result<(Transition, EncodedOutput), StepError> {{ let state = usize::try_from(state).map_err(|_| StepError::ArithmeticOverflow)?; let quotient = usize::try_from(quotient).map_err(|_| StepError::ArithmeticOverflow)?; let public = usize::try_from(public).map_err(|_| StepError::ArithmeticOverflow)?; let fault = usize::try_from(fault).map_err(|_| StepError::ArithmeticOverflow)?; transition_for(state, quotient, public, fault) }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] const fn error_code(error: StepError) -> u32 {{ match error {{ StepError::InputOutOfRange => 1, StepError::ArithmeticOverflow => 2, StepError::InvalidState => 3, StepError::InvalidOutput => 4, StepError::CertificateMismatch => 5 }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_state_count() -> u32 {{ STATE_COUNT as u32 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_quotient_inputs() -> u32 {{ QUOTIENT_INPUTS as u32 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_public_inputs() -> u32 {{ PUBLIC_INPUTS as u32 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_fault_inputs() -> u32 {{ FAULT_INPUTS as u32 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_encoded_output_bytes() -> u32 {{ ENCODED_OUTPUT_BYTES as u32 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_step_status(state: u32, quotient: u32, public: u32, fault: u32) -> u32 {{ match wasm_step(state, quotient, public, fault) {{ Ok(_) => 0, Err(error) => error_code(error) }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_step_next(state: u32, quotient: u32, public: u32, fault: u32) -> u32 {{ match wasm_step(state, quotient, public, fault) {{ Ok((transition, _)) => u32::from(transition.next), Err(_) => u32::MAX }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_step_output(state: u32, quotient: u32, public: u32, fault: u32) -> u32 {{ match wasm_step(state, quotient, public, fault) {{ Ok((transition, _)) => u32::from(transition.output), Err(_) => u32::MAX }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_output_encoded_byte(output: u32, index: u32) -> u32 {{ let output = usize::try_from(output).ok().and_then(|value| OUTPUTS.get(value)); let index = usize::try_from(index).ok(); match (output, index) {{ (Some(output), Some(index)) => output.encode().get(index).copied().map_or(u32::MAX, u32::from), _ => u32::MAX }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_certificate_digest_byte(index: u32) -> u32 {{ usize::try_from(index).ok().and_then(|value| CERTIFICATE_DIGEST.get(value)).copied().map_or(u32::MAX, u32::from) }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_manifest_digest_byte(index: u32) -> u32 {{ usize::try_from(index).ok().and_then(|value| MANIFEST_DIGEST.get(value)).copied().map_or(u32::MAX, u32::from) }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_reset() -> u32 {{ 0 }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_handoff(state: u32) -> u32 {{ if usize::try_from(state).is_ok_and(|value| value < STATE_COUNT) {{ state }} else {{ u32::MAX }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_restore(state: u32) -> u32 {{ qf_handoff(state) }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[allow(unsafe_code)] #[unsafe(no_mangle)] pub extern \"C\" fn qf_probe_offset_status(state: u32, input: u32) -> u32 {{ let state = usize::try_from(state).unwrap_or(usize::MAX); let input = usize::try_from(input).unwrap_or(usize::MAX); match table_offset(state, input) {{ Ok(_) => 0, Err(error) => error_code(error) }} }}").unwrap();
+    writeln!(source, "#[cfg(target_arch = \"wasm32\")] #[panic_handler] fn panic(_info: &core::panic::PanicInfo<'_>) -> ! {{ loop {{ core::hint::spin_loop(); }} }}").unwrap();
     writeln!(source, "#[cfg(test)] mod vectors;").unwrap();
     Ok(source)
 }
@@ -429,6 +495,9 @@ fn generate_vectors(
     .unwrap();
     writeln!(source, "    for vector in VECTORS {{ let mut runtime = Runtime {{ state: vector.from }}; let output = runtime.step(QuotientInput(vector.quotient), PublicInput(vector.public), FaultInput(vector.fault)).expect(\"certificate vector must execute\"); assert_eq!(runtime.state(), vector.to); assert_eq!(output, OUTPUTS[usize::from(vector.output)]); let first = output.encode(); let second = output.encode(); assert_eq!(first, second); }}").unwrap();
     writeln!(source, "}}").unwrap();
+    writeln!(source, "#[test] fn reset_handoff_and_restore_are_bound_to_the_build() {{ for state in 0..STATE_COUNT {{ let mut runtime = Runtime {{ state: state as u16 }}; let handoff = runtime.handoff(); runtime.reset(); assert_eq!(runtime.state(), 0); let restored = Runtime::restore(handoff).expect(\"bound handoff must restore\"); assert_eq!(usize::from(restored.state()), state); let mut changed = handoff; changed.manifest_digest[0] ^= 1; assert_eq!(Runtime::restore(changed), Err(StepError::CertificateMismatch)); }} }}").unwrap();
+    writeln!(source, "#[test] fn invalid_axes_and_offset_overflow_fail_closed() {{ let mut runtime = Runtime::new(); assert_eq!(runtime.step(QuotientInput(QUOTIENT_INPUTS as u16), PublicInput(0), FaultInput(0)), Err(StepError::InputOutOfRange)); assert_eq!(runtime.step(QuotientInput(0), PublicInput(PUBLIC_INPUTS as u16), FaultInput(0)), Err(StepError::InputOutOfRange)); assert_eq!(runtime.step(QuotientInput(0), PublicInput(0), FaultInput(FAULT_INPUTS as u16)), Err(StepError::InputOutOfRange)); assert_eq!(table_offset(usize::MAX, usize::MAX), Err(StepError::ArithmeticOverflow)); }}").unwrap();
+    writeln!(source, "#[test] fn bounded_sequence_matches_the_certificate_table() {{ let mut runtime = Runtime::new(); for step in 0..64 {{ let input = step % INPUT_COUNT; let index = usize::from(runtime.state()) * INPUT_COUNT + input; let vector = VECTORS[index]; assert_eq!(runtime.state(), vector.from); let output = runtime.step(QuotientInput(vector.quotient), PublicInput(vector.public), FaultInput(vector.fault)).expect(\"bounded sequence must execute\"); assert_eq!(runtime.state(), vector.to); assert_eq!(output, OUTPUTS[usize::from(vector.output)]); }} }}").unwrap();
     Ok(source)
 }
 
@@ -471,7 +540,7 @@ fn generate_manifest(
 ) -> String {
     let hashes = certificate.hashes;
     format!(
-        "format = \"quotient-forge-codegen-v1\"\npackage = \"{}\"\ncertificate_version = {}\ncertificate_digest = \"{}\"\nspec_hash = \"{}\"\nplant_hash = \"{}\"\nquotient_hash = \"{}\"\nobserver_hash = \"{}\"\nutility_hash = \"{}\"\nfault_hash = \"{}\"\ntransducer_hash = \"{}\"\nchecker_contract_hash = \"{}\"\nstates = {}\ninputs = {}\noutputs = {}\nquotient_inputs = {}\npublic_inputs = {}\nfault_inputs = {}\noutput_encoding = \"qf-fixed-le-v1\"\n",
+        "format = \"quotient-forge-codegen-v2\"\npackage = \"{}\"\ncertificate_version = {}\ncertificate_digest = \"{}\"\nspec_hash = \"{}\"\nplant_hash = \"{}\"\nquotient_hash = \"{}\"\nobserver_hash = \"{}\"\nutility_hash = \"{}\"\nfault_hash = \"{}\"\ntransducer_hash = \"{}\"\nchecker_contract_hash = \"{}\"\nstates = {}\ninputs = {}\noutputs = {}\nquotient_inputs = {}\npublic_inputs = {}\nfault_inputs = {}\noutput_encoding = \"qf-fixed-le-v1\"\ntranslation_semantics = \"all-state-input-step-reset-handoff-v1\"\ntargets = [\"native-no-std\", \"wasm32-unknown-unknown\"]\n",
         config.package_name,
         certificate.version,
         hex(certificate_digest),
@@ -489,6 +558,169 @@ fn generate_manifest(
         config.quotient_inputs,
         config.public_inputs,
         config.fault_inputs,
+    )
+}
+
+fn generate_wasm_validation(
+    certificate: &Certificate,
+    config: &CodegenConfig,
+    certificate_digest: Digest,
+    manifest_digest: Digest,
+) -> Result<String, CodegenError> {
+    let max_payload = certificate
+        .outputs
+        .iter()
+        .map(|output| output.payload.len())
+        .max()
+        .unwrap_or(0);
+    let max_actions = certificate
+        .outputs
+        .iter()
+        .map(|output| output.actions.len())
+        .max()
+        .unwrap_or(0);
+    let sequence = bounded_sequence(certificate, 64)?;
+    let mut script = String::new();
+    writeln!(script, "import {{ readFile }} from \"node:fs/promises\";").unwrap();
+    writeln!(script, "import process from \"node:process\";").unwrap();
+    writeln!(script, "const vectors = [").unwrap();
+    for transition in &certificate.transitions {
+        let (quotient, public, fault) = decompose_input(transition.input, config)?;
+        writeln!(script, "  {{ from: {}, quotient: {quotient}, public: {public}, fault: {fault}, to: {}, output: {} }},", transition.from, transition.to, transition.output).unwrap();
+    }
+    writeln!(script, "];").unwrap();
+    writeln!(script, "const outputs = [").unwrap();
+    for output in &certificate.outputs {
+        writeln!(
+            script,
+            "  {},",
+            js_array(&encoded_output(output, max_payload, max_actions))
+        )
+        .unwrap();
+    }
+    writeln!(script, "];").unwrap();
+    writeln!(script, "const sequence = [").unwrap();
+    for (from, input, to, output) in sequence {
+        let (quotient, public, fault) = decompose_input(input, config)?;
+        writeln!(script, "  {{ from: {from}, quotient: {quotient}, public: {public}, fault: {fault}, to: {to}, output: {output} }},").unwrap();
+    }
+    writeln!(script, "];").unwrap();
+    writeln!(
+        script,
+        "const certificateDigest = {};",
+        js_array(certificate_digest.as_bytes())
+    )
+    .unwrap();
+    writeln!(
+        script,
+        "const manifestDigest = {};",
+        js_array(manifest_digest.as_bytes())
+    )
+    .unwrap();
+    writeln!(script, "const assertEqual = (actual, expected, label) => {{ if (actual !== expected) throw new Error(label + \": expected \" + expected + \", got \" + actual); }};").unwrap();
+    writeln!(script, "if (process.argv.length !== 3) throw new Error(\"usage: node wasm-validation.mjs runtime.wasm\");").unwrap();
+    writeln!(
+        script,
+        "const module = await WebAssembly.compile(await readFile(process.argv[2]));"
+    )
+    .unwrap();
+    writeln!(
+        script,
+        "const imports = WebAssembly.Module.imports(module);"
+    )
+    .unwrap();
+    writeln!(script, "if (imports.length !== 0) throw new Error(\"WASM runtime unexpectedly imports host capabilities\");").unwrap();
+    writeln!(
+        script,
+        "const exportedNames = WebAssembly.Module.exports(module).map((entry) => entry.name);"
+    )
+    .unwrap();
+    writeln!(script, "if (exportedNames.some((name) => /(private|biosignal|ingest)/i.test(name))) throw new Error(\"private-input surface exported\");").unwrap();
+    writeln!(
+        script,
+        "const instance = await WebAssembly.instantiate(module, {{}});"
+    )
+    .unwrap();
+    writeln!(script, "const e = instance.exports;").unwrap();
+    writeln!(script, "for (let index = 0; index < 32; index += 1) {{ assertEqual(e.qf_certificate_digest_byte(index), certificateDigest[index], \"certificate digest byte \" + index); assertEqual(e.qf_manifest_digest_byte(index), manifestDigest[index], \"manifest digest byte \" + index); }}").unwrap();
+    writeln!(script, "for (const vector of vectors) {{ const args = [vector.from, vector.quotient, vector.public, vector.fault]; assertEqual(e.qf_step_status(...args), 0, \"step status\"); assertEqual(e.qf_step_next(...args), vector.to, \"next-state mismatch\"); assertEqual(e.qf_step_output(...args), vector.output, \"output-id mismatch\"); const expected = outputs[vector.output]; assertEqual(e.qf_encoded_output_bytes(), expected.length, \"encoded output length\"); for (let index = 0; index < expected.length; index += 1) assertEqual(e.qf_output_encoded_byte(vector.output, index), expected[index], \"output byte mismatch at \" + index); }}").unwrap();
+    writeln!(script, "assertEqual(e.qf_step_status(0, e.qf_quotient_inputs(), 0, 0), 1, \"quotient range status\");").unwrap();
+    writeln!(
+        script,
+        "assertEqual(e.qf_step_status(0, 0, e.qf_public_inputs(), 0), 1, \"public range status\");"
+    )
+    .unwrap();
+    writeln!(
+        script,
+        "assertEqual(e.qf_step_status(0, 0, 0, e.qf_fault_inputs()), 1, \"fault range status\");"
+    )
+    .unwrap();
+    writeln!(
+        script,
+        "assertEqual(e.qf_step_status(e.qf_state_count(), 0, 0, 0), 3, \"invalid state status\");"
+    )
+    .unwrap();
+    writeln!(script, "assertEqual(e.qf_probe_offset_status(0xffffffff, 0xffffffff), 2, \"offset overflow status\");").unwrap();
+    writeln!(script, "for (let state = 0; state < e.qf_state_count(); state += 1) {{ assertEqual(e.qf_reset(), 0, \"reset mismatch\"); assertEqual(e.qf_handoff(state), state, \"handoff mismatch\"); assertEqual(e.qf_restore(e.qf_handoff(state)), state, \"restore mismatch\"); }}").unwrap();
+    writeln!(script, "let sequenceState = 0; for (const vector of sequence) {{ assertEqual(sequenceState, vector.from, \"sequence source mismatch\"); const args = [sequenceState, vector.quotient, vector.public, vector.fault]; assertEqual(e.qf_step_status(...args), 0, \"sequence status\"); assertEqual(e.qf_step_output(...args), vector.output, \"sequence output\"); sequenceState = e.qf_step_next(...args); assertEqual(sequenceState, vector.to, \"sequence next state\"); }}").unwrap();
+    writeln!(script, "process.stdout.write(JSON.stringify({{ verdict: \"VALID\", target: \"wasm32-unknown-unknown\", transitions: vectors.length, sequenceSteps: sequence.length }}) + \"\\n\");").unwrap();
+    Ok(script)
+}
+
+fn bounded_sequence(
+    certificate: &Certificate,
+    steps: usize,
+) -> Result<Vec<(u32, u32, u32, u32)>, CodegenError> {
+    let mut state = 0_u32;
+    let mut sequence = Vec::with_capacity(steps);
+    for step in 0..steps {
+        let input = u32::try_from(step % certificate.input_count as usize)
+            .map_err(|_| CodegenError::InputProductOverflow)?;
+        let transition = certificate
+            .transitions
+            .iter()
+            .find(|transition| transition.from == state && transition.input == input)
+            .ok_or_else(|| {
+                CodegenError::CertificateRejected(format!(
+                    "missing transition for state {state}, input {input}"
+                ))
+            })?;
+        sequence.push((state, input, transition.to, transition.output));
+        state = transition.to;
+    }
+    Ok(sequence)
+}
+
+fn encoded_output(output: &OutputRecord, max_payload: usize, max_actions: usize) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(5 + max_payload + max_actions.saturating_mul(4));
+    bytes.push(u8::from(output.emitted));
+    bytes.extend_from_slice(
+        &u16::try_from(output.payload.len())
+            .unwrap_or(u16::MAX)
+            .to_le_bytes(),
+    );
+    bytes.extend_from_slice(&output.payload);
+    bytes.resize(3 + max_payload, 0);
+    bytes.extend_from_slice(
+        &u16::try_from(output.actions.len())
+            .unwrap_or(u16::MAX)
+            .to_le_bytes(),
+    );
+    for action in &output.actions {
+        bytes.extend_from_slice(&action.to_le_bytes());
+    }
+    bytes.resize(5 + max_payload + max_actions.saturating_mul(4), 0);
+    bytes
+}
+
+fn js_array(values: &[u8]) -> String {
+    format!(
+        "[{}]",
+        values
+            .iter()
+            .map(u8::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
     )
 }
 
