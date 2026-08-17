@@ -1,0 +1,46 @@
+version: 1
+format:
+  magic_ascii: QSEALCAP
+  canonical_encoding: true
+  trailing_bytes: reject
+  unknown_version: reject
+  section_order:
+    - resource_bounds
+    - source_certificate
+    - wasm_module
+    - abi_manifest
+    - observer_registry
+    - relation_certificate
+    - robust_certificate
+    - resource_certificate
+    - compiler_manifest
+  section_digest:
+    algorithm: sha256
+    domain_separated: true
+checker:
+  semantic_backend_required: true
+  independent_process_required: true
+  compiler_manifest_trusted: false
+  engine_manifest_trusted: false
+  fail_closed: true
+  verdicts:
+    - valid
+    - counterexample
+    - invalid
+    - inconclusive
+resource_envelope:
+  capsule_bytes: 16777216
+  section_bytes: 8388608
+  parser_work_units: 1000000
+  semantic_steps: 1000000
+  context_pairs: 100000
+  normalization_overhead_units: 1000000
+reproducibility:
+  identical_input_is_byte_identical: true
+  one_bit_mutation_is_rejected: true
+hardware_status: NOT_VERIFIED
+non_claims:
+  - priority_or_world_first
+  - hardware_validation
+  - unbounded_program_equivalence
+  - compiler_correctness_from_manifest
