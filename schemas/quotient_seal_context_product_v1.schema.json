@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_context_product_v1.schema.json",
+  "title": "QuotientSeal Context Product v1 Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "contract_version",
+    "status",
+    "parent_issue",
+    "issue",
+    "gates",
+    "context_semantics",
+    "product",
+    "observers",
+    "bounds",
+    "induction",
+    "counterexample",
+    "verdicts",
+    "non_claims",
+    "hardware_status"
+  ],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-context-product-v1" },
+    "contract_id": { "const": "QUOTIENT_SEAL_CONTEXT_PRODUCT_V1" },
+    "contract_version": { "const": 1 },
+    "status": { "const": "FROZEN" },
+    "parent_issue": { "const": 95 },
+    "issue": { "const": 102 },
+    "gates": { "type": "object" },
+    "context_semantics": { "type": "object" },
+    "product": { "type": "object" },
+    "observers": { "type": "object" },
+    "bounds": { "type": "object" },
+    "induction": { "type": "object" },
+    "counterexample": { "type": "object" },
+    "verdicts": {
+      "type": "array",
+      "const": ["ACCEPT", "COUNTEREXAMPLE", "INCONCLUSIVE"]
+    },
+    "non_claims": { "type": "array", "minItems": 5, "uniqueItems": true },
+    "hardware_status": { "const": "NOT_VERIFIED" }
+  }
+}

@@ -1651,6 +1651,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-seal-context"
+version = "0.1.0"
+dependencies = [
+ "quotient-forge-caqt",
+ "quotient-seal-relation",
+]
+
+[[package]]
 name = "quotient-seal-relation"
 version = "0.1.0"
 dependencies = [
