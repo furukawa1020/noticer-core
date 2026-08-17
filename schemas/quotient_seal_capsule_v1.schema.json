@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.local/schemas/quotient_seal_capsule_v1.schema.json",
+  "title": "QuotientSeal Capsule v1 frozen configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "format",
+    "checker",
+    "resource_envelope",
+    "reproducibility",
+    "hardware_status",
+    "non_claims"
+  ],
+  "properties": {
+    "version": { "const": 1 },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "magic_ascii",
+        "canonical_encoding",
+        "trailing_bytes",
+        "unknown_version",
+        "section_order",
+        "section_digest"
+      ],
+      "properties": {
+        "magic_ascii": { "const": "QSEALCAP" },
+        "canonical_encoding": { "const": true },
+        "trailing_bytes": { "const": "reject" },
+        "unknown_version": { "const": "reject" },
+        "section_order": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "resource_bounds" },
+            { "const": "source_certificate" },
+            { "const": "wasm_module" },
+            { "const": "abi_manifest" },
+            { "const": "observer_registry" },
+            { "const": "relation_certificate" },
+            { "const": "robust_certificate" },
+            { "const": "resource_certificate" },
+            { "const": "compiler_manifest" }
+          ],
+          "items": false,
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "section_digest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["algorithm", "domain_separated"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "domain_separated": { "const": true }
+          }
+        }
+      }
+    },
+    "checker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "semantic_backend_required",
+        "independent_process_required",
+        "compiler_manifest_trusted",
+        "engine_manifest_trusted",
+        "fail_closed",
+        "verdicts"
+      ],
+      "properties": {
+        "semantic_backend_required": { "const": true },
+        "independent_process_required": { "const": true },
+        "compiler_manifest_trusted": { "const": false },
+        "engine_manifest_trusted": { "const": false },
+        "fail_closed": { "const": true },
+        "verdicts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["valid", "counterexample", "invalid", "inconclusive"]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "resource_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capsule_bytes",
+        "section_bytes",
+        "parser_work_units",
+        "semantic_steps",
+        "context_pairs",
+        "normalization_overhead_units"
+      ],
+      "properties": {
+        "capsule_bytes": { "$ref": "#/$defs/positiveBound" },
+        "section_bytes": { "$ref": "#/$defs/positiveBound" },
+        "parser_work_units": { "$ref": "#/$defs/positiveBound" },
+        "semantic_steps": { "$ref": "#/$defs/positiveBound" },
+        "context_pairs": { "$ref": "#/$defs/positiveBound" },
+        "normalization_overhead_units": { "$ref": "#/$defs/positiveBound" }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identical_input_is_byte_identical",
+        "one_bit_mutation_is_rejected"
+      ],
+      "properties": {
+        "identical_input_is_byte_identical": { "const": true },
+        "one_bit_mutation_is_rejected": { "const": true }
+      }
+    },
+    "hardware_status": { "const": "NOT_VERIFIED" },
+    "non_claims": {
+      "type": "array",
+      "uniqueItems": true,
+      "contains": { "const": "priority_or_world_first" }
+    }
+  },
+  "$defs": {
+    "positiveBound": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    }
+  }
+}

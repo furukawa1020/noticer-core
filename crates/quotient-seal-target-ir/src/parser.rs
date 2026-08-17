@@ -522,7 +522,7 @@ fn parse_exports(
         .ok_or_else(|| invalid(InvalidReason::IntegerOverflow))?;
     let mut exports = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let name = reader.read_name(limits.max_name_bytes)?;
+        let wire_name = reader.read_name(limits.max_name_bytes)?;
         let kind = reader.read_u8()?;
         if kind != 0 {
             return Err(incompatible(if kind == 2 {
@@ -531,6 +531,11 @@ fn parse_exports(
                 UnsupportedFeature::NonFunctionExport
             }));
         }
+        let name = String::from(
+            wire_name
+                .strip_prefix("qseal.public.")
+                .unwrap_or(&wire_name),
+        );
         if !ALLOWED_EXPORTS.contains(&name.as_str()) {
             return Err(incompatible(UnsupportedFeature::PublicExport));
         }

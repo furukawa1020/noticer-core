@@ -8,6 +8,7 @@ venv/
 dist/
 build/
 target/
+*.qseal
 
 artifacts/*
 !artifacts/README.md
