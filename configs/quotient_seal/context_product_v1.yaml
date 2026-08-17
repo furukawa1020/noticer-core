@@ -1,0 +1,109 @@
+schema_version: quotient-seal-context-product-v1
+contract_id: QUOTIENT_SEAL_CONTEXT_PRODUCT_V1
+contract_version: 1
+status: FROZEN
+parent_issue: 95
+issue: 102
+
+gates:
+  k8_01_semantics: FROZEN
+  k8_05_relation_verdict: VALID
+  relation_binding:
+    - relation_digest
+    - inductive_digest
+    - target_ir_digest
+
+context_semantics:
+  transition_key:
+    - context_state
+    - public_observation
+    - shared_public_randomness
+  deterministic_after_randomness: true
+  private_input: UNREPRESENTABLE
+  complete_families:
+    - TICK
+    - RESET
+    - HANDOFF
+    - MALFORMED
+    - RETRY
+    - DEADLINE
+    - FAULT_TIMEOUT
+    - FAULT_RECONNECT
+    - FAULT_LOSS
+    - SERVICE_COLLUSION
+    - CROSS_SERVICE_REPLAY
+    - STOP
+
+product:
+  state:
+    - source_left
+    - target_left
+    - source_right
+    - target_right
+    - context_state
+    - public_observation
+  search: CANONICAL_BFS
+  visited: FIXPOINT
+  predecessor: REQUIRED
+  private_pair: K7_RELATION_PAIR
+  shared_command: REQUIRED
+  shared_randomness: REQUIRED
+
+observers:
+  profiles:
+    - O0
+    - O1
+    - O2
+    - O3
+    - O4
+    - O5
+    - O6
+  classification: FIRST_DIVERGENCE_PER_PROFILE
+
+bounds:
+  maximum_prefix_hard_limit: 256
+  product_state_bound: CONFIGURABLE
+  context_state_bound: CONFIGURABLE
+  bound_exhaustion: INCONCLUSIVE
+  unknown_transition: INCONCLUSIVE
+  unsupported: INCONCLUSIVE
+  disagreement: INCONCLUSIVE
+
+induction:
+  accept_requires_finite_closure: true
+  obligations:
+    - BASE_CASE
+    - STEP_CLOSURE
+    - SOURCE_DETERMINISM
+    - TARGET_DETERMINISM
+    - CONTEXT_DETERMINISM
+    - FINITE_STATE_SPACE
+    - RESOURCE_PROGRESS
+  missing_obligation: INCONCLUSIVE
+
+counterexample:
+  order: SHORTEST_THEN_LEXICOGRAPHIC
+  artifact: CANONICAL_QSCP_V1
+  fields:
+    - observer_profile
+    - context_family
+    - private_pair
+    - minimum_call_sequence
+    - shared_command
+    - shared_emitted_action
+    - first_divergence
+    - left_observation
+    - right_observation
+
+verdicts:
+  - ACCEPT
+  - COUNTEREXAMPLE
+  - INCONCLUSIVE
+
+non_claims:
+  - arbitrary_wasm_secure_compilation
+  - full_abstraction
+  - malicious_runtime_or_os
+  - microarchitectural_confidentiality
+  - physical_hardware_verification
+hardware_status: NOT_VERIFIED
