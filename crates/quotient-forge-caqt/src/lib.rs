@@ -32,6 +32,28 @@ pub use inductive::{
 #[cfg(feature = "std")]
 pub use inductive::{verify_inductive_timed, TimedInductiveVerification};
 
+/// Computes a domain-separated SHA-256 digest for generated build artifacts.
+///
+/// The function remains available in the minimal no_std checker build so a
+/// deployment validator can bind a certificate to its build manifest without
+/// introducing a second digest implementation.
+#[must_use]
+pub fn artifact_digest(domain: &[u8], payload: &[u8]) -> Digest {
+    let domain_length = u64::try_from(domain.len()).unwrap_or(u64::MAX);
+    let payload_length = u64::try_from(payload.len()).unwrap_or(u64::MAX);
+    let mut material = alloc::vec::Vec::with_capacity(
+        14_usize
+            .saturating_add(domain.len())
+            .saturating_add(payload.len()),
+    );
+    material.extend_from_slice(b"CAQT-ARTIFACT\0");
+    material.extend_from_slice(&domain_length.to_le_bytes());
+    material.extend_from_slice(domain);
+    material.extend_from_slice(&payload_length.to_le_bytes());
+    material.extend_from_slice(payload);
+    Digest::new(sha256::sha256(&material))
+}
+
 #[cfg(feature = "ir-compat")]
 use core::marker::PhantomData;
 
