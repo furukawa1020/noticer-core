@@ -105,6 +105,14 @@ def test_frozen_contract_loads_with_complete_observers(contract: SemanticsContra
     assert "WALL_CLOCK" not in {kind.value for kind in TargetEventKind}
 
 
+def test_k7_dependency_gate_references_the_translation_validation_issue(
+    contract: SemanticsContract,
+) -> None:
+    assert contract.schema_version == "k8-semantics-v1"
+    document = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    assert document["k7_boundary"]["required_issues"] == [76, 77, 88]
+
+
 def test_contract_rejects_private_context_capability(tmp_path: Path) -> None:
     document = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
     document["capabilities"]["context_allowed"].append("PRIVATE_INGEST")

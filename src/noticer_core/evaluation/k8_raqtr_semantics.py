@@ -460,8 +460,8 @@ def validate_semantics_document(document: Mapping[str, object]) -> tuple[str, ..
         errors.append("arbitrary-prefix induction obligations must remain complete")
 
     k7_boundary = cast(Mapping[str, object], document["k7_boundary"])
-    if set(cast(list[int], k7_boundary["required_issues"])) != {76, 77, 85}:
-        errors.append("K7 dependency gate must remain #76, #77, and #85")
+    if set(cast(list[int], k7_boundary["required_issues"])) != {76, 77, 88}:
+        errors.append("K7 dependency gate must remain #76, #77, and #88")
     if k7_boundary["mode"] != "REFERENCE_ONLY":
         errors.append("K7 artifacts may only be referenced, never copied")
     return tuple(errors)

@@ -9,7 +9,7 @@ k7_boundary:
   required_issues:
     - 76
     - 77
-    - 85
+    - 88
   references:
     - CAQT_CERTIFICATE
     - ACCEPTED_SOURCE_MACHINE

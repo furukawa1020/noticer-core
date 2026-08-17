@@ -24,7 +24,7 @@ K8は次を再定義しない。
 - generated runtime manifestとharness
 
 `SourceStateRef`が保持するのはcertificate digest、state ID、action-semantics IDだけである。
-#77と#85がmainへ入るまでは、具体型へのbindingを作らない。
+#77と#88がmainへ入るまでは、具体型へのbindingを作らない。
 
 ## 3. Worlds and source semantics
 
