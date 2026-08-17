@@ -1,0 +1,90 @@
+contract:
+  id: QUOTIENT_SEAL_RELATION_V1
+  format_version: 1
+  status: FROZEN
+  issue: 100
+  parent_issue: 95
+  dependencies:
+    inductive_caqt: K7-03
+    translation_validation: K7-10
+    target_ir: K8-03
+    small_step: K8-04
+
+gates:
+  k7_translation: VALID
+  inductive_certificate: VALID
+  parser_consensus: VALID
+  parser_disagreement: UNRESOLVED
+  target_execution:
+    resource_bound: INCONCLUSIVE
+    trap: INVALID
+    termination: INVALID
+
+relation:
+  source_component: reachable-source-state
+  target_components:
+    - entry-pc-set
+    - exit-pc-set
+    - typed-global-predicates
+    - memory-byte-predicates
+    - allowed-memory-write-ranges
+  canonical:
+    - source-state-order
+    - pc-order
+    - global-index-order
+    - non-overlapping-memory-order
+    - non-overlapping-write-range-order
+
+simulation:
+  axes:
+    - quotient
+    - public
+    - fault
+  entry_export: tick
+  source_state_as_public_argument: false
+  action_deadline_steps: 0
+  lifecycle_exports:
+    reset: relation-state-zero
+    handoff: relation-state-preserved
+    status: relation-state-preserved
+
+reject:
+  - uncovered-reachable-source-state
+  - target-only-host-call
+  - target-only-memory-write
+  - target-trap
+  - target-termination
+  - target-resource-bound
+  - unknown-public-failure
+  - unauthorized-action
+  - duplicate-action
+  - missing-required-action
+  - missing-recovery-action
+  - payload-divergence
+  - observer-trace-divergence
+  - context-coupling-divergence
+  - reset-divergence
+  - handoff-divergence
+
+counterexample:
+  policy: first-lexicographic-divergence
+  witness:
+    - phase
+    - source-state
+    - flat-input
+    - pair-left
+    - pair-right
+    - event-index
+    - expected
+    - actual
+
+non_claims:
+  - general-secure-compilation
+  - arbitrary-WebAssembly
+  - full-abstraction
+  - JIT-or-native-validation
+  - malicious-runtime-security
+  - operating-system-compromise
+  - microarchitectural-side-channels
+  - hardware-verification
+  - research-priority
