@@ -11,6 +11,7 @@ extern crate alloc;
 
 mod checker;
 mod format;
+mod inductive;
 mod sha256;
 
 pub use checker::{
@@ -22,6 +23,14 @@ pub use format::{
     Certificate, CertificateLimits, CostVector, Digest, DomainHashes, HashDomain, ObserverRecord,
     OutputRecord, ParseError, RelationPair, TransitionRecord, FORMAT_VERSION,
 };
+pub use inductive::{
+    build_inductive_certificate, verify_inductive, ClosureRecord, ExpectedInductiveContract,
+    InductiveBuildError, InductiveCanonicalViolation, InductiveCertificate, InductiveDecodeError,
+    InductiveIncompatibleReason, InductiveInvalidReason, InductiveLimits, InductiveParseError,
+    InductiveResourceBound, InductiveValidationReport, InductiveVerdict, INDUCTIVE_FORMAT_VERSION,
+};
+#[cfg(feature = "std")]
+pub use inductive::{verify_inductive_timed, TimedInductiveVerification};
 
 #[cfg(feature = "ir-compat")]
 use core::marker::PhantomData;
