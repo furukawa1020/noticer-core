@@ -42,7 +42,9 @@ lake build
 lake env lean Aqrs/Audit.lean
 ```
 
-CIでは公式`lean-action`と`actions/checkout`をcommit SHAへ固定する。通常のLean kernel buildに加え、`leanchecker`とRust製external checker`nanoda`を実行し、`nanoda-allow-sorry: false`を指定する。source guardは`sorry`、追加の論理公理宣言、`opaque`、`unsafe`を拒否する。
+CIでは公式`lean-action`と`actions/checkout`をcommit SHAへ固定する。通常のLean kernel buildに加え、bundled `leanchecker`で生成済みoleanを再検証する。source guardは`sorry`、追加の論理公理宣言、`opaque`、`unsafe`を拒否する。
+
+Rust製external checker `nanoda`は、Lean 4.30 exportを読み込む段階で`invalid digit found in string`となるため`NOT_VERIFIED`であり、K7-02の成功条件へ数えない。再導入条件と失敗証拠は#115で追跡する。
 
 生成される`.lake/`はGitへcommitしない。
 

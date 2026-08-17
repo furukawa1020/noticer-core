@@ -41,8 +41,15 @@ jobs:
           lint: false
           use-mathlib-cache: false
           leanchecker: true
-          nanoda: true
-          nanoda-allow-sorry: false
+          nanoda: false
+
+      - name: Record external checker status
+        run: |
+          {
+            echo "### External checker status"
+            echo "- bundled leanchecker: REQUIRED"
+            echo "- nanoda: NOT_VERIFIED (#115; Lean 4.30 export incompatibility)"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Assert theorem axiom surface
         working-directory: formal/aqrs
         shell: bash

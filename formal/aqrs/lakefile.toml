@@ -4,7 +4,3 @@ defaultTargets = ["Aqrs"]
 
 [[lean_lib]]
 name = "Aqrs"
-
-# Compatibility metadata for the nanoda wrapper in the pinned lean-action.
-[package]
-name = "Aqrs"

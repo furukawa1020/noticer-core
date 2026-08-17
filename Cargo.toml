@@ -1,6 +1,5 @@
 [workspace]
 resolver = "2"
-exclude = ["formal/aqrs/_nanoda_lib"]
 members = [
   "crates/noticer-types",
   "crates/noticer-protocol",
