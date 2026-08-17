@@ -1,0 +1,6 @@
+name = "aqrs"
+version = "0.1.0"
+defaultTargets = ["AQRS"]
+
+[[lean_lib]]
+name = "AQRS"
