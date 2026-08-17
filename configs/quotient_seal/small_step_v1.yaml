@@ -1,0 +1,78 @@
+contract:
+  id: QUOTIENT_SEAL_SMALL_STEP_V1
+  status: FROZEN
+  issue: 101
+  parent_issue: 95
+  predecessor:
+    target_ir: QUOTIENT_SEAL_TARGET_IR_V1
+    issue: 99
+
+state:
+  required:
+    - program-counter
+    - operand-stack
+    - locals
+    - globals
+    - fixed-memory
+    - control-stack
+    - call-stack
+    - event-trace
+    - remaining-fuel
+    - host-tape-cursor
+
+fuel:
+  instruction: 1
+  host_imports:
+    qseal.emit_frame: 8
+    qseal.emit_action: 8
+    qseal.public_failure: 4
+  exhaustion:
+    verdict: RESOURCE_BOUND
+    interpretation: INCONCLUSIVE
+
+host:
+  capability_surface:
+    - qseal.emit_frame
+    - qseal.emit_action
+    - qseal.public_failure
+  tape: public-and-ordered
+  undeclared_import: trap
+  missing_or_mismatched_directive: trap
+  private_ingress: unavailable
+
+events:
+  complete_classes:
+    - API
+    - instruction
+    - control
+    - function
+    - memory
+    - host
+    - trap
+    - termination
+    - fuel
+    - resource
+
+outcomes:
+  normal_return: RETURNED
+  host_termination: TERMINATED
+  semantic_fault: TRAPPED
+  budget_exhaustion: RESOURCE_BOUND
+
+limits:
+  initial_fuel: 1000000
+  events: 2000000
+  operand_stack: 4096
+  call_depth: 256
+  memory_bytes: 1048576
+  host_calls: 65536
+
+non_claims:
+  - relational-source-target-validation
+  - arbitrary-WebAssembly
+  - JIT-or-native-validation
+  - malicious-runtime-security
+  - operating-system-compromise
+  - microarchitectural-side-channels
+  - hardware-verification
+  - research-priority
