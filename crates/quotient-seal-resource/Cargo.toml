@@ -1,0 +1,11 @@
+[package]
+name = "quotient-seal-resource"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+quotient-forge-caqt.workspace = true
+quotient-seal-context.workspace = true
+quotient-seal-relation.workspace = true
