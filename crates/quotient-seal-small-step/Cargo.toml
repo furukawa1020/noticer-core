@@ -1,0 +1,8 @@
+[package]
+name = "quotient-seal-small-step"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+quotient-seal-target-ir = { path = "../quotient-seal-target-ir" }

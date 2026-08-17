@@ -47,6 +47,7 @@ members = [
     "crates/quotient-forge-studio-wasm",
     "crates/quotient-seal-abi",
     "crates/quotient-seal-target-ir",
+    "crates/quotient-seal-small-step",
 ]
 
 [workspace.package]
@@ -89,6 +90,7 @@ quotient-forge-codegen = { path = "crates/quotient-forge-codegen" }
 quotient-forge-noticer = { path = "crates/quotient-forge-noticer" }
 quotient-seal-abi = { path = "crates/quotient-seal-abi" }
 quotient-seal-target-ir = { path = "crates/quotient-seal-target-ir" }
+quotient-seal-small-step = { path = "crates/quotient-seal-small-step" }
 chacha20poly1305 = "0.10"
 ed25519-dalek = { version = "2.2", features = ["rand_core", "zeroize"] }
 p256 = { version = "0.13", features = ["ecdsa"] }

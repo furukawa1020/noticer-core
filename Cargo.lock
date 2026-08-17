@@ -1651,6 +1651,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-seal-small-step"
+version = "0.1.0"
+dependencies = [
+ "quotient-seal-target-ir",
+]
+
+[[package]]
 name = "quotient-seal-target-ir"
 version = "0.1.0"
 dependencies = [

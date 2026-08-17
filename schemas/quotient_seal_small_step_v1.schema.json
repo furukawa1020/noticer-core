@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_small_step_v1.schema.json",
+  "title": "QUOTIENT_SEAL_SMALL_STEP_V1 contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "state", "fuel", "host", "events", "outcomes", "limits", "non_claims"],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "required": ["id", "status", "issue", "parent_issue", "predecessor"],
+      "properties": {
+        "id": {"const": "QUOTIENT_SEAL_SMALL_STEP_V1"},
+        "status": {"const": "FROZEN"},
+        "issue": {"const": 101},
+        "parent_issue": {"const": 95},
+        "predecessor": {
+          "type": "object",
+          "required": ["target_ir", "issue"],
+          "properties": {
+            "target_ir": {"const": "QUOTIENT_SEAL_TARGET_IR_V1"},
+            "issue": {"const": 99}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": ["required"],
+      "properties": {
+        "required": {"type": "array", "minItems": 10, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    },
+    "fuel": {
+      "type": "object",
+      "required": ["instruction", "host_imports", "exhaustion"],
+      "properties": {
+        "instruction": {"const": 1},
+        "host_imports": {
+          "const": {
+            "qseal.emit_frame": 8,
+            "qseal.emit_action": 8,
+            "qseal.public_failure": 4
+          }
+        },
+        "exhaustion": {
+          "type": "object",
+          "required": ["verdict", "interpretation"],
+          "properties": {
+            "verdict": {"const": "RESOURCE_BOUND"},
+            "interpretation": {"const": "INCONCLUSIVE"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "host": {"type": "object"},
+    "events": {"type": "object"},
+    "outcomes": {"type": "object"},
+    "limits": {"type": "object"},
+    "non_claims": {
+      "type": "array",
+      "contains": {"const": "hardware-verification"}
+    }
+  }
+}
