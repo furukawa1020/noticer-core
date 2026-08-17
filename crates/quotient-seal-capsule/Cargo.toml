@@ -1,0 +1,16 @@
+[package]
+name = "quotient-seal-capsule"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+quotient-forge-caqt.workspace = true
+quotient-seal-abi.workspace = true
+quotient-seal-context.workspace = true
+quotient-seal-relation.workspace = true
+quotient-seal-resource.workspace = true
+quotient-seal-target-ir.workspace = true
+
+[dev-dependencies]
+quotient-seal-small-step.workspace = true
