@@ -1,4 +1,4 @@
-import AQRS.Trace
+import Aqrs.Trace
 
 namespace AQRS
 

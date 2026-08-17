@@ -1,6 +1,6 @@
 name = "aqrs"
 version = "0.1.0"
-defaultTargets = ["AQRS"]
+defaultTargets = ["Aqrs"]
 
 [[lean_lib]]
-name = "AQRS"
+name = "Aqrs"

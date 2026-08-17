@@ -47,7 +47,7 @@ jobs:
         working-directory: formal/aqrs
         shell: bash
         run: |
-          audit="$(lake env lean AQRS/Audit.lean 2>&1)"
+          audit="$(lake env lean Aqrs/Audit.lean 2>&1)"
           printf '%s\n' "$audit"
           if grep -Eq 'Classical\.choice|Quot\.sound|sorryAx' <<<"$audit"; then
             echo "unexpected theorem axiom dependency"

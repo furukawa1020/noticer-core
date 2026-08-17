@@ -1,4 +1,4 @@
-import AQRS.Soundness
+import Aqrs.Soundness
 
 namespace AQRS
 

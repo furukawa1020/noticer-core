@@ -1,4 +1,4 @@
-import AQRS.Model
+import Aqrs.Model
 
 namespace AQRS
 

@@ -6,7 +6,7 @@ K7-02は、有限AQRS modelに対するbad-state checkerの数学的核をLean 4
 
 ## Formal boundary
 
-[`Model.lean`](../formal/aqrs/AQRS/Model.lean)は次の有限domainを明示する。
+[`Model.lean`](../formal/aqrs/Aqrs/Model.lean)は次の有限domainを明示する。
 
 - plant state、private history、total transition
 - shared environment input、そのpublic symbolとfault
@@ -26,7 +26,7 @@ K7-02は、有限AQRS modelに対するbad-state checkerの数学的核をLean 4
 
 ## Negative witness
 
-[`Negative.lean`](../formal/aqrs/AQRS/Negative.lean)はslot 0で必須actionを持つ1-state modelと、actionを一切出さないsuppress-all release machineを定義する。次を機械検証する。
+[`Negative.lean`](../formal/aqrs/Aqrs/Negative.lean)はslot 0で必須actionを持つ1-state modelと、actionを一切出さないsuppress-all release machineを定義する。次を機械検証する。
 
 - suppress-allはdeadline violationを持つ
 - suppress-allは`UtilitySafeThrough`を満たさない
@@ -39,7 +39,7 @@ K7-02は、有限AQRS modelに対するbad-state checkerの数学的核をLean 4
 ```bash
 cd formal/aqrs
 lake build
-lake env lean AQRS/Audit.lean
+lake env lean Aqrs/Audit.lean
 ```
 
 CIでは公式`lean-action`と`actions/checkout`をcommit SHAへ固定する。通常のLean kernel buildに加え、`leanchecker`とRust製external checker`nanoda`を実行し、`nanoda-allow-sorry: false`を指定する。source guardは`sorry`、追加の論理公理宣言、`opaque`、`unsafe`を拒否する。
