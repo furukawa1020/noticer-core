@@ -1557,6 +1557,8 @@ name = "quotient-forge-check"
 version = "0.1.0"
 dependencies = [
  "quotient-forge-ir",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
