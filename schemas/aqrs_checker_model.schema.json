@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.example/schemas/aqrs_checker_model.schema.json",
+  "title": "AQRS independent checker interchange model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "horizon",
+    "states",
+    "semantics",
+    "faults",
+    "inputs",
+    "transitions",
+    "observers",
+    "initial_pairs"
+  ],
+  "properties": {
+    "format_version": { "const": "aqrs-check-model-v1" },
+    "horizon": { "type": "integer", "minimum": 1 },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/state" }
+    },
+    "semantics": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/semantic" }
+    },
+    "faults": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fault" }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/transition" }
+    },
+    "observers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/observer" }
+    },
+    "initial_pairs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/initial_pair" }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action_semantics", "private_history"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "action_semantics": { "$ref": "#/$defs/identifier" },
+        "private_history": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "semantic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "obligations"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "obligations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/action_obligation" }
+        }
+      }
+    },
+    "action_obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action", "trigger_slot", "deadline_slot"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "action": { "$ref": "#/$defs/identifier" },
+        "trigger_slot": { "type": "integer", "minimum": 0 },
+        "deadline_slot": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "recovery"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "recovery": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/recovery" }
+          ]
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "deadline_after_slots"],
+      "properties": {
+        "action": { "$ref": "#/$defs/identifier" },
+        "deadline_after_slots": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "public_symbol", "fault"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "public_symbol": { "$ref": "#/$defs/identifier" },
+        "fault": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/identifier" }
+          ]
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "input", "to", "release"],
+      "properties": {
+        "from": { "$ref": "#/$defs/identifier" },
+        "input": { "$ref": "#/$defs/identifier" },
+        "to": { "$ref": "#/$defs/identifier" },
+        "release": { "$ref": "#/$defs/release" }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emitted", "fields", "actions"],
+      "properties": {
+        "emitted": { "type": "boolean" },
+        "fields": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/action_emission" }
+        }
+      }
+    },
+    "action_emission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation", "action"],
+      "properties": {
+        "obligation": { "$ref": "#/$defs/obligation_ref" },
+        "action": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "obligation_ref": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "authorized" },
+            "id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "fault", "triggered_at"],
+          "properties": {
+            "kind": { "const": "recovery" },
+            "fault": { "$ref": "#/$defs/identifier" },
+            "triggered_at": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "observer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "visible_fields", "observes_actions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "visible_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "observes_actions": { "type": "boolean" }
+      }
+    },
+    "initial_pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["left", "right"],
+      "properties": {
+        "left": { "$ref": "#/$defs/identifier" },
+        "right": { "$ref": "#/$defs/identifier" }
+      }
+    }
+  }
+}
