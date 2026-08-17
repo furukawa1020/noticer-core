@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QuotientSeal RAQTR semantics contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "contract_version",
+    "status",
+    "parent_contract",
+    "k7_boundary",
+    "capabilities",
+    "source_semantics",
+    "target_semantics",
+    "context_semantics",
+    "product_semantics",
+    "event_kinds",
+    "observer_profiles",
+    "abstraction",
+    "outcomes",
+    "resource_semantics",
+    "utility",
+    "induction"
+  ],
+  "properties": {
+    "schema_version": {"const": "k8-semantics-v1"},
+    "contract_id": {"const": "quotient-seal-raqtr-semantics"},
+    "contract_version": {"const": 1},
+    "status": {"const": "FROZEN"},
+    "parent_contract": {"const": "configs/quotient_seal/k8_research.yaml"},
+    "k7_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "required_issues", "references", "forbidden_local_definitions"],
+      "properties": {
+        "mode": {"const": "REFERENCE_ONLY"},
+        "required_issues": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "minItems": 3,
+          "uniqueItems": true
+        },
+        "references": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 3,
+          "uniqueItems": true
+        },
+        "forbidden_local_definitions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 3,
+          "uniqueItems": true
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["private_only", "context_allowed", "context_forbidden"],
+      "properties": {
+        "private_only": {
+          "type": "array",
+          "items": {"enum": ["PRIVATE_INGEST"]},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "context_allowed": {
+          "type": "array",
+          "items": {
+            "enum": ["PUBLIC_CALL", "PUBLIC_FAULT", "PUBLIC_RESET", "PUBLIC_HANDOFF", "STOP"]
+          },
+          "minItems": 5,
+          "uniqueItems": true
+        },
+        "context_forbidden": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "PRIVATE_INGEST",
+              "PRIVATE_HISTORY_READ",
+              "PRIVATE_STATE_READ",
+              "LINEAR_MEMORY_READ"
+            ]
+          },
+          "minItems": 4,
+          "uniqueItems": true
+        }
+      }
+    },
+    "source_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "transition", "private_ingest", "public_call"],
+      "properties": {
+        "state": {"const": "OPAQUE_K7_CAQT_STATE_REFERENCE"},
+        "transition": {"const": "K7_ACCEPTED_SOURCE_STEP_REFERENCE"},
+        "private_ingest": {"const": "TWO_RUN_ACTION_EQUIVALENCE"},
+        "public_call": {"const": "RELATIONAL_PRESERVATION"}
+      }
+    },
+    "target_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_components", "transition", "target_trace"],
+      "properties": {
+        "state_components": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 6,
+          "uniqueItems": true
+        },
+        "transition": {"const": "DETERMINISTIC_RESTRICTED_WASM_STEP"},
+        "target_trace": {"const": "FINITE_EVENT_SEQUENCE"}
+      }
+    },
+    "context_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transition_key", "transition_output", "deterministic", "private_input"],
+      "properties": {
+        "transition_key": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "transition_output": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "deterministic": {"const": true},
+        "private_input": {"const": "UNREPRESENTABLE"}
+      }
+    },
+    "product_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["world_precondition", "context_coupling", "source_target_relation", "finite_product"],
+      "properties": {
+        "world_precondition": {"const": "PRIVATE_DISTINCT_ACTION_EQUIVALENT"},
+        "context_coupling": {"const": "EQUAL_OBSERVATION_SAME_TRANSITION"},
+        "source_target_relation": {"const": "EXPLICIT_WITNESS"},
+        "finite_product": {"const": "SOURCE_X_TARGET_LEFT_X_TARGET_RIGHT_X_CONTEXT"}
+      }
+    },
+    "event_kinds": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "API_CALL", "API_RETURN", "ACTION", "HOST_CALL", "TRAP", "CONTROL",
+          "INSTRUCTION", "MEMORY_ACCESS", "MEMORY_GROW", "RESOURCE", "TERMINATION",
+          "UNKNOWN_FAILURE", "CONTEXT_COMMAND"
+        ]
+      },
+      "minItems": 13,
+      "uniqueItems": true
+    },
+    "observer_profiles": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "visible_events"],
+        "properties": {
+          "id": {"enum": ["O0", "O1", "O2", "O3", "O4", "O5", "O6"]},
+          "name": {"type": "string"},
+          "visible_events": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "abstraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direct", "hidden", "policy_checked", "hard_fail"],
+      "properties": {
+        "direct": {
+          "type": "array",
+          "minItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target", "source"],
+            "properties": {
+              "target": {"type": "string"},
+              "source": {
+                "enum": ["PUBLIC_CALL", "PUBLIC_RETURN", "AUTHORIZED_ACTION", "PUBLIC_FAULT", "TERMINATION"]
+              }
+            }
+          }
+        },
+        "hidden": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "policy_checked": {
+          "type": "array",
+          "items": {"enum": ["HOST_CALL", "TRAP"]},
+          "minItems": 2,
+          "uniqueItems": true
+        },
+        "hard_fail": {
+          "type": "array",
+          "items": {"enum": ["MEMORY_GROW", "UNKNOWN_FAILURE"]},
+          "minItems": 2,
+          "uniqueItems": true
+        }
+      }
+    },
+    "outcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "counterexample", "inconclusive"],
+      "properties": {
+        "success": {"type": "array", "items": {"enum": ["ACCEPT"]}, "minItems": 1, "uniqueItems": true},
+        "counterexample": {"type": "array", "items": {"type": "string"}, "minItems": 6, "uniqueItems": true},
+        "inconclusive": {"type": "array", "items": {"type": "string"}, "minItems": 8, "uniqueItems": true}
+      }
+    },
+    "resource_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deterministic_fuel", "state_bound", "bounded_nontermination", "fuel_exhaustion", "state_bound_exhaustion", "wall_clock_timing"],
+      "properties": {
+        "deterministic_fuel": {"type": "integer", "minimum": 1},
+        "state_bound": {"type": "integer", "minimum": 1},
+        "bounded_nontermination": {"const": "OBSERVABLE_PREFIX"},
+        "fuel_exhaustion": {"const": "INCONCLUSIVE"},
+        "state_bound_exhaustion": {"const": "INCONCLUSIVE"},
+        "wall_clock_timing": {"const": "EMPIRICAL_ONLY"}
+      }
+    },
+    "utility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorized_action", "deadline", "fault_recovery", "suppress_all"],
+      "properties": {
+        "authorized_action": {"const": "EXACTLY_ONCE"},
+        "deadline": {"const": "REQUIRED"},
+        "fault_recovery": {"const": "REQUIRED_WHEN_DECLARED"},
+        "suppress_all": {"const": "REJECT"}
+      }
+    },
+    "induction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligations"],
+      "properties": {
+        "obligations": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 7,
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

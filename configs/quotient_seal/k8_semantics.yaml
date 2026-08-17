@@ -1,0 +1,231 @@
+schema_version: k8-semantics-v1
+contract_id: quotient-seal-raqtr-semantics
+contract_version: 1
+status: FROZEN
+parent_contract: configs/quotient_seal/k8_research.yaml
+
+k7_boundary:
+  mode: REFERENCE_ONLY
+  required_issues:
+    - 76
+    - 77
+    - 85
+  references:
+    - CAQT_CERTIFICATE
+    - ACCEPTED_SOURCE_MACHINE
+    - GENERATED_RUNTIME_HARNESS
+  forbidden_local_definitions:
+    - CAQT_CERTIFICATE_FORMAT
+    - K7_SOURCE_MACHINE
+    - K7_RUNTIME_MANIFEST
+
+capabilities:
+  private_only:
+    - PRIVATE_INGEST
+  context_allowed:
+    - PUBLIC_CALL
+    - PUBLIC_FAULT
+    - PUBLIC_RESET
+    - PUBLIC_HANDOFF
+    - STOP
+  context_forbidden:
+    - PRIVATE_INGEST
+    - PRIVATE_HISTORY_READ
+    - PRIVATE_STATE_READ
+    - LINEAR_MEMORY_READ
+
+source_semantics:
+  state: OPAQUE_K7_CAQT_STATE_REFERENCE
+  transition: K7_ACCEPTED_SOURCE_STEP_REFERENCE
+  private_ingest: TWO_RUN_ACTION_EQUIVALENCE
+  public_call: RELATIONAL_PRESERVATION
+
+target_semantics:
+  state_components:
+    - MODULE_DIGEST
+    - PROGRAM_COUNTER
+    - PUBLIC_STATE_DIGEST
+    - OPAQUE_PRIVATE_HANDLE
+    - MEMORY_PAGES
+    - EXECUTION_STATUS
+  transition: DETERMINISTIC_RESTRICTED_WASM_STEP
+  target_trace: FINITE_EVENT_SEQUENCE
+
+context_semantics:
+  transition_key:
+    - CONTEXT_STATE
+    - PUBLIC_OBSERVATION
+  transition_output:
+    - NEXT_CONTEXT_STATE
+    - PUBLIC_COMMAND
+  deterministic: true
+  private_input: UNREPRESENTABLE
+
+product_semantics:
+  world_precondition: PRIVATE_DISTINCT_ACTION_EQUIVALENT
+  context_coupling: EQUAL_OBSERVATION_SAME_TRANSITION
+  source_target_relation: EXPLICIT_WITNESS
+  finite_product: SOURCE_X_TARGET_LEFT_X_TARGET_RIGHT_X_CONTEXT
+
+event_kinds:
+  - API_CALL
+  - API_RETURN
+  - ACTION
+  - HOST_CALL
+  - TRAP
+  - CONTROL
+  - INSTRUCTION
+  - MEMORY_ACCESS
+  - MEMORY_GROW
+  - RESOURCE
+  - TERMINATION
+  - UNKNOWN_FAILURE
+  - CONTEXT_COMMAND
+
+observer_profiles:
+  - id: O0
+    name: API
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+  - id: O1
+    name: TRAP
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - TRAP
+      - TERMINATION
+      - UNKNOWN_FAILURE
+  - id: O2
+    name: CONTROL
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - TRAP
+      - TERMINATION
+      - UNKNOWN_FAILURE
+      - CONTROL
+  - id: O3
+    name: INSTRUCTION
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - TRAP
+      - TERMINATION
+      - UNKNOWN_FAILURE
+      - CONTROL
+      - INSTRUCTION
+  - id: O4
+    name: MEMORY
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - TRAP
+      - TERMINATION
+      - UNKNOWN_FAILURE
+      - CONTROL
+      - MEMORY_ACCESS
+      - MEMORY_GROW
+  - id: O5
+    name: COMBINED_SERVICE
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - HOST_CALL
+      - TRAP
+      - CONTROL
+      - INSTRUCTION
+      - MEMORY_ACCESS
+      - MEMORY_GROW
+      - RESOURCE
+      - TERMINATION
+      - UNKNOWN_FAILURE
+  - id: O6
+    name: COLLUSION
+    visible_events:
+      - API_CALL
+      - API_RETURN
+      - ACTION
+      - HOST_CALL
+      - TRAP
+      - CONTROL
+      - INSTRUCTION
+      - MEMORY_ACCESS
+      - MEMORY_GROW
+      - RESOURCE
+      - TERMINATION
+      - UNKNOWN_FAILURE
+      - CONTEXT_COMMAND
+
+abstraction:
+  direct:
+    - target: API_CALL
+      source: PUBLIC_CALL
+    - target: API_RETURN
+      source: PUBLIC_RETURN
+    - target: ACTION
+      source: AUTHORIZED_ACTION
+    - target: TERMINATION
+      source: TERMINATION
+  hidden:
+    - CONTROL
+    - INSTRUCTION
+    - MEMORY_ACCESS
+    - RESOURCE
+    - CONTEXT_COMMAND
+  policy_checked:
+    - HOST_CALL
+    - TRAP
+  hard_fail:
+    - MEMORY_GROW
+    - UNKNOWN_FAILURE
+
+outcomes:
+  success:
+    - ACCEPT
+  counterexample:
+    - SOURCE_AQNI_DIVERGENCE
+    - TRACE_REFINEMENT_FAILURE
+    - OBSERVATION_DIVERGENCE
+    - UTILITY_FAILURE
+    - CONTEXT_DECOUPLING
+    - STATE_RELATION_FAILURE
+  inconclusive:
+    - PRECONDITION_NOT_MET
+    - FUEL_EXHAUSTED
+    - STATE_BOUND_EXHAUSTED
+    - UNSUPPORTED_INSTRUCTION
+    - UNKNOWN_IMPORT
+    - PARSER_DISAGREEMENT
+    - UNKNOWN_CONTEXT_TRANSITION
+    - INDUCTION_NOT_CLOSED
+
+resource_semantics:
+  deterministic_fuel: 4096
+  state_bound: 1024
+  bounded_nontermination: OBSERVABLE_PREFIX
+  fuel_exhaustion: INCONCLUSIVE
+  state_bound_exhaustion: INCONCLUSIVE
+  wall_clock_timing: EMPIRICAL_ONLY
+
+utility:
+  authorized_action: EXACTLY_ONCE
+  deadline: REQUIRED
+  fault_recovery: REQUIRED_WHEN_DECLARED
+  suppress_all: REJECT
+
+induction:
+  obligations:
+    - BASE_CASE
+    - STEP_CLOSURE
+    - SOURCE_DETERMINISM
+    - TARGET_DETERMINISM
+    - CONTEXT_DETERMINISM
+    - FINITE_STATE_SPACE
+    - RESOURCE_PROGRESS
