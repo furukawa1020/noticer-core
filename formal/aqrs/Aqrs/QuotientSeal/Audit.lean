@@ -1,0 +1,10 @@
+import Aqrs.QuotientSeal.Negative
+
+#print axioms AQRS.QuotientSeal.finiteProduct_member
+#print axioms AQRS.QuotientSeal.relation_left_at
+#print axioms AQRS.QuotientSeal.targetLeft_projects_to_source
+#print axioms AQRS.QuotientSeal.finiteProduct_contexts_coupled
+#print axioms AQRS.QuotientSeal.finiteProductPreservesRAQTR
+#print axioms AQRS.QuotientSeal.suppressAll_has_no_validated_initial_relation
+#print axioms AQRS.QuotientSeal.suppressAll_not_target_utility
+#print axioms AQRS.QuotientSeal.resourceLeak_has_no_safe_certificate
