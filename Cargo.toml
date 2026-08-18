@@ -120,4 +120,6 @@ trybuild = "1"
 clap = { version = "4", features = ["derive"] }
 csv = "1"
 wasmi = { version = "=0.46.0", default-features = false, features = ["std", "extra-checks", "prefer-btree-collections"] }
+wasmtime = { version = "=34.0.2", default-features = false, features = ["runtime", "cranelift", "std"] }
+wasmparser = "=0.228.0"
 wat = "=1.251.0"
