@@ -1,0 +1,17 @@
+{
+  "schema_version": "quotient-seal-cross-engine-protocol/v1",
+  "artifact_schema_version": "quotient-seal-engine-run/v1",
+  "required_engines": ["wasmi", "wasmtime"],
+  "version_policy": "EXACT",
+  "missing_engine_policy": "UNRESOLVED",
+  "instruction_trace_scope": "REFERENCE_INTERPRETER_ONLY",
+  "observer_surface": [
+    "OUTPUT",
+    "PUBLIC_STATE",
+    "TRAP",
+    "RETURN",
+    "HOST_IMPORT",
+    "RESET",
+    "HANDOFF"
+  ]
+}
