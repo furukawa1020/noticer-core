@@ -39,7 +39,22 @@ observer projectionはAPI、control、instruction、memory、resourceのいず�
 最終定理はobserver profile、finite domain、product bound、finite horizon、source AQNI、source
 utility、relation witnessを引数へ明示する。
 
-## 4. Negative models
+## 4. Mechanized theorem
+
+`AQRS.QuotientSeal.finiteProductPreservesRAQTR`は、任意に与えた有限`horizon`について
+次を同時に返す。
+
+- selected observer profileでのtarget trace equality
+- adversarial context stateのcoupling
+- target resource trace equality
+- target-only trap、forbidden import、resource boundの不在
+- source releaseとtarget releaseのaction list一致
+- K7 `UtilitySafeThrough` witnessの保持
+
+finite productのentry数と`productBound`は結論へ残る。closureは全slotのpublic inputに対して
+要求されるため、特定の学習済みprefixだけを列挙して成功扱いすることはできない。
+
+## 5. Negative models
 
 - `suppress-all`: sourceで必要なactionをtargetが消すためaction refinementを満たさない。
 - `resource-only leak`: release payloadとactionが同じでもprivate run間のresource traceが異なり、
@@ -48,12 +63,14 @@ utility、relation witnessを引数へ明示する。
 negative modelは「観測を消せば安全」という退化解と、機能出力だけを比較する不十分なcheckerを
 排除するために使う。
 
-## 5. Verification boundary
+## 6. Verification boundary
 
 - Lean toolchainは`formal/aqrs/lean-toolchain`へpinする。
-- kernel buildに加えてGitHub Actionsの`leanchecker`で再検証する。
-- theoremの公理面をCIでallowlist監査する。
+- kernel buildに加えてGitHub Actionsのindependent `leanchecker`で再検証する。
+- theoremの公理面は`propext`だけを許可し、`Classical.choice`、`Quot.sound`、
+  `sorryAx`をCIで拒否する。
 - proof escape hatchをsource guardで拒否する。
+- nanodaはLean 4.30 export incompatibilityを解消するまで`NOT_VERIFIED`である（#115）。
 - RustからLean modelへのlowering correctnessは本Issueの証明対象外である。
 - infinite-trace liveness、native JIT、OS、microarchitecture、hardwareは証明対象外である。
 - 実hardware状態は`NOT_VERIFIED`である。

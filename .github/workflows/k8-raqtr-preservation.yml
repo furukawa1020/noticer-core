@@ -1,0 +1,87 @@
+name: K8 RAQTR preservation
+
+on:
+  pull_request:
+    paths:
+      - "formal/aqrs/**"
+      - "docs/quotient_seal_lean_preservation.md"
+      - ".github/workflows/k8-raqtr-preservation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "formal/aqrs/**"
+      - "docs/quotient_seal_lean_preservation.md"
+      - ".github/workflows/k8-raqtr-preservation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  raqtr-preservation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: 証明escape hatchを拒否
+        shell: bash
+        run: |
+          if grep -REn \
+            '(^|[^[:alnum:]_])(sorry|axiom|opaque|unsafe)([^[:alnum:]_]|$)' \
+            formal/aqrs --include='*.lean'; then
+            echo "Lean proof escape hatch detected"
+            exit 1
+          fi
+      - name: Lean kernel buildと独立leancheckerを実行
+        uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1
+        with:
+          lake-package-directory: formal/aqrs
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: false
+          leanchecker: true
+          nanoda: false
+      - name: RAQTR theoremの公理面をallowlist監査
+        working-directory: formal/aqrs
+        shell: bash
+        run: |
+          audit="$(lake env lean Aqrs/QuotientSeal/Audit.lean 2>&1)"
+          printf '%s\n' "$audit"
+          for theorem in \
+            AQRS.QuotientSeal.finiteProduct_member \
+            AQRS.QuotientSeal.relation_left_at \
+            AQRS.QuotientSeal.targetLeft_projects_to_source \
+            AQRS.QuotientSeal.finiteProduct_contexts_coupled \
+            AQRS.QuotientSeal.finiteProductPreservesRAQTR \
+            AQRS.QuotientSeal.suppressAll_has_no_validated_initial_relation \
+            AQRS.QuotientSeal.suppressAll_not_target_utility \
+            AQRS.QuotientSeal.resourceLeak_has_no_safe_certificate; do
+            if ! grep -Fq "$theorem" <<<"$audit"; then
+              echo "missing theorem audit: $theorem"
+              exit 1
+            fi
+          done
+          if grep -Eq 'Classical\.choice|Quot\.sound|sorryAx' <<<"$audit"; then
+            echo "unexpected theorem dependency"
+            exit 1
+          fi
+          unexpected="$(
+            grep -F 'depends on axioms:' <<<"$audit" \
+              | grep -Fv 'depends on axioms: [propext]' \
+              || true
+          )"
+          if [[ -n "$unexpected" ]]; then
+            printf 'axiom allowlist violation:\n%s\n' "$unexpected"
+            exit 1
+          fi
+      - name: 外部checker状態を記録
+        shell: bash
+        run: |
+          {
+            echo "### RAQTR checker status"
+            echo "- Lean kernel build: REQUIRED"
+            echo "- independent leanchecker: REQUIRED"
+            echo "- nanoda: NOT_VERIFIED (#115; Lean 4.30 export incompatibility)"
+            echo "- hardware: NOT_VERIFIED"
+          } >> "$GITHUB_STEP_SUMMARY"
