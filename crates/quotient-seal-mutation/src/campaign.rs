@@ -211,10 +211,7 @@ fn campaign_id(
     let mut hasher = Sha256::new();
     hasher.update(MUTATION_CAMPAIGN_VERSION.as_bytes());
     hasher.update([0]);
-    hasher.update(
-        serde_json::to_vec(contract)
-            .map_err(CampaignError::Serialize)?,
-    );
+    hasher.update(serde_json::to_vec(contract).map_err(CampaignError::Serialize)?);
     for value in [
         split.as_str(),
         module_family,
@@ -225,7 +222,7 @@ fn campaign_id(
         hasher.update([0]);
         hasher.update(value.as_bytes());
     }
-    let digest = format!("{hasher:x}");
+    let digest = format!("{:x}", hasher.finalize());
     Ok(format!("campaign-{}", &digest[..20]))
 }
 
@@ -296,4 +293,3 @@ pub enum CampaignError {
     #[error("existing artifact differs from deterministic output: {0}")]
     ArtifactCollision(PathBuf),
 }
-

@@ -2,18 +2,13 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
-use quotient_seal_mutation::{
-    run_campaign, CampaignRequest, InconclusiveEvaluator, SplitContract,
-};
+use quotient_seal_mutation::{run_campaign, CampaignRequest, InconclusiveEvaluator, SplitContract};
 
 #[derive(Debug, Parser)]
 #[command(name = "quotient-seal-mutation")]
 #[command(about = "Generate deterministic QuotientSeal WASM mutation artifacts")]
 struct Cli {
-    #[arg(
-        long,
-        default_value = "configs/quotient_seal/mutation_split_v1.yaml"
-    )]
+    #[arg(long, default_value = "configs/quotient_seal/mutation_split_v1.yaml")]
     split_contract: PathBuf,
     #[arg(long)]
     seed: PathBuf,
@@ -50,4 +45,3 @@ fn execute(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", serde_json::to_string_pretty(&manifest)?);
     Ok(())
 }
-

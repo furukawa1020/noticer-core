@@ -153,11 +153,7 @@ fn reject_overlap(
     }
 }
 
-fn membership(
-    value: &str,
-    development: &[String],
-    held_out: &[String],
-) -> Option<DatasetSplit> {
+fn membership(value: &str, development: &[String], held_out: &[String]) -> Option<DatasetSplit> {
     if development.iter().any(|candidate| candidate == value) {
         Some(DatasetSplit::Development)
     } else if held_out.iter().any(|candidate| candidate == value) {
@@ -204,4 +200,3 @@ pub enum SplitError {
         compiler_split: DatasetSplit,
     },
 }
-

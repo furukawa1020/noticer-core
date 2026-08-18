@@ -5,8 +5,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use quotient_seal_mutation::{
     run_campaign, CampaignRequest, DatasetSplit, Evaluation, InconclusiveEvaluator,
-    MutantEvaluator, MutationArtifact, MutationVerdict, SplitContract,
-    ALL_MUTATION_OPERATORS,
+    MutantEvaluator, MutationArtifact, MutationVerdict, SplitContract, ALL_MUTATION_OPERATORS,
 };
 
 static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
@@ -59,10 +58,7 @@ fn checked_in_split_is_disjoint_and_classifies_both_axes() {
     );
     assert_eq!(
         contract
-            .classify(
-                "noticer_atv2_held_out",
-                "nightly-o0-off-1-o2"
-            )
+            .classify("noticer_atv2_held_out", "nightly-o0-off-1-o2")
             .expect("held-out pair"),
         DatasetSplit::HeldOut
     );
@@ -110,7 +106,10 @@ fn rerun_has_same_campaign_id_manifest_and_artifact_tree() {
     let first_json = serde_json::to_vec(&first).expect("first manifest");
     let second = run_campaign(&load_split(), &request, &TriEvaluator).expect("second campaign");
     assert_eq!(first, second);
-    assert_eq!(first_json, serde_json::to_vec(&second).expect("second manifest"));
+    assert_eq!(
+        first_json,
+        serde_json::to_vec(&second).expect("second manifest")
+    );
 }
 
 #[test]
@@ -213,4 +212,3 @@ fn leb(mut value: u32) -> Vec<u8> {
         }
     }
 }
-
