@@ -49,6 +49,7 @@ members = [
     "crates/quotient-seal-context",
     "crates/quotient-seal-resource",
     "crates/quotient-seal-capsule",
+    "crates/quotient-seal-engine",
     "crates/quotient-seal-matrix",
     "crates/quotient-seal-mutation",
     "crates/quotient-seal-target-ir",
@@ -98,6 +99,7 @@ quotient-seal-abi = { path = "crates/quotient-seal-abi" }
 quotient-seal-context = { path = "crates/quotient-seal-context" }
 quotient-seal-resource = { path = "crates/quotient-seal-resource" }
 quotient-seal-capsule = { path = "crates/quotient-seal-capsule" }
+quotient-seal-engine = { path = "crates/quotient-seal-engine" }
 quotient-seal-target-ir = { path = "crates/quotient-seal-target-ir" }
 quotient-seal-small-step = { path = "crates/quotient-seal-small-step" }
 quotient-seal-relation = { path = "crates/quotient-seal-relation" }

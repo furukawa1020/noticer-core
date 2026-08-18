@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_cross_engine_v1.schema.json",
+  "title": "QuotientSeal cross-engine protocol v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_schema_version",
+    "required_engines",
+    "version_policy",
+    "missing_engine_policy",
+    "instruction_trace_scope",
+    "observer_surface"
+  ],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-cross-engine-protocol/v1" },
+    "artifact_schema_version": { "const": "quotient-seal-engine-run/v1" },
+    "required_engines": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "allOf": [
+        { "contains": { "const": "wasmi" } },
+        { "contains": { "const": "wasmtime" } }
+      ],
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "version_policy": { "const": "EXACT" },
+    "missing_engine_policy": { "const": "UNRESOLVED" },
+    "instruction_trace_scope": { "const": "REFERENCE_INTERPRETER_ONLY" },
+    "observer_surface": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "OUTPUT",
+          "PUBLIC_STATE",
+          "TRAP",
+          "RETURN",
+          "HOST_IMPORT",
+          "RESET",
+          "HANDOFF"
+        ]
+      }
+    }
+  }
+}
