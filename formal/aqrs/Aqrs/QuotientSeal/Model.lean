@@ -39,7 +39,6 @@ structure Configuration
     (target : TargetMachine source) where
   state : target.State
   context : target.Context
-deriving Repr
 
 def stepConfiguration
     (source : Model)
@@ -107,7 +106,6 @@ structure CoupledConfiguration
   targetRight : target.State
   contextLeft : target.Context
   contextRight : target.Context
-deriving Repr
 
 def stepCoupled
     (source : Model)
