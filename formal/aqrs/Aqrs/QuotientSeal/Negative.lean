@@ -69,7 +69,11 @@ theorem suppressAll_action_mismatch :
     Not
       ((suppressAllTarget.release () ()).actions =
         (requiredActionSource.release () ()).actions) := by
-  decide
+  intro same
+  change
+    ([] : List (Emission (ObligationRef Unit Empty) Unit)) =
+      [Emission.mk (ObligationRef.authorized ()) ()] at same
+  nomatch same
 
 theorem suppressAll_has_no_validated_initial_relation :
     forall relation :
@@ -80,14 +84,7 @@ theorem suppressAll_has_no_validated_initial_relation :
     suppressAll_action_mismatch
       (relation.actionsPreserved related ())
 
-theorem suppressAll_not_target_utility
-    (sourceUtility :
-      UtilitySafeThrough
-        requiredActionSource
-        ()
-        ()
-        requiredActionInputs
-        1) :
+theorem suppressAll_not_target_utility :
     Not
       (TargetUtilityPreserved
         requiredActionSource
@@ -163,7 +160,9 @@ theorem resourceLeak_private_distinct :
       resourceLeakSource
       resourceLeakInitial.sourceLeft
       resourceLeakInitial.sourceRight := by
-  decide
+  intro same
+  change false = true at same
+  nomatch same
 
 theorem resourceLeak_public_observation_equal :
     resourceLeakTarget.observe () false () () =
