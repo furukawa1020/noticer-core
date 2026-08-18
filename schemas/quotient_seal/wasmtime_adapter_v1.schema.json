@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient-seal/wasmtime-adapter-v1.schema.json",
+  "title": "QuotientSeal Wasmtime adapter configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "engine", "runtime", "evidence", "resource_policy"],
+  "properties": {
+    "schema_version": {
+      "const": "quotient-seal-wasmtime-adapter-config/v1"
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "version_policy", "cargo_features"],
+      "properties": {
+        "name": { "const": "wasmtime" },
+        "version": { "const": "34.0.2" },
+        "version_policy": { "const": "EXACT" },
+        "cargo_features": {
+          "const": ["cranelift", "runtime", "std"]
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compiler", "optimization_level", "consume_fuel", "epoch_interruption", "epoch_driver", "nan_canonicalization", "disabled_features"],
+      "properties": {
+        "compiler": { "const": "cranelift" },
+        "optimization_level": { "const": "none" },
+        "consume_fuel": { "const": true },
+        "epoch_interruption": { "const": true },
+        "epoch_driver": { "const": "outer_orchestrator" },
+        "nan_canonicalization": { "const": false },
+        "disabled_features": {
+          "const": ["simd", "relaxed_simd", "memory64", "multi_memory", "tail_call"]
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine_binary_binding", "instruction_trace", "native_jit_instruction_equality"],
+      "properties": {
+        "engine_binary_binding": { "const": "enclosing_process_sha256" },
+        "instruction_trace": { "const": "NOT_VERIFIED" },
+        "native_jit_instruction_equality": { "const": "NOT_VERIFIED" }
+      }
+    },
+    "resource_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fuel", "memory", "host_calls", "timeout_ms"],
+      "properties": {
+        "fuel": { "const": "deterministic_store_budget" },
+        "memory": { "const": "store_limiter" },
+        "host_calls": { "const": "adapter_counter" },
+        "timeout_ms": { "const": "outer_orchestrator" }
+      }
+    }
+  }
+}

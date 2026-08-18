@@ -1,0 +1,31 @@
+schema_version: quotient-seal-wasmtime-adapter-config/v1
+engine:
+  name: wasmtime
+  version: 34.0.2
+  version_policy: EXACT
+  cargo_features:
+    - cranelift
+    - runtime
+    - std
+runtime:
+  compiler: cranelift
+  optimization_level: none
+  consume_fuel: true
+  epoch_interruption: true
+  epoch_driver: outer_orchestrator
+  nan_canonicalization: false
+  disabled_features:
+    - simd
+    - relaxed_simd
+    - memory64
+    - multi_memory
+    - tail_call
+evidence:
+  engine_binary_binding: enclosing_process_sha256
+  instruction_trace: NOT_VERIFIED
+  native_jit_instruction_equality: NOT_VERIFIED
+resource_policy:
+  fuel: deterministic_store_budget
+  memory: store_limiter
+  host_calls: adapter_counter
+  timeout_ms: outer_orchestrator
