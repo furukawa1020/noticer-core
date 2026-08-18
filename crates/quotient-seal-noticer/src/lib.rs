@@ -8,6 +8,7 @@
 
 mod aets;
 mod aets_compile;
+mod aets_reference;
 mod manifest;
 
 pub use aets::{
@@ -16,8 +17,12 @@ pub use aets::{
     AetsPublicSourceArtifact, AETS_PUBLIC_SOURCE_FORMAT_VERSION,
 };
 pub use aets_compile::{
-    compile_aets_p0, AetsCompileError, AetsCompileLimits, AetsCompiledQsm, AetsServiceCode,
-    AETS_QSM_COMPILER_VERSION,
+    compile_aets_p0, AetsActionPlacement, AetsCompileError, AetsCompileLimits, AetsCompiledQsm,
+    AetsServiceCode, AETS_QSM_COMPILER_VERSION,
+};
+pub use aets_reference::{
+    evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
+    AetsReferenceUnresolved, AetsReferenceVerdict, AETS_SOURCE_REFERENCE_VERSION,
 };
 
 pub use manifest::{

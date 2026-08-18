@@ -2094,8 +2094,12 @@ dependencies = [
  "quotient-forge-codegen",
  "quotient-seal-abi",
  "quotient-seal-capsule",
+ "quotient-seal-context",
+ "quotient-seal-engine",
  "quotient-seal-relation",
+ "quotient-seal-small-step",
  "quotient-seal-target-ir",
+ "sha2",
  "thiserror 2.0.20",
  "wat",
 ]

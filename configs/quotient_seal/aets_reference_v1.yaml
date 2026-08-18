@@ -1,0 +1,14 @@
+schema_version: noticer-aets-source-reference/v1
+sequence_format: noticer-aets-public-sequence/v1
+reference_identity: noticer-aets-source-reference
+reference_kind: SOURCE_DERIVED_EXPECTATION_NOT_INTERPRETER
+observable_axes:
+  - output
+  - public_state
+  - return
+  - host_import
+  - reset
+  - handoff
+private_ingress: FORBIDDEN
+small_step_promotion: REQUIRES_EXACT_TRACE_MATCH_IN_K8_13B3B
+hardware_status: NOT_VERIFIED
