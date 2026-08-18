@@ -388,7 +388,9 @@ theorem context_step_coupled
           configuration.targetRight
           configuration.contextRight
           input)
-  rw [contexts, observations]
+  cases contexts
+  cases observations
+  rfl
 
 theorem finiteProduct_contexts_coupled
     (source : Model)
@@ -438,20 +440,30 @@ theorem finiteProduct_resources_equal
         (coupledAt source target observer initial inputs slot).targetRight
         (coupledAt source target observer initial inputs slot).contextRight
         (inputs slot) := by
-  by_contra different
-  exact
-    (certificate.safe
-      slot
-      (coupledAt source target observer initial inputs slot)
-      (finiteProduct_member
-        source
-        target
-        observer
-        initial
-        inputs
-        certificate
-        slot))
-      (RobustBadAt.resourceMismatch different)
+  by_cases same :
+      target.resourceTrace
+          (coupledAt source target observer initial inputs slot).targetLeft
+          (coupledAt source target observer initial inputs slot).contextLeft
+          (inputs slot) =
+        target.resourceTrace
+          (coupledAt source target observer initial inputs slot).targetRight
+          (coupledAt source target observer initial inputs slot).contextRight
+          (inputs slot)
+  · exact same
+  · exact
+      False.elim
+        ((certificate.safe
+          slot
+          (coupledAt source target observer initial inputs slot)
+          (finiteProduct_member
+            source
+            target
+            observer
+            initial
+            inputs
+            certificate
+            slot))
+          (RobustBadAt.resourceMismatch same))
 
 theorem targetDivergence_is_bad_left
     (source : Model)
