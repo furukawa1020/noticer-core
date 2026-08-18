@@ -8,6 +8,7 @@
 
 mod contract;
 mod wasmi_adapter;
+mod wasmtime_adapter;
 
 pub use contract::{
     compute_execution_id, ContextCommandRecord, ContractError, EngineIdentity, EngineRunArtifact,
@@ -19,4 +20,7 @@ pub use contract::{
 };
 pub use wasmi_adapter::{
     WasmiAdapter, WasmiAdapterError, WASMI_ADAPTER_PROFILE_VERSION, WASMI_CRATE_VERSION,
+};
+pub use wasmtime_adapter::{
+    WasmtimeAdapter, WasmtimeAdapterError, WASMTIME_ADAPTER_PROFILE_VERSION, WASMTIME_CRATE_VERSION,
 };
