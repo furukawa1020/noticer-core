@@ -3,16 +3,14 @@ use std::path::{Path, PathBuf};
 
 use quotient_seal_matrix::{CommandExecutor, CommandOutput, CommandSpec};
 use quotient_seal_target_ir::{
-    local_parser_decision, reconcile_parser_decisions, ConsensusVerdict, ExternalParserDecision,
-    ParserLimits,
+    local_parser_decision, parse_and_lower, reconcile_parser_decisions, ConsensusVerdict,
+    ExternalParserDecision, ParserLimits,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
-use crate::{
-    Evaluation, EvaluationEvidence, MutantEvaluator, MutationArtifact,
-};
+use crate::{Evaluation, EvaluationEvidence, MutantEvaluator, MutationArtifact};
 
 pub const PARSER_ACCEPT_EXIT: i32 = 0;
 pub const PARSER_REJECT_EXIT: i32 = 1;
@@ -133,7 +131,8 @@ impl<E: CommandExecutor> MutantEvaluator for IndependentPipelineEvaluator<E> {
     }
 
     fn evaluate(&self, artifact_path: &Path, artifact: &MutationArtifact) -> Evaluation {
-        let local = local_parser_decision(&artifact.bytes, self.parser_limits);
+        let local_result = parse_and_lower(&artifact.bytes, self.parser_limits);
+        let local = local_parser_decision(&local_result);
         let (parser_a, evidence_a) = run_parser(&self.executor, &self.parser_a, artifact_path);
         let (parser_b, evidence_b) = run_parser(&self.executor, &self.parser_b, artifact_path);
         let mut evidence = vec![evidence_a, evidence_b];
@@ -282,4 +281,3 @@ pub enum PipelineError {
     #[error("failed to serialize pipeline identity: {0}")]
     Serialize(serde_json::Error),
 }
-

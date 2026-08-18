@@ -1687,6 +1687,8 @@ name = "quotient-seal-mutation"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "quotient-seal-matrix",
+ "quotient-seal-target-ir",
  "serde",
  "serde_json",
  "sha2",

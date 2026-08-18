@@ -4,8 +4,8 @@ use std::process::ExitCode;
 use clap::Parser;
 use quotient_seal_matrix::ProcessExecutor;
 use quotient_seal_mutation::{
-    run_campaign, CampaignManifest, CampaignRequest, CommandTemplate,
-    InconclusiveEvaluator, IndependentPipelineEvaluator, SplitContract,
+    run_campaign, CampaignManifest, CampaignRequest, CommandTemplate, InconclusiveEvaluator,
+    IndependentPipelineEvaluator, SplitContract,
 };
 
 #[derive(Debug, Parser)]
@@ -64,18 +64,8 @@ fn execute(cli: Cli) -> Result<(), Box<dyn std::error::Error>> {
             let current_dir = PathBuf::from(".");
             let evaluator = IndependentPipelineEvaluator::new(
                 ProcessExecutor,
-                CommandTemplate::new(
-                    "parser_a",
-                    parser_a,
-                    cli.parser_a_arg,
-                    current_dir.clone(),
-                )?,
-                CommandTemplate::new(
-                    "parser_b",
-                    parser_b,
-                    cli.parser_b_arg,
-                    current_dir.clone(),
-                )?,
+                CommandTemplate::new("parser_a", parser_a, cli.parser_a_arg, current_dir.clone())?,
+                CommandTemplate::new("parser_b", parser_b, cli.parser_b_arg, current_dir.clone())?,
                 CommandTemplate::new("checker", checker, cli.checker_arg, current_dir)?,
             )?;
             run_campaign(&contract, &request, &evaluator)?

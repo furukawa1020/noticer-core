@@ -11,8 +11,8 @@ mod split;
 mod wasm;
 
 pub use campaign::{
-    run_campaign, CampaignError, CampaignManifest, CampaignRequest, Evaluation,
-    EvaluationEvidence, InconclusiveEvaluator, MutantEvaluator, MutantRecord, MutationVerdict,
+    run_campaign, CampaignError, CampaignManifest, CampaignRequest, Evaluation, EvaluationEvidence,
+    InconclusiveEvaluator, MutantEvaluator, MutantRecord, MutationVerdict,
     MUTATION_CAMPAIGN_VERSION,
 };
 pub use evaluator::{

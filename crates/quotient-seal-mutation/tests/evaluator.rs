@@ -6,10 +6,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use quotient_seal_matrix::{CommandExecutor, CommandOutput, CommandSpec};
 use quotient_seal_mutation::{
-    run_campaign, CampaignRequest, CommandTemplate, IndependentPipelineEvaluator,
-    MutationArtifact, MutationVerdict, SplitContract,
+    run_campaign, CampaignRequest, CommandTemplate, IndependentPipelineEvaluator, MutationVerdict,
+    SplitContract,
 };
-use quotient_seal_target_ir::{local_parser_decision, LocalParserDecision, ParserLimits};
+use quotient_seal_target_ir::{
+    local_parser_decision, parse_and_lower, LocalParserDecision, ParserLimits,
+};
 
 static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
 
@@ -48,16 +50,22 @@ impl CommandExecutor for FakePipelineExecutor {
         let artifact = PathBuf::from(command.args.first().expect("artifact argument"));
         let bytes = fs::read(artifact)?;
         if command.program.starts_with("parser-") {
-            if command.program == "parser-b" && contains(&bytes, b"wrong_observer_binding") {
+            if matches!(self.parser_mode, ParserMode::Mirror)
+                && command.program == "parser-b"
+                && contains(&bytes, b"wrong_observer_binding")
+            {
                 return Ok(output(9));
             }
             let code = match self.parser_mode {
                 ParserMode::Resource => 2,
-                ParserMode::Mirror => match local_parser_decision(&bytes, ParserLimits::default()) {
-                    LocalParserDecision::Accepted(_) => 0,
-                    LocalParserDecision::Rejected => 1,
-                    LocalParserDecision::ResourceBound => 2,
-                },
+                ParserMode::Mirror => {
+                    let result = parse_and_lower(&bytes, ParserLimits::default());
+                    match local_parser_decision(&result) {
+                        LocalParserDecision::Accepted(_) => 0,
+                        LocalParserDecision::Rejected => 1,
+                        LocalParserDecision::ResourceBound => 2,
+                    }
+                }
             };
             return Ok(output(code));
         }
@@ -82,8 +90,8 @@ impl CommandExecutor for FakePipelineExecutor {
 fn full_37_mutant_pipeline_preserves_kill_escape_and_inconclusive() {
     let temp = TestDirectory::new();
     let evaluator = evaluator(&temp.0, ParserMode::Mirror, ParserLimits::default());
-    let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator)
-        .expect("37-mutant campaign");
+    let manifest =
+        run_campaign(&load_split(), &request(&temp.0), &evaluator).expect("37-mutant campaign");
     assert_eq!(manifest.mutants.len(), 37);
     let verdicts: BTreeSet<_> = manifest
         .mutants
@@ -92,9 +100,10 @@ fn full_37_mutant_pipeline_preserves_kill_escape_and_inconclusive() {
         .collect();
     assert_eq!(verdicts.len(), 3);
     assert!(verdicts.contains(&MutationVerdict::Escaped));
-    assert!(manifest.mutants.iter().all(|record| {
-        record.artifact_path.is_none() || record.evaluation.evidence.len() >= 2
-    }));
+    assert!(manifest
+        .mutants
+        .iter()
+        .all(|record| { record.artifact_path.is_none() || record.evaluation.evidence.len() >= 2 }));
     let escaped = manifest
         .mutants
         .iter()
@@ -107,21 +116,28 @@ fn full_37_mutant_pipeline_preserves_kill_escape_and_inconclusive() {
 fn parser_disagreement_and_checker_failure_are_inconclusive() {
     let temp = TestDirectory::new();
     let evaluator = evaluator(&temp.0, ParserMode::Mirror, ParserLimits::default());
-    let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator)
-        .expect("campaign");
+    let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator).expect("campaign");
     let disagreement = record(&manifest, "wrong_observer_binding");
-    assert_eq!(disagreement.evaluation.verdict, MutationVerdict::Inconclusive);
+    assert_eq!(
+        disagreement.evaluation.verdict,
+        MutationVerdict::Inconclusive
+    );
     assert_eq!(disagreement.evaluation.reason_code, "parser_disagreement");
     let unavailable = record(&manifest, "stale_state_restore");
-    assert_eq!(unavailable.evaluation.verdict, MutationVerdict::Inconclusive);
+    assert_eq!(
+        unavailable.evaluation.verdict,
+        MutationVerdict::Inconclusive
+    );
     assert_eq!(unavailable.evaluation.reason_code, "checker_unavailable");
 }
 
 #[test]
 fn unanimous_resource_bound_is_never_counted_as_killed() {
     let temp = TestDirectory::new();
-    let mut limits = ParserLimits::default();
-    limits.max_module_bytes = 1;
+    let limits = ParserLimits {
+        max_module_bytes: 1,
+        ..ParserLimits::default()
+    };
     let evaluator = evaluator(&temp.0, ParserMode::Resource, limits);
     let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator)
         .expect("resource-bound campaign");
@@ -135,8 +151,7 @@ fn unanimous_resource_bound_is_never_counted_as_killed() {
 fn command_evidence_contains_instantiated_paths_not_placeholders() {
     let temp = TestDirectory::new();
     let evaluator = evaluator(&temp.0, ParserMode::Mirror, ParserLimits::default());
-    let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator)
-        .expect("campaign");
+    let manifest = run_campaign(&load_split(), &request(&temp.0), &evaluator).expect("campaign");
     for evidence in manifest
         .mutants
         .iter()
@@ -218,21 +233,35 @@ fn request(root: &Path) -> CampaignRequest {
 
 fn fixture_wasm() -> Vec<u8> {
     let mut module = b"\0asm\x01\0\0\0".to_vec();
-    push_section(&mut module, 1, &[0x01, 0x60, 0x00, 0x00]);
-    let mut import = vec![0x01];
-    import.extend(name("env"));
-    import.extend(name("emit_action"));
-    import.extend([0x00, 0x00]);
+    push_section(
+        &mut module,
+        1,
+        &[
+            0x04, 0x60, 0x02, 0x7f, 0x7f, 0x00, 0x60, 0x02, 0x7f, 0x7f, 0x00, 0x60, 0x01, 0x7f,
+            0x00, 0x60, 0x00, 0x00,
+        ],
+    );
+    let mut import = vec![0x03];
+    for (import_name, type_index) in [
+        ("emit_frame", 0_u8),
+        ("emit_action", 1_u8),
+        ("public_failure", 2_u8),
+    ] {
+        import.extend(name("qseal"));
+        import.extend(name(import_name));
+        import.extend([0x00, type_index]);
+    }
     push_section(&mut module, 2, &import);
-    push_section(&mut module, 3, &[0x01, 0x00]);
+    push_section(&mut module, 3, &[0x01, 0x03]);
     push_section(&mut module, 5, &[0x01, 0x01, 0x01, 0x01]);
-    push_section(&mut module, 6, &[0x01, 0x7f, 0x00, 0x41, 0x00, 0x0b]);
+    push_section(&mut module, 6, &[0x01, 0x7f, 0x01, 0x41, 0x00, 0x0b]);
     let mut export = vec![0x01];
     export.extend(name("tick"));
-    export.extend([0x00, 0x01]);
+    export.extend([0x00, 0x03]);
     push_section(&mut module, 7, &export);
     let body = [
-        0x00, 0x41, 0x00, 0x28, 0x02, 0x00, 0x1a, 0x10, 0x00, 0x10, 0x01, 0x0b,
+        0x01, 0x01, 0x7f, 0x41, 0x00, 0x41, 0x07, 0x36, 0x02, 0x00, 0x23, 0x00, 0x1a, 0x20, 0x00,
+        0x1a, 0x10, 0x00, 0x10, 0x01, 0x0b,
     ];
     let mut code = vec![0x01];
     code.extend(leb(u32::try_from(body.len()).expect("body length")));
@@ -268,4 +297,3 @@ fn leb(mut value: u32) -> Vec<u8> {
         }
     }
 }
-

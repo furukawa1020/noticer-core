@@ -1,10 +1,10 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use quotient_seal_matrix::CommandSpec;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
-use quotient_seal_matrix::CommandSpec;
 
 use crate::{
     mutate_wasm, validate_wasm_container, DatasetSplit, MutationArtifact, MutationEdit,
