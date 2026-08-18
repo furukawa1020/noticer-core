@@ -11,7 +11,7 @@
 - Cranelift最適化levelは`none`とする。
 - fuel消費とepoch interruptionを有効化する。
 - NaN canonicalizationは無効化し、値を文字列へ丸めない。
-- SIMD、relaxed SIMD、memory64、multi-memory、tail-callは無効化する。
+- float operator/localはABI通過後のengine-feature gateで拒否し、SIMD、relaxed SIMD、memory64、multi-memory、tail-callはWasmtime configで無効化する。
 - engine identityはadapter profile、engine version、feature/configuration、enclosing process SHA-256を含む。
 
 ## resource境界

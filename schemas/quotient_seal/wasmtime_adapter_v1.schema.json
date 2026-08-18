@@ -34,7 +34,7 @@
         "epoch_driver": { "const": "outer_orchestrator" },
         "nan_canonicalization": { "const": false },
         "disabled_features": {
-          "const": ["simd", "relaxed_simd", "memory64", "multi_memory", "tail_call"]
+          "const": ["floats", "simd", "relaxed_simd", "memory64", "multi_memory", "tail_call"]
         }
       }
     },

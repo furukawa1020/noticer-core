@@ -8,6 +8,7 @@ use quotient_seal_context::{CommandKind, ContextCommand};
 use quotient_seal_small_step::PublicHostTape;
 use sha2::{Digest as _, Sha256};
 use thiserror::Error;
+use wasmparser::{Parser, Payload, ValType};
 use wasmtime::{
     Caller, Config, Engine, Error as WasmtimeError, Instance, Linker, Module, OptLevel, Store,
     StoreLimits, StoreLimitsBuilder, Trap,
@@ -132,13 +133,51 @@ impl WasmtimeAdapter {
             }
         }
 
+        match disabled_engine_feature(wasm) {
+            Ok(None) => {}
+            Ok(Some(feature)) => {
+                return artifact(
+                    input,
+                    Vec::new(),
+                    ExecutionTermination::Unsupported {
+                        feature: feature.to_owned(),
+                    },
+                    EngineRunVerdict::Unresolved,
+                );
+            }
+            Err(error) => {
+                return artifact(
+                    input,
+                    Vec::new(),
+                    ExecutionTermination::EngineFailure {
+                        stage: "engine_feature_scan".to_owned(),
+                        exit_code: None,
+                        detail_sha256: sha256_hex(error.to_string().as_bytes()),
+                    },
+                    EngineRunVerdict::Unresolved,
+                );
+            }
+        }
+
         let engine = match deterministic_engine() {
             Ok(engine) => engine,
             Err(error) => return engine_failure(input, Vec::new(), "engine_configuration", &error),
         };
         let module = match Module::new(&engine, wasm) {
             Ok(module) => module,
-            Err(error) => return engine_failure(input, Vec::new(), "module_compilation", &error),
+            Err(error) => {
+                return artifact(
+                    input,
+                    Vec::new(),
+                    ExecutionTermination::Unsupported {
+                        feature: format!(
+                            "WASMTIME_REJECTED_ABI_VALID_MODULE:{}",
+                            sha256_hex(error.to_string().as_bytes())
+                        ),
+                    },
+                    EngineRunVerdict::Unresolved,
+                )
+            }
         };
         let memory_bytes = match u64::from(input.limits.max_memory_pages)
             .checked_mul(WASM_PAGE_BYTES)
@@ -250,6 +289,7 @@ fn frozen_configuration() -> BTreeMap<String, String> {
         ("epoch_interruption".to_owned(), "true".to_owned()),
         ("epoch_driver".to_owned(), "outer_orchestrator".to_owned()),
         ("nan_canonicalization".to_owned(), "false".to_owned()),
+        ("floats".to_owned(), "false".to_owned()),
         ("optimization_level".to_owned(), "none".to_owned()),
         ("simd".to_owned(), "false".to_owned()),
         ("relaxed_simd".to_owned(), "false".to_owned()),
@@ -272,6 +312,28 @@ fn deterministic_engine() -> Result<Engine, WasmtimeError> {
     config.wasm_multi_memory(false);
     config.wasm_tail_call(false);
     Engine::new(&config)
+}
+
+fn disabled_engine_feature(
+    wasm: &[u8],
+) -> Result<Option<&'static str>, wasmparser::BinaryReaderError> {
+    for payload in Parser::new(0).parse_all(wasm) {
+        if let Payload::CodeSectionEntry(body) = payload? {
+            for local in body.get_locals_reader()? {
+                let (_, value_type) = local?;
+                if matches!(value_type, ValType::F32 | ValType::F64) {
+                    return Ok(Some("WASMTIME_FLOAT_LOCAL_DISABLED"));
+                }
+            }
+            for operator in body.get_operators_reader()? {
+                let operator = format!("{:?}", operator?);
+                if operator.contains("F32") || operator.contains("F64") {
+                    return Ok(Some("WASMTIME_FLOAT_OPERATOR_DISABLED"));
+                }
+            }
+        }
+    }
+    Ok(None)
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
