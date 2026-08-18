@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
+use quotient_seal_matrix::CommandSpec;
 
 use crate::{
     mutate_wasm, validate_wasm_container, DatasetSplit, MutationArtifact, MutationEdit,
@@ -23,10 +24,21 @@ pub enum MutationVerdict {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct EvaluationEvidence {
+    pub stage: String,
+    pub command: CommandSpec,
+    pub exit_code: Option<i32>,
+    pub stdout: String,
+    pub stderr: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Evaluation {
     pub verdict: MutationVerdict,
     pub reason_code: String,
     pub detail: String,
+    pub evidence: Vec<EvaluationEvidence>,
 }
 
 impl Evaluation {
@@ -36,6 +48,7 @@ impl Evaluation {
             verdict: MutationVerdict::Killed,
             reason_code: reason_code.into(),
             detail: detail.into(),
+            evidence: Vec::new(),
         }
     }
 
@@ -45,6 +58,7 @@ impl Evaluation {
             verdict: MutationVerdict::Escaped,
             reason_code: reason_code.into(),
             detail: detail.into(),
+            evidence: Vec::new(),
         }
     }
 
@@ -54,6 +68,7 @@ impl Evaluation {
             verdict: MutationVerdict::Inconclusive,
             reason_code: reason_code.into(),
             detail: detail.into(),
+            evidence: Vec::new(),
         }
     }
 }
