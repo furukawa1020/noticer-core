@@ -1,0 +1,11 @@
+schema_version: noticer-aets-qsm-binding/v1
+source_format: noticer-aets-public-source/v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+module_id: AETS
+digest_domains:
+  source: noticer-aets-public-source-v1
+  generated_runtime: quotient-forge-codegen-manifest-v2
+  qsm_capsule: noticer-aets-qsm-capsule-v1
+  observer_registry: noticer-aets-observer-registry-v1
+private_ingress: FORBIDDEN
+hardware_status: NOT_VERIFIED
