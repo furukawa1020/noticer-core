@@ -6,7 +6,14 @@
 //! feature dependency. Its fixed binary registry cannot encode arbitrary
 //! private fields.
 
+mod aets;
 mod manifest;
+
+pub use aets::{
+    aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
+    AetsArtifactSet, AetsBindingError, AetsP0Binding, AetsPublicSourceArtifact,
+    AETS_PUBLIC_SOURCE_FORMAT_VERSION,
+};
 
 pub use manifest::{
     existing_binding_type_names, ManifestDecodeError, ManifestError, NoticerModuleBinding,

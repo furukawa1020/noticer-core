@@ -2087,10 +2087,14 @@ dependencies = [
 name = "quotient-seal-noticer"
 version = "0.1.0"
 dependencies = [
+ "noticer-aetp",
  "noticer-protocol",
  "noticer-types",
  "quotient-forge-caqt",
+ "quotient-forge-codegen",
+ "quotient-forge-noticer",
  "quotient-seal-abi",
+ "thiserror 2.0.20",
 ]
 
 [[package]]

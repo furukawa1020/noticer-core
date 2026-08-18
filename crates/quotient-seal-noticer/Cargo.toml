@@ -7,7 +7,13 @@ rust-version.workspace = true
 description = "Public-only Noticer module registry and QSM integration bindings"
 
 [dependencies]
+noticer-aetp.workspace = true
 noticer-protocol.workspace = true
 noticer-types.workspace = true
 quotient-forge-caqt.workspace = true
+quotient-forge-noticer.workspace = true
 quotient-seal-abi.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+quotient-forge-codegen.workspace = true
