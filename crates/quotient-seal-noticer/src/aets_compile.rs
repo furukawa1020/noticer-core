@@ -22,8 +22,8 @@ pub const AETS_QSM_COMPILER_VERSION: &str = "noticer-aets-qsm-compiler/v1";
 const INDUCTIVE_DIGEST_DOMAIN: &[u8] = b"noticer-core/qseal/inductive-certificate/v1";
 const PENDING_ROBUST_CERTIFICATE: &[u8] = b"NOT_VERIFIED:AETS-ROBUST-CERTIFICATE-PENDING-V1";
 const PENDING_RESOURCE_CERTIFICATE: &[u8] = b"NOT_VERIFIED:AETS-RESOURCE-CERTIFICATE-PENDING-V1";
-const UNKNOWN_SERVICE_FAILURE: i32 = 0x0a001;
-const OUTSIDE_SCHEDULE_FAILURE: i32 = 0x0a002;
+pub(crate) const UNKNOWN_SERVICE_FAILURE: i32 = 0x0a001;
+pub(crate) const OUTSIDE_SCHEDULE_FAILURE: i32 = 0x0a002;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AetsServiceCode {
@@ -59,6 +59,10 @@ pub struct AetsCompiledQsm {
     registry_capsule_digest: Digest,
     observer_registry_digest: Digest,
     source_digest: Digest,
+    service_codes: Box<[AetsServiceCode]>,
+    action_placements: Box<[AetsActionPlacement]>,
+    schedule_start: u64,
+    schedule_end: u64,
 }
 
 impl AetsCompiledQsm {
@@ -96,13 +100,28 @@ impl AetsCompiledQsm {
     pub const fn source_digest(&self) -> Digest {
         self.source_digest
     }
+
+    #[must_use]
+    pub fn service_codes(&self) -> &[AetsServiceCode] {
+        &self.service_codes
+    }
+
+    #[must_use]
+    pub fn action_placements(&self) -> &[AetsActionPlacement] {
+        &self.action_placements
+    }
+
+    #[must_use]
+    pub const fn schedule_range(&self) -> (u64, u64) {
+        (self.schedule_start, self.schedule_end)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-struct Placement {
-    qsm_alias: u32,
-    slot: u64,
-    action: u16,
+pub struct AetsActionPlacement {
+    pub qsm_alias: u32,
+    pub slot: u64,
+    pub action: u16,
 }
 
 pub fn compile_aets_p0(
@@ -178,6 +197,10 @@ pub fn compile_aets_p0(
         registry_capsule_digest: aets_qsm_capsule_digest(&capsule),
         observer_registry_digest: aets_observer_registry_digest(OBSERVER_REGISTRY_V1),
         source_digest: source.digest(),
+        service_codes: canonical_codes.into_boxed_slice(),
+        action_placements: placements.into_boxed_slice(),
+        schedule_start,
+        schedule_end,
     })
 }
 
@@ -185,7 +208,7 @@ fn compile_plan(
     source: &AetsPublicSourceArtifact,
     service_codes: &[AetsServiceCode],
     limits: AetsCompileLimits,
-) -> Result<(Vec<AetsServiceCode>, Vec<Placement>, u64, u64), AetsCompileError> {
+) -> Result<(Vec<AetsServiceCode>, Vec<AetsActionPlacement>, u64, u64), AetsCompileError> {
     let context = source.public_context();
     if context.network.services.len() > limits.max_services {
         return Err(AetsCompileError::ServiceLimit);
@@ -255,7 +278,7 @@ fn compile_plan(
         domain.extend_from_slice(&obligation.public_bucket.0.to_le_bytes());
         let width = end - start + 1;
         let slot = start + source.schedule_tape().sample_u64(&domain, 0) % width;
-        placements.push(Placement {
+        placements.push(AetsActionPlacement {
             qsm_alias: by_service[&obligation.service],
             slot,
             action: obligation.action as u16,
@@ -267,7 +290,7 @@ fn compile_plan(
 
 fn emit_wat(
     service_codes: &[AetsServiceCode],
-    placements: &[Placement],
+    placements: &[AetsActionPlacement],
     schedule_start: u64,
     schedule_end: u64,
 ) -> Result<String, AetsCompileError> {

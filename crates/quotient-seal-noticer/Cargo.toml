@@ -13,8 +13,12 @@ noticer-types.workspace = true
 quotient-forge-caqt.workspace = true
 quotient-seal-abi.workspace = true
 quotient-seal-capsule.workspace = true
+quotient-seal-context.workspace = true
+quotient-seal-engine.workspace = true
 quotient-seal-relation.workspace = true
+quotient-seal-small-step.workspace = true
 quotient-seal-target-ir.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 wat.workspace = true
 
