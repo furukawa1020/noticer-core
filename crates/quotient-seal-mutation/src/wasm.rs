@@ -57,9 +57,7 @@ pub fn mutate_wasm(
         MutationRecipe::DuplicateCall => module.duplicate_call(operator)?,
         MutationRecipe::DropCall => module.drop_call(operator)?,
         MutationRecipe::IncrementCallIndex => module.increment_call_index(operator, marker)?,
-        MutationRecipe::InsertCall => {
-            module.inject_code(operator, &[0x10, 0x00], "extra call")?
-        }
+        MutationRecipe::InsertCall => module.inject_code(operator, &[0x10, 0x00], "extra call")?,
         MutationRecipe::ReorderCalls => module.reorder_calls(operator)?,
         MutationRecipe::AppendFunctionExport => module.append_export(operator, 0, 0)?,
         MutationRecipe::AppendFunctionImport => module.append_import(operator)?,
@@ -73,18 +71,16 @@ pub fn mutate_wasm(
         )?,
         MutationRecipe::InsertSignedOverflow => module.inject_code(
             operator,
-            &[
-                0x41, 0x80, 0x80, 0x80, 0x80, 0x78, 0x41, 0x7f, 0x6d, 0x1a,
-            ],
+            &[0x41, 0x80, 0x80, 0x80, 0x80, 0x78, 0x41, 0x7f, 0x6d, 0x1a],
             "signed division overflow",
         )?,
         MutationRecipe::AppendMemoryExport => module.append_export(operator, 2, 0)?,
-        MutationRecipe::InsertMemoryGrow => module.inject_code(
-            operator,
-            &[0x41, 0x01, 0x40, 0x00, 0x1a],
-            "memory.grow",
-        )?,
-        MutationRecipe::IncrementMemoryOffset => module.increment_memory_offset(operator, marker)?,
+        MutationRecipe::InsertMemoryGrow => {
+            module.inject_code(operator, &[0x41, 0x01, 0x40, 0x00, 0x1a], "memory.grow")?
+        }
+        MutationRecipe::IncrementMemoryOffset => {
+            module.increment_memory_offset(operator, marker)?
+        }
         MutationRecipe::AppendMutableGlobal => module.append_mutable_global(operator, marker)?,
         MutationRecipe::ShiftDataOffset => module.shift_data_offset(operator, marker)?,
         MutationRecipe::InsertPrivateBranch => module.inject_code(
@@ -96,11 +92,9 @@ pub fn mutate_wasm(
             let nops = vec![0x01; usize::from(marker % 5 + 2)];
             module.inject_code(operator, &nops, "opcode cost inflation")?
         }
-        MutationRecipe::InsertLoopBackedge => module.inject_code(
-            operator,
-            &[0x03, 0x40, 0x0c, 0x00, 0x0b],
-            "loop backedge",
-        )?,
+        MutationRecipe::InsertLoopBackedge => {
+            module.inject_code(operator, &[0x03, 0x40, 0x0c, 0x00, 0x0b], "loop backedge")?
+        }
         MutationRecipe::AppendBindingSection => module.append_binding(operator)?,
     };
     let witness = module.append_witness(operator);
@@ -379,6 +373,9 @@ impl RawModule {
             let first = body[first_start..first_end].to_vec();
             let middle = body[first_end..second_start].to_vec();
             let second = body[second_start..second_end].to_vec();
+            if first == second {
+                return Err(not_applicable(operator, "two distinct call instructions"));
+            }
             let mut after = second;
             after.extend(middle);
             after.extend(first);
@@ -393,12 +390,12 @@ impl RawModule {
         })
     }
 
-    fn append_import(
-        &mut self,
-        operator: MutationOperator,
-    ) -> Result<MutationEdit, MutationError> {
+    fn append_import(&mut self, operator: MutationOperator) -> Result<MutationEdit, MutationError> {
         if self.sections.iter().all(|section| section.id != 1) {
-            return Err(not_applicable(operator, "type section with type index zero"));
+            return Err(not_applicable(
+                operator,
+                "type section with type index zero",
+            ));
         }
         let mut entry = encode_name("env");
         entry.extend(encode_name(operator.id()));
@@ -429,7 +426,7 @@ impl RawModule {
 
     fn append_vector_entry(
         &mut self,
-        operator: MutationOperator,
+        _operator: MutationOperator,
         section_id: u8,
         entry: Vec<u8>,
         locus: &str,
@@ -438,7 +435,8 @@ impl RawModule {
             let mut position = 0;
             let count = read_u32(&section.payload, &mut position)?;
             let offset = section.payload.len();
-            let mut payload = encode_u32(count.checked_add(1).ok_or(MutationError::IntegerOverflow)?);
+            let mut payload =
+                encode_u32(count.checked_add(1).ok_or(MutationError::IntegerOverflow)?);
             payload.extend_from_slice(&section.payload[position..]);
             payload.extend_from_slice(&entry);
             section.payload = payload;
@@ -672,4 +670,3 @@ pub enum MutationError {
         requirement: String,
     },
 }
-

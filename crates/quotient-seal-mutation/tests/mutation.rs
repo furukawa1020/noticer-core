@@ -2,8 +2,8 @@ use std::collections::{BTreeSet, HashSet};
 use std::path::PathBuf;
 
 use quotient_seal_mutation::{
-    mutate_wasm, validate_wasm_container, MutationFamily, MutationOperator,
-    ALL_MUTATION_OPERATORS, MUTATION_TAXONOMY_VERSION,
+    mutate_wasm, validate_wasm_container, MutationFamily, MutationOperator, ALL_MUTATION_OPERATORS,
+    MUTATION_TAXONOMY_VERSION,
 };
 
 #[test]
@@ -29,8 +29,10 @@ fn every_operator_is_byte_deterministic_unique_and_container_valid() {
     let mut hashes = HashSet::new();
     let mut primary_sections = BTreeSet::new();
     for operator in ALL_MUTATION_OPERATORS {
-        let first = mutate_wasm(&seed, operator).expect(operator.id());
-        let second = mutate_wasm(&seed, operator).expect(operator.id());
+        let first = mutate_wasm(&seed, operator)
+            .unwrap_or_else(|error| panic!("{}: {error}", operator.id()));
+        let second = mutate_wasm(&seed, operator)
+            .unwrap_or_else(|error| panic!("{}: {error}", operator.id()));
         assert_eq!(first, second, "{} must be deterministic", operator.id());
         assert_ne!(first.bytes, seed, "{} must change bytes", operator.id());
         assert_eq!(&first.bytes[..8], b"\0asm\x01\0\0\0");
@@ -63,9 +65,7 @@ fn missing_required_locus_is_not_applicable_not_success() {
 #[test]
 fn malformed_and_noncanonical_containers_are_rejected() {
     assert!(validate_wasm_container(b"bad").is_err());
-    let noncanonical = [
-        b'\0', b'a', b's', b'm', 1, 0, 0, 0, 0, 0x80, 0x00,
-    ];
+    let noncanonical = [b'\0', b'a', b's', b'm', 1, 0, 0, 0, 0, 0x80, 0x00];
     assert!(validate_wasm_container(&noncanonical).is_err());
 }
 
@@ -111,17 +111,13 @@ fn fixture_wasm() -> Vec<u8> {
     push_section(&mut module, 7, &export);
 
     let body = [
-        0x00, 0x41, 0x00, 0x28, 0x02, 0x00, 0x1a, 0x10, 0x00, 0x10, 0x00, 0x0b,
+        0x00, 0x41, 0x00, 0x28, 0x02, 0x00, 0x1a, 0x10, 0x00, 0x10, 0x01, 0x0b,
     ];
     let mut code = vec![0x01];
     code.extend(leb(u32::try_from(body.len()).expect("body length")));
     code.extend(body);
     push_section(&mut module, 10, &code);
-    push_section(
-        &mut module,
-        11,
-        &[0x01, 0x00, 0x41, 0x00, 0x0b, 0x01, 0x00],
-    );
+    push_section(&mut module, 11, &[0x01, 0x00, 0x41, 0x00, 0x0b, 0x01, 0x00]);
     module
 }
 
@@ -151,4 +147,3 @@ fn leb(mut value: u32) -> Vec<u8> {
         }
     }
 }
-
