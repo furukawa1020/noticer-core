@@ -1,0 +1,36 @@
+{
+  "schema_version": "quotient-seal-compilation-matrix/v1",
+  "target": "wasm32-unknown-unknown",
+  "rustup_binary": "rustup",
+  "wasm_opt_binary": "wasm-opt",
+  "wasm_opt_expected_version": "version 123",
+  "toolchains": [
+    {
+      "id": "stable-1.93.0",
+      "channel": "1.93.0",
+      "role": "development"
+    },
+    {
+      "id": "nightly-2025-03-15",
+      "channel": "nightly-2025-03-15",
+      "role": "held_out"
+    }
+  ],
+  "configurations": [
+    { "id": "stable-o0-off-default-none", "toolchain": "stable-1.93.0", "opt_level": "0", "lto": "off", "codegen_units": "default", "wasm_opt": "none" },
+    { "id": "stable-o1-off-1-o1", "toolchain": "stable-1.93.0", "opt_level": "1", "lto": "off", "codegen_units": "1", "wasm_opt": "o1" },
+    { "id": "stable-o2-thin-default-o2", "toolchain": "stable-1.93.0", "opt_level": "2", "lto": "thin", "codegen_units": "default", "wasm_opt": "o2" },
+    { "id": "stable-o3-fat-1-os", "toolchain": "stable-1.93.0", "opt_level": "3", "lto": "fat", "codegen_units": "1", "wasm_opt": "os" },
+    { "id": "stable-os-thin-1-oz", "toolchain": "stable-1.93.0", "opt_level": "s", "lto": "thin", "codegen_units": "1", "wasm_opt": "oz" },
+    { "id": "stable-oz-fat-default-none", "toolchain": "stable-1.93.0", "opt_level": "z", "lto": "fat", "codegen_units": "default", "wasm_opt": "none" },
+    { "id": "stable-o2-off-1-os", "toolchain": "stable-1.93.0", "opt_level": "2", "lto": "off", "codegen_units": "1", "wasm_opt": "os" },
+    { "id": "stable-o3-thin-default-oz", "toolchain": "stable-1.93.0", "opt_level": "3", "lto": "thin", "codegen_units": "default", "wasm_opt": "oz" },
+    { "id": "nightly-o0-off-1-o2", "toolchain": "nightly-2025-03-15", "opt_level": "0", "lto": "off", "codegen_units": "1", "wasm_opt": "o2" },
+    { "id": "nightly-o1-thin-default-none", "toolchain": "nightly-2025-03-15", "opt_level": "1", "lto": "thin", "codegen_units": "default", "wasm_opt": "none" },
+    { "id": "nightly-o2-fat-1-o1", "toolchain": "nightly-2025-03-15", "opt_level": "2", "lto": "fat", "codegen_units": "1", "wasm_opt": "o1" },
+    { "id": "nightly-o3-off-default-oz", "toolchain": "nightly-2025-03-15", "opt_level": "3", "lto": "off", "codegen_units": "default", "wasm_opt": "oz" },
+    { "id": "nightly-os-fat-default-os", "toolchain": "nightly-2025-03-15", "opt_level": "s", "lto": "fat", "codegen_units": "default", "wasm_opt": "os" },
+    { "id": "nightly-oz-thin-1-o2", "toolchain": "nightly-2025-03-15", "opt_level": "z", "lto": "thin", "codegen_units": "1", "wasm_opt": "o2" }
+  ]
+}
+
