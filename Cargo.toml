@@ -119,3 +119,5 @@ proptest = "1"
 trybuild = "1"
 clap = { version = "4", features = ["derive"] }
 csv = "1"
+wasmi = { version = "=0.46.0", default-features = false, features = ["std", "extra-checks", "prefer-btree-collections"] }
+wat = "=1.251.0"

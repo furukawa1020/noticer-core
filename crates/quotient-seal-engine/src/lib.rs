@@ -7,6 +7,7 @@
 //! successful observation.
 
 mod contract;
+mod wasmi_adapter;
 
 pub use contract::{
     compute_execution_id, ContextCommandRecord, ContractError, EngineIdentity, EngineRunArtifact,
@@ -15,4 +16,7 @@ pub use contract::{
     ObservableEvent, ProtocolConfig, ResourceKind, ScalarValue, TrapClass, VersionPolicy,
     CROSS_ENGINE_ARTIFACT_SCHEMA_VERSION, CROSS_ENGINE_PROTOCOL_SCHEMA_VERSION,
     ENGINE_ADAPTER_CONTRACT_VERSION,
+};
+pub use wasmi_adapter::{
+    WasmiAdapter, WasmiAdapterError, WASMI_ADAPTER_PROFILE_VERSION, WASMI_CRATE_VERSION,
 };
