@@ -2084,6 +2084,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-seal-noticer"
+version = "0.1.0"
+dependencies = [
+ "noticer-protocol",
+ "noticer-types",
+ "quotient-forge-caqt",
+ "quotient-seal-abi",
+]
+
+[[package]]
 name = "quotient-seal-relation"
 version = "0.1.0"
 dependencies = [
