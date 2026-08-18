@@ -7,9 +7,14 @@ rust-version.workspace = true
 description = "Engine-independent cross-engine execution contract for QuotientSeal"
 
 [dependencies]
+quotient-seal-abi.workspace = true
 quotient-seal-context.workspace = true
 quotient-seal-small-step.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+wasmi.workspace = true
+
+[dev-dependencies]
+wat.workspace = true
