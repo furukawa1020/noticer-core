@@ -393,6 +393,7 @@ theorem context_step_coupled
 theorem finiteProduct_contexts_coupled
     (source : Model)
     (target : TargetMachine source)
+    [DecidableEq target.Context]
     (observer : source.Observer)
     (initial : CoupledConfiguration source target)
     (inputs : Nat -> source.Input)
@@ -401,20 +402,24 @@ theorem finiteProduct_contexts_coupled
     (slot : Nat) :
     (coupledAt source target observer initial inputs slot).contextLeft =
       (coupledAt source target observer initial inputs slot).contextRight := by
-  by_contra different
-  exact
-    (certificate.safe
-      slot
-      (coupledAt source target observer initial inputs slot)
-      (finiteProduct_member
-        source
-        target
-        observer
-        initial
-        inputs
-        certificate
-        slot))
-      (RobustBadAt.contextMismatch different)
+  by_cases same :
+      (coupledAt source target observer initial inputs slot).contextLeft =
+        (coupledAt source target observer initial inputs slot).contextRight
+  · exact same
+  · exact
+      False.elim
+        ((certificate.safe
+          slot
+          (coupledAt source target observer initial inputs slot)
+          (finiteProduct_member
+            source
+            target
+            observer
+            initial
+            inputs
+            certificate
+            slot))
+          (RobustBadAt.contextMismatch same))
 
 theorem finiteProduct_resources_equal
     (source : Model)

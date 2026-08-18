@@ -177,6 +177,7 @@ theorem finiteProductPreservesRAQTR
     [DecidableEq source.Observation]
     (_finiteDomains : FiniteDomains source)
     (target : TargetMachine source)
+    [DecidableEq target.Context]
     (relation : ValidatedRelation source target)
     (observer : source.Observer)
     (initial : CoupledConfiguration source target)
