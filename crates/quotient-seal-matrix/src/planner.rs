@@ -132,9 +132,7 @@ pub fn plan_configuration(
         args: input
             .checker_args
             .iter()
-            .map(|argument| {
-                argument.replace("{artifact}", &final_outputs[0].to_string_lossy())
-            })
+            .map(|argument| argument.replace("{artifact}", &final_outputs[0].to_string_lossy()))
             .collect(),
         current_dir: config_dir,
     };
@@ -155,8 +153,7 @@ pub fn plan_configuration(
         wasm_opt_version_command,
         wasm_opt_commands,
         checker_command,
-        wasm_opt_expected_version: optimized
-            .then(|| matrix.wasm_opt_expected_version.clone()),
+        wasm_opt_expected_version: optimized.then(|| matrix.wasm_opt_expected_version.clone()),
         fingerprint_sha256: String::new(),
     };
     plan.fingerprint_sha256 = plan_fingerprint(&plan)?;
@@ -235,4 +232,3 @@ pub enum PlanError {
     #[error("failed to serialize deterministic plan: {0}")]
     Serialize(serde_json::Error),
 }
-

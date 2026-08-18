@@ -8,8 +8,8 @@ use std::process::Command;
 use sha2::{Digest, Sha256};
 
 use crate::manifest::{
-    ArtifactDigest, CheckerRecord, MatrixVerdict, ReproducibilityRecord,
-    ReproducibilityStatus, RunManifest, ToolEvidence, RUN_MANIFEST_SCHEMA_VERSION,
+    ArtifactDigest, CheckerRecord, MatrixVerdict, ReproducibilityRecord, ReproducibilityStatus,
+    RunManifest, ToolEvidence, RUN_MANIFEST_SCHEMA_VERSION,
 };
 use crate::planner::{CommandSpec, CompilationPlan};
 
@@ -176,7 +176,8 @@ pub fn run_plan<E: CommandExecutor>(plan: &CompilationPlan, executor: &E) -> Run
             manifest.reason = "independent checker rejected the artifact".to_owned();
         }
         code => {
-            manifest.reason = format!("independent checker returned non-verdict exit code {code:?}");
+            manifest.reason =
+                format!("independent checker returned non-verdict exit code {code:?}");
         }
     }
     manifest.checker = Some(checker);
@@ -222,13 +223,7 @@ fn inspect_rustc<E: CommandExecutor>(plan: &CompilationPlan, executor: &E) -> To
         }
     };
     let path = PathBuf::from(path_output.stdout.trim());
-    inspect_tool_at_path(
-        requested,
-        path,
-        &plan.rustc_version_command,
-        None,
-        executor,
-    )
+    inspect_tool_at_path(requested, path, &plan.rustc_version_command, None, executor)
 }
 
 fn inspect_resolved_tool<E: CommandExecutor>(
@@ -386,4 +381,3 @@ fn executable_extensions() -> Vec<OsString> {
         vec![OsString::new()]
     }
 }
-

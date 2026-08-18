@@ -82,4 +82,3 @@ impl RunManifest {
         fs::write(path, encoded)
     }
 }
-

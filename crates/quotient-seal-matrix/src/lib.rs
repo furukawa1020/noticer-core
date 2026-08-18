@@ -14,11 +14,8 @@ pub use config::{
     ToolchainRole, ToolchainSpec, WasmOptLevel,
 };
 pub use manifest::{
-    ArtifactDigest, CheckerRecord, MatrixVerdict, ReproducibilityRecord,
-    ReproducibilityStatus, RunManifest, ToolEvidence,
+    ArtifactDigest, CheckerRecord, MatrixVerdict, ReproducibilityRecord, ReproducibilityStatus,
+    RunManifest, ToolEvidence,
 };
-pub use planner::{
-    plan_configuration, CommandSpec, CompilationPlan, PlanError, PlanInput,
-};
+pub use planner::{plan_configuration, CommandSpec, CompilationPlan, PlanError, PlanInput};
 pub use runner::{run_plan, CommandExecutor, CommandOutput, ProcessExecutor};
-

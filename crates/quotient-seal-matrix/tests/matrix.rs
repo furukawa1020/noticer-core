@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use quotient_seal_matrix::{
-    plan_configuration, run_plan, CommandExecutor, CommandOutput, CommandSpec,
-    CompilationMatrix, MatrixVerdict, PlanInput, ReproducibilityStatus, ToolchainRole,
+    plan_configuration, run_plan, CommandExecutor, CommandOutput, CommandSpec, CompilationMatrix,
+    MatrixVerdict, PlanInput, ReproducibilityStatus, ToolchainRole,
 };
 
 static NEXT_TEMP: AtomicU64 = AtomicU64::new(0);
@@ -65,7 +65,11 @@ impl FakeExecutor {
 
 impl CommandExecutor for FakeExecutor {
     fn run(&self, command: &CommandSpec) -> io::Result<CommandOutput> {
-        if command.args.first().is_some_and(|argument| argument == "which") {
+        if command
+            .args
+            .first()
+            .is_some_and(|argument| argument == "which")
+        {
             return Ok(success(format!("{}\n", self.root.join("rustc").display())));
         }
         if command.args.iter().any(|argument| argument == "--version") {
@@ -218,4 +222,3 @@ fn manifest_round_trip_preserves_held_out_role_and_commands() {
     assert!(decoded.held_out);
     assert_eq!(decoded.compile_commands, plan.compile_commands);
 }
-

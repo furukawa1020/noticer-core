@@ -144,9 +144,7 @@ impl CompilationMatrix {
             return Err(MatrixError::Target(self.target.clone()));
         }
         if self.configurations.len() < 12 {
-            return Err(MatrixError::TooFewConfigurations(
-                self.configurations.len(),
-            ));
+            return Err(MatrixError::TooFewConfigurations(self.configurations.len()));
         }
         if self.rustup_binary.is_empty()
             || self.wasm_opt_binary.is_empty()
@@ -222,9 +220,7 @@ impl CompilationMatrix {
 
     #[must_use]
     pub fn toolchain(&self, id: &str) -> Option<&ToolchainSpec> {
-        self.toolchains
-            .iter()
-            .find(|toolchain| toolchain.id == id)
+        self.toolchains.iter().find(|toolchain| toolchain.id == id)
     }
 }
 
@@ -262,4 +258,3 @@ pub enum MatrixError {
     #[error("matrix does not cover every frozen compilation axis")]
     IncompleteAxisCoverage,
 }
-

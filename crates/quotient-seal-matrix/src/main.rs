@@ -86,4 +86,3 @@ fn execute(cli: Cli) -> Result<ExitCode, Box<dyn std::error::Error>> {
         }
     }
 }
-
