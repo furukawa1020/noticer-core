@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_mutation_checker_protocol_v1.schema.json",
+  "title": "QuotientSeal mutation checker protocol v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_placeholder",
+    "parser_exit_codes",
+    "checker_exit_codes",
+    "other_exit_semantics",
+    "execution_failure_semantics",
+    "parser_disagreement_semantics"
+  ],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-mutation-checker-protocol/v1" },
+    "artifact_placeholder": { "const": "{artifact}" },
+    "parser_exit_codes": {
+      "const": { "accepted": 0, "rejected": 1, "resource_bound": 2 }
+    },
+    "checker_exit_codes": {
+      "const": { "accepted": 0, "rejected": 1 }
+    },
+    "other_exit_semantics": { "const": "inconclusive" },
+    "execution_failure_semantics": { "const": "inconclusive" },
+    "parser_disagreement_semantics": { "const": "inconclusive" }
+  }
+}
+
