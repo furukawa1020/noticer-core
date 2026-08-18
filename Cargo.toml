@@ -50,6 +50,7 @@ members = [
     "crates/quotient-seal-resource",
     "crates/quotient-seal-capsule",
     "crates/quotient-seal-matrix",
+    "crates/quotient-seal-mutation",
     "crates/quotient-seal-target-ir",
     "crates/quotient-seal-small-step",
     "crates/quotient-seal-relation",

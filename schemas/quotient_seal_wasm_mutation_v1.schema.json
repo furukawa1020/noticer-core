@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_wasm_mutation_v1.schema.json",
+  "title": "QuotientSeal WASM mutation taxonomy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operators"],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-wasm-mutation/v1" },
+    "operators": {
+      "type": "array",
+      "minItems": 37,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "family"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
+          "family": {
+            "enum": ["action", "state", "context", "trap", "memory", "resource", "binding"]
+          }
+        }
+      }
+    }
+  }
+}
+
