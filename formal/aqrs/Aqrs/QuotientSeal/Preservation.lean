@@ -13,9 +13,8 @@ structure RAQTR
     (observer : source.Observer)
     (initial : CoupledConfiguration source target)
     (inputs : Nat -> source.Input)
-    (productBound horizon : Nat) : Prop where
-  finiteProductStates : Nat
-  finiteProductWithinBound : finiteProductStates <= productBound
+    (productStates productBound horizon : Nat) : Prop where
+  finiteProductWithinBound : productStates <= productBound
   observerEquivalent :
     forall slot,
       slot < horizon ->
@@ -204,25 +203,26 @@ theorem finiteProductPreservesRAQTR
         initial.sourceRight
         inputs
         horizon) :
-    RAQTR
+    And
+      (RAQTR
         source
         target
         observer
         initial
         inputs
+        certificate.entries.length
         productBound
-        horizon /
-      TargetUtilityPreserved
+        horizon)
+      (TargetUtilityPreserved
         source
         target
         observer
         initial
         inputs
-        horizon := by
+        horizon) := by
   constructor
   · refine
       {
-        finiteProductStates := certificate.entries.length
         finiteProductWithinBound := ?_
         observerEquivalent := ?_
         contextsCoupled := ?_
