@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient-seal/noticer-qsm-registry-v1.schema.json",
+  "title": "QuotientSeal Noticer QSM registry contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "format", "modules", "bindings", "profiles", "privacy", "claim_boundary"],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-noticer-registry/v1" },
+    "format": {
+      "const": { "magic": "NQSMREG1", "version": 1, "encoding": "fixed-little-endian", "module_count": 5 }
+    },
+    "modules": {
+      "const": ["AETS", "ATV2_FRAME_PLANNER", "APLOT", "AEPA", "MENFUGU_EXECUTION_PLANNER"]
+    },
+    "bindings": {
+      "const": ["source_digest", "source_certificate_digest", "generated_runtime_digest", "qsm_capsule_digest", "service_alias", "epoch", "policy_hash", "observer_registry_digest"]
+    },
+    "profiles": {
+      "const": {
+        "P0_PUBLIC_QUOTIENT_ONLY": { "p1_resource_evidence": "forbidden" },
+        "P1_SEALED_ADMISSION": { "p1_resource_evidence": "required" }
+      }
+    },
+    "privacy": {
+      "const": { "arbitrary_fields": "forbidden", "raw_ppg": "forbidden", "private_baseline": "forbidden", "k1_raw_feature": "forbidden" }
+    },
+    "claim_boundary": {
+      "const": { "hardware_execution": "NOT_VERIFIED" }
+    }
+  }
+}

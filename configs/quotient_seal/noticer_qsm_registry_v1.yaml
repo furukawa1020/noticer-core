@@ -1,0 +1,33 @@
+schema_version: quotient-seal-noticer-registry/v1
+format:
+  magic: NQSMREG1
+  version: 1
+  encoding: fixed-little-endian
+  module_count: 5
+modules:
+  - AETS
+  - ATV2_FRAME_PLANNER
+  - APLOT
+  - AEPA
+  - MENFUGU_EXECUTION_PLANNER
+bindings:
+  - source_digest
+  - source_certificate_digest
+  - generated_runtime_digest
+  - qsm_capsule_digest
+  - service_alias
+  - epoch
+  - policy_hash
+  - observer_registry_digest
+profiles:
+  P0_PUBLIC_QUOTIENT_ONLY:
+    p1_resource_evidence: forbidden
+  P1_SEALED_ADMISSION:
+    p1_resource_evidence: required
+privacy:
+  arbitrary_fields: forbidden
+  raw_ppg: forbidden
+  private_baseline: forbidden
+  k1_raw_feature: forbidden
+claim_boundary:
+  hardware_execution: NOT_VERIFIED
