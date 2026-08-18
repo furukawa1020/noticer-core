@@ -6,10 +6,13 @@ license.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+clap.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
 
-[dev-dependencies]
-serde_json.workspace = true
+[[bin]]
+name = "quotient-seal-mutation"
+path = "src/main.rs"
 

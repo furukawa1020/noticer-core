@@ -1,0 +1,34 @@
+{
+  "schema_version": "quotient-seal-mutation-split/v1",
+  "development": {
+    "module_families": [
+      "noticer_reference",
+      "generic_reference"
+    ],
+    "compiler_configurations": [
+      "stable-o0-off-default-none",
+      "stable-o1-off-1-o1",
+      "stable-o2-thin-default-o2",
+      "stable-o3-fat-1-os",
+      "stable-os-thin-1-oz",
+      "stable-oz-fat-default-none",
+      "stable-o2-off-1-os",
+      "stable-o3-thin-default-oz"
+    ]
+  },
+  "held_out": {
+    "module_families": [
+      "noticer_atv2_held_out",
+      "generic_adversarial_held_out"
+    ],
+    "compiler_configurations": [
+      "nightly-o0-off-1-o2",
+      "nightly-o1-thin-default-none",
+      "nightly-o2-fat-1-o1",
+      "nightly-o3-off-default-oz",
+      "nightly-os-fat-default-os",
+      "nightly-oz-thin-1-o2"
+    ]
+  }
+}
+

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_mutation_split_v1.schema.json",
+  "title": "QuotientSeal mutation split v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "development", "held_out"],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-mutation-split/v1" },
+    "development": { "$ref": "#/$defs/side" },
+    "held_out": { "$ref": "#/$defs/side" }
+  },
+  "$defs": {
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module_families", "compiler_configurations"],
+      "properties": {
+        "module_families": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" }
+        },
+        "compiler_configurations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" }
+        }
+      }
+    }
+  }
+}
+
