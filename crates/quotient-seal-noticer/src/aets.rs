@@ -3,8 +3,9 @@ use std::collections::BTreeSet;
 use noticer_aetp::{ActionSemantics, AetpError, PublicContext, ScheduleRandomTape};
 use noticer_protocol::WireServiceAlias;
 use noticer_types::{Epoch, PolicyHash};
-use quotient_forge_caqt::{artifact_digest, CertificateLimits, Digest, ExpectedContract};
-use quotient_forge_noticer::{CertifiedGeneratedPlan, ConnectionError};
+use quotient_forge_caqt::{
+    artifact_digest, verify, CertificateLimits, CertificateVerdict, Digest, ExpectedContract,
+};
 use quotient_seal_abi::DeploymentProfile;
 use thiserror::Error;
 
@@ -162,12 +163,18 @@ pub fn bind_aets_p0(
     }
     ensure_digest("source", entry.source_digest, source.digest())?;
 
-    let certified = CertifiedGeneratedPlan::from_certificate(
+    let certificate_digest = match verify(
         artifacts.certificate,
         artifacts.expected_contract,
         artifacts.certificate_limits,
-    )?;
-    let certificate_digest = certified.certificate_digest();
+    ) {
+        CertificateVerdict::Valid(report) => report.certificate_digest,
+        verdict => {
+            return Err(AetsBindingError::CertificateRejected(format!(
+                "{verdict:?}"
+            )))
+        }
+    };
     ensure_digest(
         "certificate",
         entry.source_certificate_digest,
@@ -300,8 +307,8 @@ pub enum AetsBindingError {
     EpochMismatch,
     #[error("AETS policy hash does not match the public source or manifest")]
     PolicyMismatch,
-    #[error(transparent)]
-    Certificate(#[from] ConnectionError),
+    #[error("CAQT certificate was rejected: {0}")]
+    CertificateRejected(String),
     #[error("generated runtime manifest is not canonical codegen v2 metadata")]
     InvalidCodegenManifest,
     #[error("generated runtime manifest is bound to a different CAQT certificate")]

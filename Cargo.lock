@@ -2092,7 +2092,6 @@ dependencies = [
  "noticer-types",
  "quotient-forge-caqt",
  "quotient-forge-codegen",
- "quotient-forge-noticer",
  "quotient-seal-abi",
  "thiserror 2.0.20",
 ]

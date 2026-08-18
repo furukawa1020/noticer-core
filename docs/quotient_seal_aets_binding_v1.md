@@ -29,7 +29,7 @@ The binding performs all of these checks before returning success:
 1. Select exactly the canonical AETS entry from the Noticer QSM registry.
 2. Require `P0 Public Quotient Only` and reject P1 evidence.
 3. Match service alias, epoch, policy hash, and public source digest.
-4. Verify the original CAQT bytes with `CertifiedGeneratedPlan`.
+4. Verify the original CAQT bytes with the existing minimal CAQT verifier.
 5. Parse the real QuotientForge codegen v2 manifest and match its embedded
    certificate digest to the independently verified CAQT digest.
 6. Match the codegen manifest, QSM capsule, and observer registry digests.
