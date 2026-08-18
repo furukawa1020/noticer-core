@@ -388,9 +388,7 @@ theorem context_step_coupled
           configuration.targetRight
           configuration.contextRight
           input)
-  cases contexts
-  cases observations
-  rfl
+  rw [observations, contexts]
 
 theorem finiteProduct_contexts_coupled
     (source : Model)
