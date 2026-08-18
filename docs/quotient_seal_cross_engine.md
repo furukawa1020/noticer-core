@@ -38,3 +38,13 @@ trapをtool failureへ潰さず、unsupportedやresource exhaustionを成功ま�
 context sequenceは`quotient-seal-context::ContextCommand`から安定recordへ投影する。host tapeは`quotient-seal-small-step::PublicHostTape`からimport名とoutcomeを失わず投影する。既存の実行意味論を新crateへ複製しない。
 
 固定設定は`configs/quotient_seal/cross_engine_v1.yaml`、schemaは`schemas/quotient_seal_cross_engine_v1.schema.json`に置く。生成されたrun artifactは`artifacts/`以下へ保存し、Gitへcommitしない。
+
+## wasmi adapter v1
+
+K8-12bは`wasmi`をprocess外toolではなくRust libraryとしてembedする。workspace MSRV 1.85を維持するため、Rust 1.86を要求する`wasmi 1.1.0`ではなく、MSRV 1.83のstable `wasmi =0.46.0`をexact pinした。pinと設定は`configs/quotient_seal/wasmi_adapter_v1.yaml`へ凍結する。
+
+adapterはABI validatorを先に通し、Eager compilation、fuel metering、fixed memory、host-call上限、MVP plus mutable-global profileで実行する。各public command後の`qseal.public.status` probeもengine設定としてexecution IDへ含める。host tapeの不足・順序違い・未消費は成功にしない。
+
+`timeout_ms`は外側orchestratorのwatchdog契約であり、同期wasmi call単独でwall-clock timeoutを実行したとは主張しない。adapter内部の停止保証はdeterministic fuel boundである。enclosing executableのSHA-256はcallerが与え、embedded crate名だけをbinary hashとして偽装しない。
+
+wasmi単独の再現試験は実行するが、Wasmtimeとの一致とreference differential verdictは後続Issueまで`NOT_VERIFIED`である。

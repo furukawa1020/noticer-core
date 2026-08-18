@@ -1,0 +1,16 @@
+{
+  "schema_version": "quotient-seal-wasmi-adapter/v1",
+  "engine": "wasmi",
+  "crate_version": "0.46.0",
+  "dependency_requirement": "=0.46.0",
+  "engine_msrv": "1.83",
+  "workspace_msrv": "1.85",
+  "cargo_features": ["std", "extra-checks", "prefer-btree-collections"],
+  "compilation_mode": "EAGER",
+  "consume_fuel": true,
+  "floats": false,
+  "proposal_profile": "MVP_MUTABLE_GLOBAL_ONLY",
+  "post_command_status_probe": true,
+  "timeout_strategy": "ORCHESTRATOR_PLUS_FUEL",
+  "embedded_binary_hash_source": "ENCLOSING_BINARY_SHA256"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_wasmi_adapter_v1.schema.json",
+  "title": "QuotientSeal wasmi adapter v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "engine",
+    "crate_version",
+    "dependency_requirement",
+    "engine_msrv",
+    "workspace_msrv",
+    "cargo_features",
+    "compilation_mode",
+    "consume_fuel",
+    "floats",
+    "proposal_profile",
+    "post_command_status_probe",
+    "timeout_strategy",
+    "embedded_binary_hash_source"
+  ],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-wasmi-adapter/v1" },
+    "engine": { "const": "wasmi" },
+    "crate_version": { "const": "0.46.0" },
+    "dependency_requirement": { "const": "=0.46.0" },
+    "engine_msrv": { "const": "1.83" },
+    "workspace_msrv": { "const": "1.85" },
+    "cargo_features": {
+      "const": ["std", "extra-checks", "prefer-btree-collections"]
+    },
+    "compilation_mode": { "const": "EAGER" },
+    "consume_fuel": { "const": true },
+    "floats": { "const": false },
+    "proposal_profile": { "const": "MVP_MUTABLE_GLOBAL_ONLY" },
+    "post_command_status_probe": { "const": true },
+    "timeout_strategy": { "const": "ORCHESTRATOR_PLUS_FUEL" },
+    "embedded_binary_hash_source": { "const": "ENCLOSING_BINARY_SHA256" }
+  }
+}
