@@ -2093,7 +2093,11 @@ dependencies = [
  "quotient-forge-caqt",
  "quotient-forge-codegen",
  "quotient-seal-abi",
+ "quotient-seal-capsule",
+ "quotient-seal-relation",
+ "quotient-seal-target-ir",
  "thiserror 2.0.20",
+ "wat",
 ]
 
 [[package]]

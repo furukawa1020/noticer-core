@@ -1,0 +1,14 @@
+schema_version: noticer-aets-qsm-compiler/v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+source_binding: noticer-aets-public-source/v1
+compiler_output:
+  wasm_abi: quotient-seal-abi/v1
+  capsule: QUOTIENT_SEAL_CAPSULE_V1
+  deterministic: true
+public_inputs:
+  - service_alias
+  - public_slot
+  - public_fault
+private_ingress: FORBIDDEN
+semantic_backend_status: PENDING_K8_13B3
+hardware_status: NOT_VERIFIED

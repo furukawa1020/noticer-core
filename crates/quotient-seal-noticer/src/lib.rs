@@ -7,12 +7,17 @@
 //! private fields.
 
 mod aets;
+mod aets_compile;
 mod manifest;
 
 pub use aets::{
     aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
-    AetsArtifactSet, AetsBindingError, AetsP0Binding, AetsPublicSourceArtifact,
-    AETS_PUBLIC_SOURCE_FORMAT_VERSION,
+    verify_aets_k7, AetsArtifactSet, AetsBindingError, AetsK7Binding, AetsP0Binding,
+    AetsPublicSourceArtifact, AETS_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use aets_compile::{
+    compile_aets_p0, AetsCompileError, AetsCompileLimits, AetsCompiledQsm, AetsServiceCode,
+    AETS_QSM_COMPILER_VERSION,
 };
 
 pub use manifest::{
