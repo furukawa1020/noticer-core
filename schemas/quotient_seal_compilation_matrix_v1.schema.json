@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_compilation_matrix_v1.schema.json",
+  "title": "QuotientSeal compilation matrix v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "target",
+    "rustup_binary",
+    "wasm_opt_binary",
+    "wasm_opt_expected_version",
+    "toolchains",
+    "configurations"
+  ],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-compilation-matrix/v1" },
+    "target": { "const": "wasm32-unknown-unknown" },
+    "rustup_binary": { "type": "string", "minLength": 1 },
+    "wasm_opt_binary": { "type": "string", "minLength": 1 },
+    "wasm_opt_expected_version": { "type": "string", "minLength": 1 },
+    "toolchains": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "channel", "role"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "channel": { "type": "string", "minLength": 1 },
+          "role": { "enum": ["development", "held_out"] }
+        }
+      }
+    },
+    "configurations": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "toolchain", "opt_level", "lto", "codegen_units", "wasm_opt"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "toolchain": { "type": "string", "minLength": 1 },
+          "opt_level": { "enum": ["0", "1", "2", "3", "s", "z"] },
+          "lto": { "enum": ["off", "thin", "fat"] },
+          "codegen_units": { "enum": ["default", "1"] },
+          "wasm_opt": { "enum": ["none", "o1", "o2", "os", "oz"] }
+        }
+      }
+    }
+  }
+}
+
