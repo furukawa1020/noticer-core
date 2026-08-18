@@ -12,7 +12,11 @@ noticer-protocol.workspace = true
 noticer-types.workspace = true
 quotient-forge-caqt.workspace = true
 quotient-seal-abi.workspace = true
+quotient-seal-capsule.workspace = true
+quotient-seal-relation.workspace = true
+quotient-seal-target-ir.workspace = true
 thiserror.workspace = true
+wat.workspace = true
 
 [dev-dependencies]
 quotient-forge-codegen.workspace = true

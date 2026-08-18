@@ -4,7 +4,8 @@ use noticer_aetp::{ActionSemantics, AetpError, PublicContext, ScheduleRandomTape
 use noticer_protocol::WireServiceAlias;
 use noticer_types::{Epoch, PolicyHash};
 use quotient_forge_caqt::{
-    artifact_digest, verify, CertificateLimits, CertificateVerdict, Digest, ExpectedContract,
+    artifact_digest, verify, Certificate, CertificateLimits, CertificateVerdict, Digest,
+    ExpectedContract,
 };
 use quotient_seal_abi::DeploymentProfile;
 use thiserror::Error;
@@ -27,6 +28,9 @@ pub struct AetsPublicSourceArtifact {
     service_alias: WireServiceAlias,
     epoch: Epoch,
     policy_hash: PolicyHash,
+    action_semantics: ActionSemantics,
+    public_context: PublicContext,
+    schedule_tape: ScheduleRandomTape,
 }
 
 impl AetsPublicSourceArtifact {
@@ -58,6 +62,8 @@ impl AetsPublicSourceArtifact {
         let obligation_count = u32::try_from(semantics.obligations.len())
             .map_err(|_| AetsBindingError::PublicSourceTooLarge)?;
 
+        let mut canonical_context = public_context.clone();
+        canonical_context.network.services = services.clone();
         let mut bytes = Vec::new();
         bytes.extend_from_slice(AETS_SOURCE_MAGIC);
         bytes.extend_from_slice(&1_u16.to_le_bytes());
@@ -93,6 +99,9 @@ impl AetsPublicSourceArtifact {
             service_alias,
             epoch: Epoch(u64::from(public_context.network.public_epoch)),
             policy_hash,
+            action_semantics: semantics,
+            public_context: canonical_context,
+            schedule_tape,
         })
     }
 
@@ -120,6 +129,21 @@ impl AetsPublicSourceArtifact {
     pub const fn policy_hash(&self) -> PolicyHash {
         self.policy_hash
     }
+
+    #[must_use]
+    pub fn action_semantics(&self) -> &ActionSemantics {
+        &self.action_semantics
+    }
+
+    #[must_use]
+    pub fn public_context(&self) -> &PublicContext {
+        &self.public_context
+    }
+
+    #[must_use]
+    pub const fn schedule_tape(&self) -> ScheduleRandomTape {
+        self.schedule_tape
+    }
 }
 
 pub struct AetsArtifactSet<'a> {
@@ -131,6 +155,50 @@ pub struct AetsArtifactSet<'a> {
     pub observer_registry: &'a [u8],
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AetsK7Binding {
+    source_digest: Digest,
+    certificate_digest: Digest,
+    generated_runtime_digest: Digest,
+    certificate: Certificate,
+    source_certificate: Box<[u8]>,
+    quotient_inputs: u16,
+    public_inputs: u16,
+    fault_inputs: u16,
+}
+
+impl AetsK7Binding {
+    #[must_use]
+    pub const fn source_digest(&self) -> Digest {
+        self.source_digest
+    }
+
+    #[must_use]
+    pub const fn certificate_digest(&self) -> Digest {
+        self.certificate_digest
+    }
+
+    #[must_use]
+    pub const fn generated_runtime_digest(&self) -> Digest {
+        self.generated_runtime_digest
+    }
+
+    #[must_use]
+    pub fn source_certificate(&self) -> &[u8] {
+        &self.source_certificate
+    }
+
+    #[must_use]
+    pub fn certificate(&self) -> &Certificate {
+        &self.certificate
+    }
+
+    #[must_use]
+    pub const fn input_axes(&self) -> (u16, u16, u16) {
+        (self.quotient_inputs, self.public_inputs, self.fault_inputs)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AetsP0Binding {
     pub source_digest: Digest,
@@ -138,6 +206,51 @@ pub struct AetsP0Binding {
     pub generated_runtime_digest: Digest,
     pub qsm_capsule_digest: Digest,
     pub observer_registry_digest: Digest,
+    seal: AetsBindingSeal,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct AetsBindingSeal;
+
+pub fn verify_aets_k7(
+    source: &AetsPublicSourceArtifact,
+    certificate_bytes: &[u8],
+    expected_contract: ExpectedContract,
+    certificate_limits: CertificateLimits,
+    generated_runtime_manifest: &[u8],
+) -> Result<AetsK7Binding, AetsBindingError> {
+    let certificate_digest = match verify(certificate_bytes, expected_contract, certificate_limits)
+    {
+        CertificateVerdict::Valid(report) => report.certificate_digest,
+        verdict => {
+            return Err(AetsBindingError::CertificateRejected(format!(
+                "{verdict:?}"
+            )))
+        }
+    };
+    let certificate = Certificate::decode(certificate_bytes, certificate_limits)
+        .map_err(|error| AetsBindingError::CertificateParse(error.to_string()))?;
+    let metadata = codegen_metadata(generated_runtime_manifest)?;
+    if metadata.certificate_digest != certificate_digest {
+        return Err(AetsBindingError::CodegenCertificateMismatch);
+    }
+    let input_product = u32::from(metadata.quotient_inputs)
+        .checked_mul(u32::from(metadata.public_inputs))
+        .and_then(|value| value.checked_mul(u32::from(metadata.fault_inputs)))
+        .ok_or(AetsBindingError::CodegenInputAxes)?;
+    if input_product != certificate.input_count {
+        return Err(AetsBindingError::CodegenInputAxes);
+    }
+    Ok(AetsK7Binding {
+        source_digest: source.digest(),
+        certificate_digest,
+        generated_runtime_digest: codegen_manifest_digest(generated_runtime_manifest),
+        certificate,
+        source_certificate: certificate_bytes.to_vec().into_boxed_slice(),
+        quotient_inputs: metadata.quotient_inputs,
+        public_inputs: metadata.public_inputs,
+        fault_inputs: metadata.fault_inputs,
+    })
 }
 
 pub fn bind_aets_p0(
@@ -163,30 +276,20 @@ pub fn bind_aets_p0(
     }
     ensure_digest("source", entry.source_digest, source.digest())?;
 
-    let certificate_digest = match verify(
+    let k7 = verify_aets_k7(
+        source,
         artifacts.certificate,
         artifacts.expected_contract,
         artifacts.certificate_limits,
-    ) {
-        CertificateVerdict::Valid(report) => report.certificate_digest,
-        verdict => {
-            return Err(AetsBindingError::CertificateRejected(format!(
-                "{verdict:?}"
-            )))
-        }
-    };
+        artifacts.generated_runtime_manifest,
+    )?;
+    let certificate_digest = k7.certificate_digest();
     ensure_digest(
         "certificate",
         entry.source_certificate_digest,
         certificate_digest,
     )?;
-    let manifest_certificate_digest =
-        certificate_digest_from_codegen_manifest(artifacts.generated_runtime_manifest)?;
-    if manifest_certificate_digest != certificate_digest {
-        return Err(AetsBindingError::CodegenCertificateMismatch);
-    }
-
-    let generated_runtime_digest = codegen_manifest_digest(artifacts.generated_runtime_manifest);
+    let generated_runtime_digest = k7.generated_runtime_digest();
     let qsm_capsule_digest = aets_qsm_capsule_digest(artifacts.qsm_capsule);
     let observer_registry_digest = aets_observer_registry_digest(artifacts.observer_registry);
     ensure_digest(
@@ -207,6 +310,7 @@ pub fn bind_aets_p0(
         generated_runtime_digest,
         qsm_capsule_digest,
         observer_registry_digest,
+        seal: AetsBindingSeal,
     })
 }
 
@@ -225,7 +329,14 @@ pub fn aets_observer_registry_digest(bytes: &[u8]) -> Digest {
     artifact_digest(OBSERVER_REGISTRY_DOMAIN, bytes)
 }
 
-fn certificate_digest_from_codegen_manifest(bytes: &[u8]) -> Result<Digest, AetsBindingError> {
+struct CodegenMetadata {
+    certificate_digest: Digest,
+    quotient_inputs: u16,
+    public_inputs: u16,
+    fault_inputs: u16,
+}
+
+fn codegen_metadata(bytes: &[u8]) -> Result<CodegenMetadata, AetsBindingError> {
     let text = std::str::from_utf8(bytes).map_err(|_| AetsBindingError::InvalidCodegenManifest)?;
     let mut format_seen = false;
     let mut certificate_digest = None;
@@ -249,7 +360,35 @@ fn certificate_digest_from_codegen_manifest(bytes: &[u8]) -> Result<Digest, Aets
     if !format_seen {
         return Err(AetsBindingError::InvalidCodegenManifest);
     }
-    certificate_digest.ok_or(AetsBindingError::InvalidCodegenManifest)
+    let certificate_digest = certificate_digest.ok_or(AetsBindingError::InvalidCodegenManifest)?;
+    Ok(CodegenMetadata {
+        certificate_digest,
+        quotient_inputs: manifest_u16(text, "quotient_inputs = ")?,
+        public_inputs: manifest_u16(text, "public_inputs = ")?,
+        fault_inputs: manifest_u16(text, "fault_inputs = ")?,
+    })
+}
+
+fn manifest_u16(text: &str, prefix: &str) -> Result<u16, AetsBindingError> {
+    let mut value = None;
+    for line in text.lines() {
+        if let Some(candidate) = line.strip_prefix(prefix) {
+            if value.is_some()
+                || candidate.is_empty()
+                || !candidate.bytes().all(|byte| byte.is_ascii_digit())
+            {
+                return Err(AetsBindingError::InvalidCodegenManifest);
+            }
+            value = Some(
+                candidate
+                    .parse::<u16>()
+                    .map_err(|_| AetsBindingError::InvalidCodegenManifest)?,
+            );
+        }
+    }
+    value
+        .filter(|value| *value > 0)
+        .ok_or(AetsBindingError::InvalidCodegenManifest)
 }
 
 fn parse_digest(value: &str) -> Result<Digest, AetsBindingError> {
@@ -309,10 +448,14 @@ pub enum AetsBindingError {
     PolicyMismatch,
     #[error("CAQT certificate was rejected: {0}")]
     CertificateRejected(String),
+    #[error("CAQT certificate could not be decoded after verification: {0}")]
+    CertificateParse(String),
     #[error("generated runtime manifest is not canonical codegen v2 metadata")]
     InvalidCodegenManifest,
     #[error("generated runtime manifest is bound to a different CAQT certificate")]
     CodegenCertificateMismatch,
+    #[error("generated runtime input axes do not match the CAQT certificate")]
+    CodegenInputAxes,
     #[error("{artifact} digest does not match the Noticer QSM manifest")]
     ArtifactDigestMismatch { artifact: &'static str },
 }
