@@ -1,0 +1,31 @@
+schema_version: quotient-seal-differential-oracle-config/v1
+oracle_version: quotient-seal-differential-oracle/v1
+reference_engine: quotient-seal-small-step
+required_engines:
+  - wasmi
+  - wasmtime
+input_policy:
+  exclude_from_shared_hash:
+    - engine_identity
+  require_equal:
+    - module_sha256
+    - abi_sha256
+    - host_tape
+    - context_sequence
+    - execution_limits
+comparison_policy:
+  observer_axes:
+    - OUTPUT
+    - PUBLIC_STATE
+    - TRAP
+    - RETURN
+    - HOST_IMPORT
+    - RESET
+    - HANDOFF
+  first_difference: field_wise
+  non_executed: UNRESOLVED
+  executed_difference: COUNTEREXAMPLE
+  all_executed_equal: MATCH
+claim_boundary:
+  native_jit_instruction_equality: NOT_VERIFIED
+  hardware_execution: NOT_VERIFIED

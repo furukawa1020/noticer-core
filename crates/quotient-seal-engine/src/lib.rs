@@ -7,6 +7,7 @@
 //! successful observation.
 
 mod contract;
+mod differential;
 mod wasmi_adapter;
 mod wasmtime_adapter;
 
@@ -17,6 +18,12 @@ pub use contract::{
     ObservableEvent, ProtocolConfig, ResourceKind, ScalarValue, TrapClass, VersionPolicy,
     CROSS_ENGINE_ARTIFACT_SCHEMA_VERSION, CROSS_ENGINE_PROTOCOL_SCHEMA_VERSION,
     ENGINE_ADAPTER_CONTRACT_VERSION,
+};
+pub use differential::{
+    ComparisonPoint, DifferentialCounterexample, DifferentialCounterexampleKind,
+    DifferentialOracle, DifferentialOracleArtifact, DifferentialOracleError, DifferentialVerdict,
+    UnresolvedEvidence, DIFFERENTIAL_ORACLE_ARTIFACT_SCHEMA_VERSION, DIFFERENTIAL_ORACLE_VERSION,
+    REFERENCE_ENGINE_NAME,
 };
 pub use wasmi_adapter::{
     WasmiAdapter, WasmiAdapterError, WASMI_ADAPTER_PROFILE_VERSION, WASMI_CRATE_VERSION,

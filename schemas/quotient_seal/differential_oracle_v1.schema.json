@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient-seal/differential-oracle-v1.schema.json",
+  "title": "QuotientSeal differential oracle configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "oracle_version", "reference_engine", "required_engines", "input_policy", "comparison_policy", "claim_boundary"],
+  "properties": {
+    "schema_version": { "const": "quotient-seal-differential-oracle-config/v1" },
+    "oracle_version": { "const": "quotient-seal-differential-oracle/v1" },
+    "reference_engine": { "const": "quotient-seal-small-step" },
+    "required_engines": { "const": ["wasmi", "wasmtime"] },
+    "input_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exclude_from_shared_hash", "require_equal"],
+      "properties": {
+        "exclude_from_shared_hash": { "const": ["engine_identity"] },
+        "require_equal": { "const": ["module_sha256", "abi_sha256", "host_tape", "context_sequence", "execution_limits"] }
+      }
+    },
+    "comparison_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observer_axes", "first_difference", "non_executed", "executed_difference", "all_executed_equal"],
+      "properties": {
+        "observer_axes": { "const": ["OUTPUT", "PUBLIC_STATE", "TRAP", "RETURN", "HOST_IMPORT", "RESET", "HANDOFF"] },
+        "first_difference": { "const": "field_wise" },
+        "non_executed": { "const": "UNRESOLVED" },
+        "executed_difference": { "const": "COUNTEREXAMPLE" },
+        "all_executed_equal": { "const": "MATCH" }
+      }
+    },
+    "claim_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["native_jit_instruction_equality", "hardware_execution"],
+      "properties": {
+        "native_jit_instruction_equality": { "const": "NOT_VERIFIED" },
+        "hardware_execution": { "const": "NOT_VERIFIED" }
+      }
+    }
+  }
+}
