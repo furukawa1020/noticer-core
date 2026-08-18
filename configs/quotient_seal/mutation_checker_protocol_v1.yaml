@@ -1,0 +1,17 @@
+{
+  "schema_version": "quotient-seal-mutation-checker-protocol/v1",
+  "artifact_placeholder": "{artifact}",
+  "parser_exit_codes": {
+    "accepted": 0,
+    "rejected": 1,
+    "resource_bound": 2
+  },
+  "checker_exit_codes": {
+    "accepted": 0,
+    "rejected": 1
+  },
+  "other_exit_semantics": "inconclusive",
+  "execution_failure_semantics": "inconclusive",
+  "parser_disagreement_semantics": "inconclusive"
+}
+

@@ -11,6 +11,8 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
+quotient-seal-matrix = { path = "../quotient-seal-matrix" }
+quotient-seal-target-ir = { path = "../quotient-seal-target-ir" }
 
 [[bin]]
 name = "quotient-seal-mutation"
