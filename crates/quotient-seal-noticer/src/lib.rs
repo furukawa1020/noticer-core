@@ -8,6 +8,7 @@
 
 mod aets;
 mod aets_compile;
+mod aets_differential;
 mod aets_reference;
 mod manifest;
 
@@ -19,6 +20,10 @@ pub use aets::{
 pub use aets_compile::{
     compile_aets_p0, AetsActionPlacement, AetsCompileError, AetsCompileLimits, AetsCompiledQsm,
     AetsServiceCode, AETS_QSM_COMPILER_VERSION,
+};
+pub use aets_differential::{
+    evaluate_aets_differential, AetsDifferentialArtifact, AetsDifferentialError,
+    AetsDifferentialVerdict, AetsEngineDigests, AetsSourceRefinement, AETS_DIFFERENTIAL_VERSION,
 };
 pub use aets_reference::{
     evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
