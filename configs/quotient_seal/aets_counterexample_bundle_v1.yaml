@@ -1,0 +1,23 @@
+schema_version: noticer-aets-counterexample-bundle/v1
+selection: MATRIX_COUNTEREXAMPLE_CASE_ONLY
+original_reproduction: BYTE_IDENTICAL_REQUIRED
+first_difference_selection:
+  priority:
+    - SOURCE_REFINEMENT
+    - DIFFERENTIAL_ORACLE_CANONICAL_FIRST
+  preservation: ORIGIN_KIND_PARTICIPANTS_AND_OBSERVABLE_AXES
+  original_and_minimized_points: REQUIRED
+shrink_order:
+  - REMOVE_NON_STOP_COMMANDS_REVERSE_INDEX_KEEP_ONE
+  - ZERO_PAYLOAD_TAG_ASCENDING_INDEX
+  - ZERO_FAULT_ASCENDING_INDEX
+  - ZERO_SERVICE_ALIAS_ASCENDING_INDEX
+  - ZERO_PUBLIC_SLOT_ASCENDING_INDEX
+candidate_policy: GREEDY_REEVALUATE_EVERY_CANDIDATE
+attempt_log: COMPLETE_CANONICAL_ORDER
+bundle_encoding: CANONICAL_JSON
+bundle_digest: SHA256_OF_CANONICAL_JSON
+verification: FULL_BUNDLE_RECOMPUTATION
+private_ingress: FORBIDDEN
+hardware_status: NOT_VERIFIED
+priority_claim: NOT_MADE
