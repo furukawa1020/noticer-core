@@ -2,6 +2,7 @@ schema_version: noticer-atv2-public-source/v1
 k7_spec_family: noticer_atv2_action_window
 source_types:
   token_plan: noticer_release::TokenPlan
+  noticer_release_features: []
   public_context: noticer_aetp::PublicContext
   schedule_tape: noticer_aetp::ScheduleRandomTape
   shaper: noticer_trace_shaper::ActionEquivalentTraceShaper

@@ -4,7 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
+default = ["admission"]
+admission = ["dep:noticer-claim"]
+
 [dependencies]
 noticer-aetp.workspace = true
-noticer-claim.workspace = true
+noticer-claim = { workspace = true, optional = true }
 thiserror.workspace = true

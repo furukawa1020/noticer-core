@@ -2089,6 +2089,8 @@ version = "0.1.0"
 dependencies = [
  "noticer-aetp",
  "noticer-protocol",
+ "noticer-release",
+ "noticer-trace-shaper",
  "noticer-types",
  "quotient-forge-caqt",
  "quotient-forge-codegen",

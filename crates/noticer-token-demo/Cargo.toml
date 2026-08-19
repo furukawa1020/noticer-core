@@ -12,7 +12,7 @@ noticer-claim.workspace = true
 noticer-crypto.workspace = true
 noticer-evidence.workspace = true
 noticer-protocol.workspace = true
-noticer-release.workspace = true
+noticer-release = { workspace = true, features = ["admission"] }
 noticer-token = { workspace = true, features = ["lab-unattested"] }
 noticer-trace-shaper.workspace = true
 noticer-types.workspace = true

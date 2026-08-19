@@ -13,6 +13,11 @@ schedule shape, service set, epoch, policy, and public schedule tape. It never
 retains an ATv2 envelope, signing key, encryption key, evidence permit, raw
 feature, or private timing.
 
+`noticer-release` keeps its existing admission constructor under the default
+`admission` feature. This binding disables that feature, so the public
+`TokenPlan` representation is reused without pulling `noticer-claim`, evidence,
+or baseline crates into the QuotientSeal production dependency graph.
+
 The K7 binding verifies the caller-provided CAQT certificate against its
 `ExpectedContract`, decodes the same certificate, checks generated-runtime
 input axes, and requires the runtime manifest to name that exact certificate

@@ -6,6 +6,7 @@ use noticer_aetp::{
     required_claim, validate_obligation, ActionObligation, ActionSemantics, ClaimBound,
     ServiceBinding,
 };
+#[cfg(feature = "admission")]
 use noticer_claim::AdmittedAction;
 use std::collections::BTreeSet;
 use thiserror::Error;
@@ -33,6 +34,7 @@ pub struct TokenPlan {
 }
 
 impl TokenPlan {
+    #[cfg(feature = "admission")]
     pub fn from_admitted(
         admitted: impl IntoIterator<Item = AdmittedAction>,
         services: Vec<ServiceBinding>,
