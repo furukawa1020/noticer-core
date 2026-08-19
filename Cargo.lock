@@ -2099,6 +2099,8 @@ dependencies = [
  "quotient-seal-relation",
  "quotient-seal-small-step",
  "quotient-seal-target-ir",
+ "serde",
+ "serde_json",
  "sha2",
  "thiserror 2.0.20",
  "wat",

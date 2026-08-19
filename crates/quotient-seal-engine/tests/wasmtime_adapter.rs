@@ -177,6 +177,25 @@ fn reset_handoff_and_artifact_hash_are_reproducible() {
 }
 
 #[test]
+fn stop_terminates_without_invoking_a_wasm_export() {
+    let adapter = WasmtimeAdapter::new(BINARY_SHA256).expect("adapter");
+    let wasm = normal_module();
+    let input = input(
+        &adapter,
+        &wasm,
+        Vec::new(),
+        vec![command(CommandKind::Stop)],
+        limits(),
+    );
+
+    let artifact = adapter.execute_input(&wasm, input).expect("Stop execution");
+
+    assert_eq!(artifact.verdict, EngineRunVerdict::Executed);
+    assert_eq!(artifact.termination, ExecutionTermination::Terminated);
+    assert!(artifact.trace.is_empty());
+}
+
+#[test]
 fn wasm_trap_remains_an_executed_typed_trap() {
     let adapter = WasmtimeAdapter::new(BINARY_SHA256).expect("adapter");
     let wasm = module("unreachable");
