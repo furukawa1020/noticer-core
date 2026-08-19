@@ -19,11 +19,14 @@ use quotient_seal_engine::{
     ObservableEvent, TrapClass,
 };
 use quotient_seal_noticer::{
-    compile_aets_p0, evaluate_aets_adversarial_matrix, evaluate_aets_differential_with_host_tape,
-    verify_aets_k7, AetsAdversarialCaseSpec, AetsAdversarialMatrix, AetsCompileLimits,
-    AetsCompiledQsm, AetsDifferentialError, AetsDifferentialVerdict, AetsEngineDigests,
-    AetsHostAxis, AetsHostInjection, AetsMatrixLimits, AetsMatrixSeed, AetsPublicSequence,
-    AetsPublicSourceArtifact, AetsResourceAxis, AetsScenarioAxis, AetsServiceCode,
+    build_aets_counterexample_bundle, compile_aets_p0, evaluate_aets_adversarial_matrix,
+    evaluate_aets_differential_with_host_tape, shrink_aets_counterexample,
+    verify_aets_counterexample_bundle_with, verify_aets_k7, AetsAdversarialCaseSpec,
+    AetsAdversarialMatrix, AetsCompileLimits, AetsCompiledQsm, AetsCounterexampleError,
+    AetsCounterexampleInput, AetsDifferentialError, AetsDifferentialVerdict, AetsEngineDigests,
+    AetsHostAxis, AetsHostInjection, AetsMatrixCaseArtifact, AetsMatrixLimits, AetsMatrixSeed,
+    AetsPublicSequence, AetsPublicSourceArtifact, AetsResourceAxis, AetsScenarioAxis,
+    AetsServiceCode, AetsShrinkOutcome,
 };
 use quotient_seal_small_step::{HostDirective, HostOutcome, PublicHostTape};
 
@@ -463,6 +466,163 @@ fn frozen_execution_contract_keeps_private_and_hardware_nonclaims_explicit() {
     assert!(config.contains("private_ingress: FORBIDDEN"));
     assert!(config.contains("hardware_status: NOT_VERIFIED"));
     assert!(docs.contains("world-first claim"));
+}
+
+fn injected_counterexample(
+    compiled: &AetsCompiledQsm,
+    seed: AetsMatrixSeed,
+    input: &AetsCounterexampleInput,
+) -> Result<AetsMatrixCaseArtifact, String> {
+    let candidate_matrix = AetsAdversarialMatrix::new(
+        compiled,
+        seed,
+        vec![input.to_case_spec()],
+        AetsMatrixLimits::default(),
+    )
+    .map_err(|error| error.to_string())?;
+    let execution = evaluate_aets_adversarial_matrix(
+        compiled,
+        &candidate_matrix,
+        AetsMatrixLimits::default(),
+        &engine_digests(),
+    )
+    .map_err(|error| error.to_string())?;
+    let mut case = execution
+        .cases
+        .into_iter()
+        .next()
+        .ok_or_else(|| "missing injected case".to_owned())?;
+    let mut engines = case.differential.oracle.engines.clone();
+    let wasmtime = engines
+        .iter_mut()
+        .find(|run| run.input.engine.name == "wasmtime")
+        .ok_or_else(|| "missing Wasmtime participant".to_owned())?;
+    let ObservableEvent::ApiCall { export, .. } = wasmtime
+        .trace
+        .first_mut()
+        .ok_or_else(|| "missing Wasmtime trace".to_owned())?
+    else {
+        return Err("first Wasmtime event is not an API call".to_owned());
+    };
+    *export = "qseal.public.injected-counterexample".to_owned();
+    case.differential.oracle =
+        DifferentialOracle::evaluate(case.differential.oracle.reference.clone(), engines)
+            .map_err(|error| error.to_string())?;
+    case.differential.verdict = AetsDifferentialVerdict::Counterexample;
+    case.verdict = AetsDifferentialVerdict::Counterexample;
+    case.differential
+        .validate()
+        .map_err(|error| error.to_string())?;
+    Ok(case)
+}
+
+#[test]
+fn counterexample_shrink_and_recomputation_are_byte_identical() {
+    let compiled = compiled();
+    let seed = AetsMatrixSeed::new([0x91; 32]);
+    let input = AetsCounterexampleInput::new(
+        AetsScenarioAxis::Normal,
+        AetsHostAxis::Continue,
+        AetsResourceAxis::Nominal,
+        commands(ContextFamily::Tick, 11, 104, 0),
+        nominal_limits(),
+    )
+    .expect("counterexample input");
+    let observed = injected_counterexample(&compiled, seed, &input).expect("observed mismatch");
+    let matrix_digest = "a".repeat(64);
+    let first = shrink_aets_counterexample(
+        matrix_digest.clone(),
+        input.clone(),
+        observed.clone(),
+        |candidate| injected_counterexample(&compiled, seed, candidate),
+    )
+    .expect("first shrink");
+    let second = shrink_aets_counterexample(
+        matrix_digest.clone(),
+        input.clone(),
+        observed.clone(),
+        |candidate| injected_counterexample(&compiled, seed, candidate),
+    )
+    .expect("second shrink");
+
+    assert_eq!(first, second);
+    assert_eq!(
+        first.canonical_json().expect("first canonical JSON"),
+        second.canonical_json().expect("second canonical JSON")
+    );
+    assert_ne!(
+        first.original.input.input_sha256,
+        first.minimized.input.input_sha256
+    );
+    assert_eq!(
+        first.minimized.input.commands.len(),
+        first.original.input.commands.len()
+    );
+    assert!(first
+        .attempts
+        .iter()
+        .any(|attempt| attempt.outcome == AetsShrinkOutcome::Preserved));
+    verify_aets_counterexample_bundle_with(&first, matrix_digest, input, observed, |candidate| {
+        injected_counterexample(&compiled, seed, candidate)
+    })
+    .expect("full bundle recomputation");
+}
+
+#[test]
+fn counterexample_bundle_tamper_and_non_counterexample_fail_closed() {
+    let compiled = compiled();
+    let matrix = matrix(&compiled);
+    let execution = evaluate_aets_adversarial_matrix(
+        &compiled,
+        &matrix,
+        AetsMatrixLimits::default(),
+        &engine_digests(),
+    )
+    .expect("matrix execution");
+    let matching = execution
+        .cases
+        .iter()
+        .find(|case| case.verdict == AetsDifferentialVerdict::Match)
+        .expect("matching case");
+    assert!(matches!(
+        build_aets_counterexample_bundle(
+            &compiled,
+            &matrix,
+            &execution,
+            &matching.case_id_sha256,
+            AetsMatrixLimits::default(),
+            &engine_digests(),
+        ),
+        Err(AetsCounterexampleError::OriginalNotCounterexample)
+    ));
+
+    let seed = AetsMatrixSeed::new([0x92; 32]);
+    let input = AetsCounterexampleInput::new(
+        AetsScenarioAxis::Normal,
+        AetsHostAxis::Continue,
+        AetsResourceAxis::Nominal,
+        commands(ContextFamily::Tick, 11, 100, 0),
+        nominal_limits(),
+    )
+    .expect("counterexample input");
+    let observed = injected_counterexample(&compiled, seed, &input).expect("observed mismatch");
+    let mut bundle = shrink_aets_counterexample("b".repeat(64), input, observed, |candidate| {
+        injected_counterexample(&compiled, seed, candidate)
+    })
+    .expect("counterexample bundle");
+    bundle.minimized.result_sha256.replace_range(0..1, "0");
+    assert!(bundle.validate().is_err());
+}
+
+#[test]
+fn frozen_counterexample_contract_keeps_nonclaims_explicit() {
+    let config = include_str!("../../../configs/quotient_seal/aets_counterexample_bundle_v1.yaml");
+    let docs = include_str!("../../../docs/quotient_seal_aets_counterexample_bundle_v1.md");
+    assert!(config.contains("original_reproduction: BYTE_IDENTICAL_REQUIRED"));
+    assert!(config.contains("verification: FULL_BUNDLE_RECOMPUTATION"));
+    assert!(config.contains("private_ingress: FORBIDDEN"));
+    assert!(config.contains("hardware_status: NOT_VERIFIED"));
+    assert!(docs.contains("world-first"));
 }
 
 struct TemporaryDirectory(PathBuf);
