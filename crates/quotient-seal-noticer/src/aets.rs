@@ -329,14 +329,14 @@ pub fn aets_observer_registry_digest(bytes: &[u8]) -> Digest {
     artifact_digest(OBSERVER_REGISTRY_DOMAIN, bytes)
 }
 
-struct CodegenMetadata {
-    certificate_digest: Digest,
-    quotient_inputs: u16,
-    public_inputs: u16,
-    fault_inputs: u16,
+pub(crate) struct CodegenMetadata {
+    pub(crate) certificate_digest: Digest,
+    pub(crate) quotient_inputs: u16,
+    pub(crate) public_inputs: u16,
+    pub(crate) fault_inputs: u16,
 }
 
-fn codegen_metadata(bytes: &[u8]) -> Result<CodegenMetadata, AetsBindingError> {
+pub(crate) fn codegen_metadata(bytes: &[u8]) -> Result<CodegenMetadata, AetsBindingError> {
     let text = std::str::from_utf8(bytes).map_err(|_| AetsBindingError::InvalidCodegenManifest)?;
     let mut format_seen = false;
     let mut certificate_digest = None;

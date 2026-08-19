@@ -71,7 +71,7 @@ noticer-crypto = { path = "crates/noticer-crypto" }
 noticer-baseline = { path = "crates/noticer-baseline" }
 noticer-evidence = { path = "crates/noticer-evidence" }
 noticer-claim = { path = "crates/noticer-claim" }
-noticer-release = { path = "crates/noticer-release" }
+noticer-release = { path = "crates/noticer-release", default-features = false }
 noticer-aetp = { path = "crates/noticer-aetp" }
 noticer-trace-shaper = { path = "crates/noticer-trace-shaper" }
 noticer-aetp-sim = { path = "crates/noticer-aetp-sim" }

@@ -1,0 +1,28 @@
+schema_version: noticer-atv2-public-source/v1
+k7_spec_family: noticer_atv2_action_window
+source_types:
+  token_plan: noticer_release::TokenPlan
+  noticer_release_features: []
+  public_context: noticer_aetp::PublicContext
+  schedule_tape: noticer_aetp::ScheduleRandomTape
+  shaper: noticer_trace_shaper::ActionEquivalentTraceShaper
+frame_projection:
+  issuer: PUBLIC_SHAPE_ONLY
+  ciphertext_bytes: 236
+  retained:
+    - public_frame_identity
+    - cover_or_action_kind
+  token_bytes: FORBIDDEN
+bindings:
+  - service_alias
+  - public_epoch
+  - policy_hash
+  - source_digest
+  - frame_plan_digest
+  - k7_certificate_digest
+  - generated_runtime_digest
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+private_ingress: FORBIDDEN
+token_key_material: FORBIDDEN
+hardware_status: NOT_VERIFIED
+priority_claim: NOT_MADE

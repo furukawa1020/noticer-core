@@ -13,6 +13,7 @@ mod aets_differential;
 mod aets_matrix;
 mod aets_matrix_execution;
 mod aets_reference;
+mod atv2;
 mod manifest;
 
 pub use aets::{
@@ -49,6 +50,11 @@ pub use aets_matrix_execution::{
 pub use aets_reference::{
     evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
     AetsReferenceUnresolved, AetsReferenceVerdict, AETS_SOURCE_REFERENCE_VERSION,
+};
+pub use atv2::{
+    bind_atv2_k7_manifest, verify_atv2_k7, Atv2BindingError, Atv2K7Binding, Atv2K7ManifestBinding,
+    Atv2PlannedFrame, Atv2PublicSourceArtifact, ATV2_K7_SPEC_FAMILY,
+    ATV2_PUBLIC_SOURCE_FORMAT_VERSION,
 };
 
 pub use manifest::{
