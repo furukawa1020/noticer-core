@@ -14,6 +14,7 @@ mod aets_matrix;
 mod aets_matrix_execution;
 mod aets_reference;
 mod atv2;
+mod atv2_compile;
 mod manifest;
 
 pub use aets::{
@@ -55,6 +56,10 @@ pub use atv2::{
     bind_atv2_k7_manifest, verify_atv2_k7, Atv2BindingError, Atv2K7Binding, Atv2K7ManifestBinding,
     Atv2PlannedFrame, Atv2PublicSourceArtifact, ATV2_K7_SPEC_FAMILY,
     ATV2_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use atv2_compile::{
+    compile_atv2_p0, Atv2CompileError, Atv2CompileLimits, Atv2CompiledQsm, Atv2FramePlacement,
+    Atv2P0Binding, Atv2ServiceCode, ATV2_FIXED_CIPHERTEXT_BYTES, ATV2_QSM_COMPILER_VERSION,
 };
 
 pub use manifest::{
