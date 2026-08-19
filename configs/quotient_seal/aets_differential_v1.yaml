@@ -1,0 +1,26 @@
+schema_version: noticer-aets-differential/v1
+source_reference:
+  identity: noticer-aets-source-reference
+  kind: SOURCE_DERIVED_EXPECTATION_NOT_INTERPRETER
+  comparison: EXACT_TRACE_AND_TERMINATION
+oracle:
+  reference_engine: quotient-seal-small-step
+  required_engines:
+    - wasmi
+    - wasmtime
+  shared_input:
+    - module_sha256
+    - abi_sha256
+    - host_tape
+    - context_sequence
+    - resource_limits
+verdicts:
+  - MATCH
+  - COUNTEREXAMPLE
+  - UNRESOLVED
+artifact:
+  canonical_json: REQUIRED
+  first_typed_difference: REQUIRED_ON_COUNTEREXAMPLE
+  all_engine_runs: REQUIRED
+private_ingress: FORBIDDEN
+hardware_status: NOT_VERIFIED
