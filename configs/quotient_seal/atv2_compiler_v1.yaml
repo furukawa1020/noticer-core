@@ -1,0 +1,59 @@
+version: 1
+compiler_id: noticer.atv2-p0-compiler.v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+
+source:
+  format_version: 1
+  frame_bytes: 236
+  frame_identity_fields:
+    - service_alias
+    - epoch
+    - policy_hash
+    - public_bucket
+    - slot_in_bucket
+    - sequence
+    - absolute_slot
+  private_ingress: forbidden
+
+abi:
+  imports:
+    - "qseal.emit_frame:(i32,i64)->i32"
+    - "qseal.emit_action:(i32,i32)->i32"
+    - "qseal.public_failure:(i32)->i32"
+  exports:
+    - "qseal.public.tick:(i32,i64,i32)->i32"
+    - "qseal.public.reset:()->i32"
+    - "qseal.public.handoff:()->i64"
+    - "qseal.public.status:()->i32"
+  deadline_semantics: tick_slot_boundary
+
+lowering:
+  service_mapping: strictly_increasing_alias_and_unique_nonzero_code
+  frame_order: absolute_slot_then_service_alias
+  action_mapping: exact_service_and_public_bucket
+  frame_emission_path: shared_for_cover_and_action
+  action_emission: action_frames_only
+
+limits:
+  max_services: 64
+  max_frames: 4096
+  max_actions: 1024
+  max_wasm_bytes: 1048576
+  max_capsule_bytes: 2097152
+
+bindings:
+  - source_digest
+  - frame_plan_digest
+  - k7_certificate_digest
+  - k7_generated_runtime_digest
+  - module_digest
+  - abi_digest
+  - capsule_digest
+  - observer_registry_digest
+
+claims:
+  deterministic_compile: required
+  p0_semantic_equivalence: pending_k8_13c3
+  adversarial_transport_robustness: pending_k8_13c4
+  p1_equivalence: NOT_VERIFIED
+  hardware_equivalence: NOT_VERIFIED
