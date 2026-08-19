@@ -8,6 +8,7 @@
 
 mod aets;
 mod aets_compile;
+mod aets_counterexample;
 mod aets_differential;
 mod aets_matrix;
 mod aets_matrix_execution;
@@ -22,6 +23,14 @@ pub use aets::{
 pub use aets_compile::{
     compile_aets_p0, AetsActionPlacement, AetsCompileError, AetsCompileLimits, AetsCompiledQsm,
     AetsServiceCode, AETS_QSM_COMPILER_VERSION,
+};
+pub use aets_counterexample::{
+    build_aets_counterexample_bundle, shrink_aets_counterexample,
+    verify_aets_counterexample_bundle, verify_aets_counterexample_bundle_with,
+    AetsComparisonSignature, AetsCounterexampleBundle, AetsCounterexampleCaseArtifact,
+    AetsCounterexampleError, AetsCounterexampleInput, AetsCounterexampleInputArtifact,
+    AetsDifferenceOrigin, AetsDifferenceSignature, AetsShrinkAttempt, AetsShrinkOperation,
+    AetsShrinkOutcome, CommandArtifact, LimitsArtifact, AETS_COUNTEREXAMPLE_BUNDLE_VERSION,
 };
 pub use aets_differential::{
     evaluate_aets_differential, evaluate_aets_differential_with_host_tape,
