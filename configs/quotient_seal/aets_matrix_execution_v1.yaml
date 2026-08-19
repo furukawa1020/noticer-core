@@ -1,0 +1,24 @@
+schema_version: noticer-aets-matrix-execution/v1
+case_order: MATRIX_CASE_ID_ORDER
+host_injection:
+  point: FIRST_PUBLIC_HOST_IMPORT
+  continue: NO_MUTATION
+  terminate: TERMINATE
+  timeout: FAULT_TIMEOUT
+  reconnect: FAULT_RECONNECT
+  loss: FAULT_LOSS
+  no_import: UNRESOLVED_NOT_APPLICABLE
+resource_limits: CASE_BOUND_EXACT
+participants:
+  - noticer-aets-source-reference
+  - quotient-seal-small-step
+  - wasmi
+  - wasmtime
+case_verdicts:
+  - MATCH
+  - COUNTEREXAMPLE
+  - UNRESOLVED
+matrix_aggregation: UNRESOLVED_THEN_COUNTEREXAMPLE_THEN_MATCH
+all_participant_artifacts: REQUIRED
+private_ingress: FORBIDDEN
+hardware_status: NOT_VERIFIED

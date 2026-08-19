@@ -11,8 +11,8 @@ use quotient_seal_engine::{
 };
 use quotient_seal_small_step::{
     CheckerMemoryPatch, CheckerSeed, ExecutionEvent, HostDirective, HostOutcome, InterpreterLimits,
-    MachineStatus, PublicHostTape, ResourceExhaustion, TrapCode, Value, WasmMachine,
-    QUOTIENT_SEAL_SMALL_STEP_V1,
+    MachineStatus, PublicHostFault, PublicHostTape, ResourceExhaustion, TrapCode, Value,
+    WasmMachine, QUOTIENT_SEAL_SMALL_STEP_V1,
 };
 use quotient_seal_target_ir::{parse_and_lower, CanonicalTargetIr, ParserLimits};
 use serde::Serialize;
@@ -148,22 +148,45 @@ pub fn evaluate_aets_differential(
     sequence: &AetsPublicSequence,
     engine_digests: &AetsEngineDigests,
 ) -> Result<AetsDifferentialArtifact, AetsDifferentialError> {
+    evaluate_aets_differential_with_host_tape(
+        compiled,
+        sequence,
+        sequence.host_tape(),
+        engine_digests,
+    )
+}
+
+pub fn evaluate_aets_differential_with_host_tape(
+    compiled: &AetsCompiledQsm,
+    sequence: &AetsPublicSequence,
+    host_tape: &PublicHostTape,
+    engine_digests: &AetsEngineDigests,
+) -> Result<AetsDifferentialArtifact, AetsDifferentialError> {
+    validate_host_tape_shape(sequence.host_tape(), host_tape)?;
     let source_verdict = evaluate_aets_source_reference(compiled, sequence)
         .map_err(|error| AetsDifferentialError::SourceReference(error.to_string()))?;
     let (source_reference, source_unresolved) = match source_verdict {
-        AetsReferenceVerdict::Executed(artifact) => (Some(artifact.run().clone()), None),
+        AetsReferenceVerdict::Executed(artifact) => (
+            Some(project_source_reference(artifact.run(), host_tape)?),
+            None,
+        ),
         AetsReferenceVerdict::Unresolved(reason) => (
             None,
             Some(format!("SOURCE_REFERENCE_UNRESOLVED:{reason:?}")),
         ),
     };
 
-    let small_step = execute_small_step(compiled, sequence, engine_digests.small_step_sha256())?;
+    let small_step = execute_small_step(
+        compiled,
+        sequence,
+        host_tape,
+        engine_digests.small_step_sha256(),
+    )?;
     let wasmi = WasmiAdapter::new(engine_digests.wasmi_sha256())
         .map_err(|error| external_error("wasmi", error))?
         .execute(
             compiled.wasm_module(),
-            sequence.host_tape(),
+            host_tape,
             sequence.commands(),
             sequence.limits(),
         )
@@ -172,7 +195,7 @@ pub fn evaluate_aets_differential(
         .map_err(|error| external_error("wasmtime", error))?
         .execute(
             compiled.wasm_module(),
-            sequence.host_tape(),
+            host_tape,
             sequence.commands(),
             sequence.limits(),
         )
@@ -200,12 +223,78 @@ pub fn evaluate_aets_differential(
     Ok(artifact)
 }
 
+fn validate_host_tape_shape(
+    expected: &PublicHostTape,
+    actual: &PublicHostTape,
+) -> Result<(), AetsDifferentialError> {
+    if expected.directives().len() != actual.directives().len()
+        || expected
+            .directives()
+            .iter()
+            .zip(actual.directives())
+            .any(|(left, right)| left.import() != right.import())
+    {
+        Err(AetsDifferentialError::HostTapeShape)
+    } else {
+        Ok(())
+    }
+}
+
+fn project_source_reference(
+    base: &EngineRunArtifact,
+    host_tape: &PublicHostTape,
+) -> Result<EngineRunArtifact, AetsDifferentialError> {
+    let mut trace = Vec::with_capacity(base.trace.len());
+    let mut directive_index = 0_usize;
+    let mut termination = base.termination.clone();
+    for event in &base.trace {
+        let ObservableEvent::HostImport {
+            import, arguments, ..
+        } = event
+        else {
+            trace.push(event.clone());
+            continue;
+        };
+        let directive = host_tape
+            .directives()
+            .get(directive_index)
+            .ok_or(AetsDifferentialError::HostTapeShape)?;
+        if directive.import() != import {
+            return Err(AetsDifferentialError::HostTapeShape);
+        }
+        directive_index = directive_index
+            .checked_add(1)
+            .ok_or(AetsDifferentialError::ArtifactContract)?;
+        let outcome = directive.outcome();
+        trace.push(ObservableEvent::HostImport {
+            import: import.clone(),
+            arguments: arguments.clone(),
+            outcome: HostOutcomeRecord::from(outcome),
+        });
+        match outcome {
+            HostOutcome::Continue => {}
+            HostOutcome::Terminate => {
+                termination = ExecutionTermination::Terminated;
+                break;
+            }
+            HostOutcome::Fault(fault) => {
+                termination = host_fault_termination(fault);
+                break;
+            }
+        }
+    }
+    let mut input = base.input.clone();
+    input.host_tape = HostTapeRecord::from(host_tape);
+    make_run(input, trace, termination, EngineRunVerdict::Executed)
+}
+
 fn execute_small_step(
     compiled: &AetsCompiledQsm,
     sequence: &AetsPublicSequence,
+    host_tape: &PublicHostTape,
     executable_sha256: &str,
 ) -> Result<EngineRunArtifact, AetsDifferentialError> {
-    let input = small_step_input(compiled, sequence, executable_sha256);
+    let input = small_step_input(compiled, sequence, host_tape, executable_sha256);
     let module = match parse_and_lower(compiled.wasm_module(), ParserLimits::default()) {
         Ok(module) => module,
         Err(error) => {
@@ -219,7 +308,7 @@ fn execute_small_step(
             )
         }
     };
-    let runtime_tape = small_step_tape(sequence.host_tape())?;
+    let runtime_tape = small_step_tape(host_tape)?;
     let mut runtime = SmallStepRuntime::new(&module, runtime_tape, sequence.limits());
     let mut trace = Vec::new();
     let mut final_values = Vec::new();
@@ -415,6 +504,7 @@ struct Invocation {
 fn small_step_input(
     compiled: &AetsCompiledQsm,
     sequence: &AetsPublicSequence,
+    host_tape: &PublicHostTape,
     executable_sha256: &str,
 ) -> ExecutionInput {
     ExecutionInput {
@@ -437,7 +527,7 @@ fn small_step_input(
                 ("hardware_status".to_owned(), HARDWARE_STATUS.to_owned()),
             ]),
         },
-        host_tape: HostTapeRecord::from(sequence.host_tape()),
+        host_tape: HostTapeRecord::from(host_tape),
         context_sequence: sequence
             .commands()
             .iter()
@@ -591,13 +681,15 @@ fn machine_termination(status: &MachineStatus, limits: ExecutionLimits) -> Execu
 }
 
 fn trap_termination(code: TrapCode) -> ExecutionTermination {
+    if let TrapCode::HostFault(fault) = code {
+        return host_fault_termination(fault);
+    }
     let class = match code {
         TrapCode::Unreachable => TrapClass::Unreachable,
         TrapCode::IntegerDivideByZero => TrapClass::IntegerDivideByZero,
         TrapCode::IntegerOverflow => TrapClass::IntegerOverflow,
         TrapCode::MemoryOutOfBounds => TrapClass::MemoryOutOfBounds,
         TrapCode::InvalidConversion => TrapClass::InvalidConversion,
-        TrapCode::HostFault(_) => TrapClass::HostFault,
         _ => TrapClass::EngineSpecific,
     };
     let detail = format!("{code:?}");
@@ -605,6 +697,20 @@ fn trap_termination(code: TrapCode) -> ExecutionTermination {
         class,
         engine_code: detail.clone(),
         detail_sha256: sha256_hex(detail.as_bytes()),
+    }
+}
+
+fn host_fault_termination(fault: PublicHostFault) -> ExecutionTermination {
+    let code = match fault {
+        PublicHostFault::Timeout => "HOST_TIMEOUT",
+        PublicHostFault::Reconnect => "HOST_RECONNECT",
+        PublicHostFault::Loss => "HOST_LOSS",
+        PublicHostFault::Denied => "HOST_DENIED",
+    };
+    ExecutionTermination::Trapped {
+        class: TrapClass::HostFault,
+        engine_code: code.to_owned(),
+        detail_sha256: sha256_hex(code.as_bytes()),
     }
 }
 
@@ -830,6 +936,8 @@ pub enum AetsDifferentialError {
     SourceInputMismatch,
     #[error("small-step host import is not qseal-qualified")]
     HostImportContract,
+    #[error("injected host tape must preserve the canonical import sequence")]
+    HostTapeShape,
     #[error("unexpected {0} return shape")]
     ReturnShape(&'static str),
 }
