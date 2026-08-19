@@ -10,6 +10,7 @@ mod aets;
 mod aets_compile;
 mod aets_differential;
 mod aets_matrix;
+mod aets_matrix_execution;
 mod aets_reference;
 mod manifest;
 
@@ -23,13 +24,18 @@ pub use aets_compile::{
     AetsServiceCode, AETS_QSM_COMPILER_VERSION,
 };
 pub use aets_differential::{
-    evaluate_aets_differential, AetsDifferentialArtifact, AetsDifferentialError,
-    AetsDifferentialVerdict, AetsEngineDigests, AetsSourceRefinement, AETS_DIFFERENTIAL_VERSION,
+    evaluate_aets_differential, evaluate_aets_differential_with_host_tape,
+    AetsDifferentialArtifact, AetsDifferentialError, AetsDifferentialVerdict, AetsEngineDigests,
+    AetsSourceRefinement, AETS_DIFFERENTIAL_VERSION,
 };
 pub use aets_matrix::{
     AetsAdversarialCase, AetsAdversarialCaseSpec, AetsAdversarialMatrix, AetsCaseId, AetsHostAxis,
     AetsMatrixDigest, AetsMatrixError, AetsMatrixLimits, AetsMatrixSeed, AetsResourceAxis,
     AetsScenarioAxis, AETS_ADVERSARIAL_MATRIX_VERSION,
+};
+pub use aets_matrix_execution::{
+    evaluate_aets_adversarial_matrix, AetsHostInjection, AetsMatrixCaseArtifact,
+    AetsMatrixExecutionArtifact, AetsMatrixExecutionError, AETS_MATRIX_EXECUTION_VERSION,
 };
 pub use aets_reference::{
     evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
