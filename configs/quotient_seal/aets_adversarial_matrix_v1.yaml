@@ -1,0 +1,40 @@
+schema_version: noticer-aets-adversarial-matrix/v1
+canonical_order: CASE_ID_LEXICOGRAPHIC
+case_id_binds:
+  - matrix_seed
+  - aets_source_digest
+  - wasm_module_digest
+  - qsm_capsule_digest
+  - quotient_seal_abi_digest
+  - scenario_axis
+  - host_axis
+  - resource_axis
+  - context_commands
+  - execution_limits
+  - public_sequence_digest
+scenario_axes:
+  - NORMAL
+  - PUBLIC_FAULT_TIMEOUT
+  - PUBLIC_FAULT_RECONNECT
+  - PUBLIC_FAULT_LOSS
+  - RESET
+  - HANDOFF
+  - DEADLINE_BEFORE
+  - DEADLINE_AT
+  - DEADLINE_AFTER
+  - UNKNOWN_SERVICE
+host_axes:
+  - CONTINUE
+  - TERMINATE
+  - TIMEOUT
+  - RECONNECT
+  - LOSS
+resource_axes:
+  - NOMINAL
+  - FUEL_BOUNDARY
+  - MEMORY_BOUNDARY
+  - HOST_CALL_BOUNDARY
+unknown_axis_policy: REJECT
+duplicate_axis_tuple_policy: REJECT
+private_ingress: FORBIDDEN
+hardware_status: NOT_VERIFIED
