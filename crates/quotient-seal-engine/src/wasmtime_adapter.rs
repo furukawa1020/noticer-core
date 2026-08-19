@@ -220,6 +220,14 @@ impl WasmtimeAdapter {
         let commands = input.context_sequence.clone();
         let mut final_values = Vec::new();
         for command in &commands {
+            if command.kind_code == CommandKind::Stop as u8 {
+                return artifact(
+                    input,
+                    store.data().events.clone(),
+                    ExecutionTermination::Terminated,
+                    EngineRunVerdict::Executed,
+                );
+            }
             final_values = match invoke_command(&instance, &mut store, command) {
                 Ok(values) => values,
                 Err(error) => return classify_execution_error(input, &store, error),

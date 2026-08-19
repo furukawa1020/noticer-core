@@ -346,6 +346,7 @@ impl<'a> SmallStepRuntime<'a> {
     }
 
     fn invoke(&mut self, export: &str, arguments: Vec<Value>) -> Result<Invocation, String> {
+        let canonical_export = export.strip_prefix("qseal.public.").unwrap_or(export);
         let tape = PublicHostTape::new(
             self.host_tape.directives()[self.consumed_host_directives..].to_vec(),
         );
@@ -353,7 +354,7 @@ impl<'a> SmallStepRuntime<'a> {
         let machine = if self.initialized {
             WasmMachine::instantiate_for_checker(
                 self.module,
-                export,
+                canonical_export,
                 arguments,
                 self.remaining_fuel,
                 tape,
@@ -364,7 +365,7 @@ impl<'a> SmallStepRuntime<'a> {
         } else {
             WasmMachine::instantiate(
                 self.module,
-                export,
+                canonical_export,
                 arguments,
                 self.remaining_fuel,
                 tape,
