@@ -9,6 +9,7 @@
 mod aets;
 mod aets_compile;
 mod aets_differential;
+mod aets_matrix;
 mod aets_reference;
 mod manifest;
 
@@ -24,6 +25,11 @@ pub use aets_compile::{
 pub use aets_differential::{
     evaluate_aets_differential, AetsDifferentialArtifact, AetsDifferentialError,
     AetsDifferentialVerdict, AetsEngineDigests, AetsSourceRefinement, AETS_DIFFERENTIAL_VERSION,
+};
+pub use aets_matrix::{
+    AetsAdversarialCase, AetsAdversarialCaseSpec, AetsAdversarialMatrix, AetsCaseId, AetsHostAxis,
+    AetsMatrixDigest, AetsMatrixError, AetsMatrixLimits, AetsMatrixSeed, AetsResourceAxis,
+    AetsScenarioAxis, AETS_ADVERSARIAL_MATRIX_VERSION,
 };
 pub use aets_reference::{
     evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
