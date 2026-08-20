@@ -1,0 +1,62 @@
+version: 1
+source_id: noticer.aplot-public-source.v1
+
+fixed_shape:
+  envelope_bytes: 236
+  transport_payload_bytes: 240
+  fragment_bytes: 20
+  fragment_header_bytes: 5
+  fragment_payload_bytes: 15
+  data_fragments: 16
+  parity_fragments: 4
+  total_fragments: 20
+
+public_source_fields:
+  - service_alias
+  - epoch
+  - policy_hash
+  - public_bucket
+  - sequence
+  - start_tick
+  - fragment_cadence_ticks
+  - public_loss_mask
+  - reconnect_ticks
+  - deadline_tick
+  - active_frame_capacity
+  - ttl_ticks
+
+retry_policy:
+  application_retry_count: 0
+  secret_dependent_retry: FORBIDDEN
+  reconnect_schedule: PUBLIC_CANONICAL_ONLY
+
+excluded_fields:
+  - envelope_bytes
+  - fragment_payload_bytes
+  - transport_id_key
+  - frame_id_key_material
+  - token_plaintext
+  - claim
+  - evidence
+  - baseline
+  - private_timestamps
+
+k7_binding:
+  - source_digest
+  - schedule_digest
+  - certificate_digest
+  - generated_runtime_digest
+  - service_alias
+  - epoch
+  - policy_hash
+
+limits:
+  max_frames: 1024
+  max_reconnect_ticks_per_frame: 64
+
+claims:
+  canonical_encoding: required
+  byte_identical_same_public_input: required
+  private_ingress: FORBIDDEN
+  real_radio_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
