@@ -15,6 +15,8 @@ mod aets_matrix_execution;
 mod aets_reference;
 mod aplot;
 mod aplot_compile;
+mod aplot_differential;
+mod aplot_reference;
 mod atv2;
 mod atv2_compile;
 mod atv2_counterexample;
@@ -70,6 +72,17 @@ pub use aplot_compile::{
     AplotP0Binding, AplotPublicEventKind, AplotServiceCode, APLOT_DEADLINE_KIND,
     APLOT_FRAGMENT_ATTEMPT_KIND, APLOT_PUBLIC_DEADLINE, APLOT_PUBLIC_LOSS, APLOT_PUBLIC_RECONNECT,
     APLOT_QSM_COMPILER_VERSION, APLOT_RECONNECT_KIND,
+};
+pub use aplot_differential::{
+    evaluate_aplot_differential, evaluate_aplot_differential_with_host_tape,
+    AplotDifferentialArtifact, AplotDifferentialError, AplotDifferentialVerdict,
+    AplotEngineDigests, AplotExpectedEvent, AplotExpectedEventKind, AplotSourceRefinement,
+    APLOT_DIFFERENTIAL_VERSION,
+};
+pub use aplot_reference::{
+    evaluate_aplot_source_reference, AplotPublicSequence, AplotReferenceArtifact,
+    AplotReferenceError, AplotReferenceUnresolved, AplotReferenceVerdict,
+    APLOT_SOURCE_REFERENCE_VERSION,
 };
 pub use atv2::{
     bind_atv2_k7_manifest, verify_atv2_k7, Atv2BindingError, Atv2K7Binding, Atv2K7ManifestBinding,
