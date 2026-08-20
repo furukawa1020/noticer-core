@@ -520,6 +520,7 @@ fn render_wat(events: &[AplotEventPlacement], qsm_alias: u32) -> String {
     format!(
         r#"(module
   (import "qseal" "emit_frame" (func $emit_frame (param i32 i64) (result i32)))
+  (import "qseal" "emit_action" (func $emit_action (param i32 i32) (result i32)))
   (import "qseal" "public_failure" (func $public_failure (param i32) (result i32)))
   (memory 1 1)
   (global $cursor (mut i64) (i64.const -1))

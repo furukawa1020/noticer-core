@@ -26,10 +26,13 @@ application retry countは常に0であり、retry event kind自体をtarget eve
 
 ## P0 ABIとprivate ingress
 
-Wasm importはP0 allowlist内の次だけを使用する。
+Wasm import surfaceはP0固定ABIと同じ3項目を持つ。
 
 - `qseal.emit_frame`
+- `qseal.emit_action`
 - `qseal.public_failure`
+
+`qseal.emit_action`はABI互換のためimportするが、APLOT transport compilerが生成するcode pathから呼んではならない。APLOT event alphabetはaction semanticsを持たない。
 
 private import、非allowlist import、可変memory、未宣言exportを認めない。生成後にcanonical ABI validatorとtarget IR parserを通し、resource limit超過は成功へ格上げしない。
 

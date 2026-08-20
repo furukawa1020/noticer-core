@@ -38,6 +38,10 @@ public_abi:
   status: qseal.public.status() -> i32
   cursor_rule: NEXT_PUBLIC_STEP_ONLY
   scheduled_tick_storage: COMPILER_PLACEMENT_ONLY
+  imports:
+    qseal.emit_frame: FRAGMENT_ATTEMPT_ONLY
+    qseal.emit_action: ABI_REQUIRED_CALL_FORBIDDEN
+    qseal.public_failure: PUBLIC_FAULT_ONLY
 
 retry_policy:
   application_retry_count: 0
