@@ -77,3 +77,5 @@ bundleはoriginal input/artifact、minimized input/artifact、matrix case、shri
 - 文献・特許上の優先権またはworld-first: 主張しない
 
 このbundleはsoftware P0 evaluationの再現性を固定するものであり、hardware証明ではない。
+
+No world-first claim is made by this software evaluation bundle.
