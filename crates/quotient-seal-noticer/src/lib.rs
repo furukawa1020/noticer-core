@@ -14,6 +14,7 @@ mod aets_matrix;
 mod aets_matrix_execution;
 mod aets_reference;
 mod aplot;
+mod aplot_compile;
 mod atv2;
 mod atv2_compile;
 mod atv2_counterexample;
@@ -63,6 +64,12 @@ pub use aplot::{
     AplotK7Binding, AplotK7ManifestBinding, AplotPublicFramePlan, AplotPublicSourceArtifact,
     APLOT_APPLICATION_RETRY_COUNT, APLOT_MAX_FRAMES, APLOT_MAX_RECONNECT_TICKS,
     APLOT_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use aplot_compile::{
+    compile_aplot_p0, AplotCompileError, AplotCompileLimits, AplotCompiledQsm, AplotEventPlacement,
+    AplotP0Binding, AplotPublicEventKind, AplotServiceCode, APLOT_DEADLINE_KIND,
+    APLOT_FRAGMENT_ATTEMPT_KIND, APLOT_PUBLIC_DEADLINE, APLOT_PUBLIC_LOSS, APLOT_PUBLIC_RECONNECT,
+    APLOT_QSM_COMPILER_VERSION, APLOT_RECONNECT_KIND,
 };
 pub use atv2::{
     bind_atv2_k7_manifest, verify_atv2_k7, Atv2BindingError, Atv2K7Binding, Atv2K7ManifestBinding,
