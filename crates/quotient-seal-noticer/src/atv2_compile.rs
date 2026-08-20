@@ -148,6 +148,8 @@ pub enum Atv2CompileError {
     FrameShape,
     #[error("a public slot cannot be represented by the P0 i64 ABI")]
     SlotRange,
+    #[error("an action slot cannot be represented by the P0 emit_action i32 ABI")]
+    ActionSlotRange,
     #[error("WAT lowering failed: {0}")]
     Wat(String),
     #[error("Wasm size {actual} exceeds limit {limit}")]
@@ -234,6 +236,9 @@ pub fn compile_atv2_p0(
         let action = match frame.kind() {
             FrameKind::Cover => None,
             FrameKind::Action => {
+                if identity.absolute_slot.0 > u64::from(u32::MAX) {
+                    return Err(Atv2CompileError::ActionSlotRange);
+                }
                 let key = (identity.service, identity.public_bucket);
                 let action = action_by_bucket
                     .get(&key)
@@ -488,7 +493,7 @@ fn render_wat(placements: &[Atv2FramePlacement]) -> String {
     (local.set $action (call $action_code (local.get $service) (local.get $slot)))
     (if (result i32) (i32.eqz (local.get $action))
       (then (i32.const 0))
-      (else (call $emit_action (local.get $service) (local.get $action)))))
+      (else (call $emit_action (local.get $action) (i32.wrap_i64 (local.get $slot))))))
   (func (export "qseal.public.reset") (result i32)
     (global.set $cursor (i64.const -1))
     (i32.const 0))

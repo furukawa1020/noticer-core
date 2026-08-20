@@ -1,0 +1,59 @@
+version: 1
+evaluator_id: noticer.atv2-differential.v1
+
+participants:
+  source_expectation:
+    kind: SOURCE_DERIVED_EXPECTATION_NOT_INTERPRETER
+    frame_kind_preserved: true
+  reference_engine:
+    name: quotient-seal-small-step
+  external_engines:
+    - wasmi
+    - wasmtime
+
+shared_input:
+  - source_digest
+  - frame_plan_digest
+  - module_sha256
+  - abi_sha256
+  - context_sequence
+  - host_tape
+  - execution_limits
+  - engine_executable_sha256
+
+observer_axes:
+  - cover_action_frame_sequence
+  - output
+  - public_state
+  - return
+  - host_import
+  - termination
+  - trap
+
+verdicts:
+  MATCH:
+    requires: source_refinement_and_all_engines_match
+  COUNTEREXAMPLE:
+    requires: first_typed_difference
+  UNRESOLVED:
+    causes:
+      - parser_disagreement
+      - unsupported_feature
+      - timeout
+      - resource_bound
+      - engine_failure
+      - source_expectation_unavailable
+
+artifact:
+  canonical_json: required
+  byte_identical_same_input: required
+  first_typed_difference: REQUIRED_ON_COUNTEREXAMPLE
+  participant_artifacts: required
+  engine_digest_binding: required
+
+security_boundary:
+  private_ingress: FORBIDDEN
+  parser_timeout_resource_as_match: FORBIDDEN
+  cover_action_conflation: FORBIDDEN
+  hardware_status: NOT_VERIFIED
+  p1_equivalence: NOT_VERIFIED
