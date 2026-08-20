@@ -11,6 +11,8 @@ noticer-aetp.workspace = true
 noticer-protocol.workspace = true
 noticer-release = { workspace = true, default-features = false }
 noticer-trace-shaper.workspace = true
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-transport-sim = { path = "../noticer-transport-sim" }
 noticer-types.workspace = true
 quotient-forge-caqt.workspace = true
 quotient-seal-abi.workspace = true
