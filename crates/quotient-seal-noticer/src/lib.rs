@@ -13,6 +13,7 @@ mod aets_differential;
 mod aets_matrix;
 mod aets_matrix_execution;
 mod aets_reference;
+mod aplot;
 mod atv2;
 mod atv2_compile;
 mod atv2_counterexample;
@@ -56,6 +57,12 @@ pub use aets_matrix_execution::{
 pub use aets_reference::{
     evaluate_aets_source_reference, AetsPublicSequence, AetsReferenceArtifact, AetsReferenceError,
     AetsReferenceUnresolved, AetsReferenceVerdict, AETS_SOURCE_REFERENCE_VERSION,
+};
+pub use aplot::{
+    bind_aplot_k7_manifest, verify_aplot_k7, AplotBindingError, AplotFragmentSlot, AplotFrameInput,
+    AplotK7Binding, AplotK7ManifestBinding, AplotPublicFramePlan, AplotPublicSourceArtifact,
+    APLOT_APPLICATION_RETRY_COUNT, APLOT_MAX_FRAMES, APLOT_MAX_RECONNECT_TICKS,
+    APLOT_PUBLIC_SOURCE_FORMAT_VERSION,
 };
 pub use atv2::{
     bind_atv2_k7_manifest, verify_atv2_k7, Atv2BindingError, Atv2K7Binding, Atv2K7ManifestBinding,
