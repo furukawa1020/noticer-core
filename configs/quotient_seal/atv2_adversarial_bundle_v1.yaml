@@ -1,0 +1,81 @@
+version: 1
+evaluator_id: noticer.atv2-adversarial-bundle.v1
+
+matrix:
+  deterministic_seed: required
+  canonical_case_id: required
+  unknown_axis_policy: REJECT
+  duplicate_axis_tuple_policy: REJECT
+  axes:
+    scenario:
+      - COVER_FRAME
+      - ACTION_FRAME
+      - DEADLINE_BOUNDARY
+      - RESET_THEN_TICK
+      - HANDOFF_THEN_TICK
+      - UNKNOWN_PUBLIC_FRAME
+    host_fault:
+      - NONE
+      - TIMEOUT
+      - RECONNECT
+      - LOSS
+    resource:
+      - NOMINAL
+      - FUEL_EDGE
+      - MEMORY_EDGE
+      - HOST_CALL_EDGE
+
+invariants:
+  fixed_ciphertext_bytes: 236
+  cadence_source_bound: true
+  cover_action_emit_frame_path_shared: true
+  fault_resource_classification_distinct: true
+
+execution:
+  participants:
+    - SOURCE_EXPECTATION
+    - QUOTIENT_SEAL_SMALL_STEP
+    - WASMI
+    - WASMTIME
+  verdicts:
+    - MATCH
+    - COUNTEREXAMPLE
+    - UNRESOLVED
+  parser_timeout_resource_as_match: FORBIDDEN
+  fault_injection:
+    point: FIRST_PUBLIC_HOST_IMPORT
+    no_import: UNRESOLVED_NOT_APPLICABLE
+
+shrink:
+  order:
+    - REMOVE_SUFFIX_COMMAND
+    - REMOVE_NON_WITNESS_COMMAND
+    - REDUCE_RESOURCE_LIMIT
+    - NORMALIZE_HOST_OUTCOME
+  preserve:
+    - difference_origin
+    - observable_axis
+    - participant
+    - termination_class
+    - first_typed_difference
+
+bundle:
+  canonical_json: required
+  byte_identical_recompute: required
+  original_reproduction: BYTE_IDENTICAL_REQUIRED
+  verification: FULL_BUNDLE_RECOMPUTATION
+  members:
+    - matrix_case
+    - original_input
+    - original_artifact
+    - minimized_input
+    - minimized_artifact
+    - shrink_transcript
+    - first_typed_difference
+    - engine_digests
+  injected_mismatch_label: TEST_INJECTION_NOT_SCIENTIFIC_RESULT
+
+security_boundary:
+  private_ingress: FORBIDDEN
+  hardware_status: NOT_VERIFIED
+  p1_equivalence: NOT_VERIFIED

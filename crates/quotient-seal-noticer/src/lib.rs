@@ -15,7 +15,10 @@ mod aets_matrix_execution;
 mod aets_reference;
 mod atv2;
 mod atv2_compile;
+mod atv2_counterexample;
 mod atv2_differential;
+mod atv2_matrix;
+mod atv2_matrix_execution;
 mod atv2_reference;
 mod manifest;
 
@@ -63,10 +66,27 @@ pub use atv2_compile::{
     compile_atv2_p0, Atv2CompileError, Atv2CompileLimits, Atv2CompiledQsm, Atv2FramePlacement,
     Atv2P0Binding, Atv2ServiceCode, ATV2_FIXED_CIPHERTEXT_BYTES, ATV2_QSM_COMPILER_VERSION,
 };
+pub use atv2_counterexample::{
+    build_atv2_counterexample_bundle, shrink_atv2_counterexample,
+    verify_atv2_counterexample_bundle, verify_atv2_counterexample_bundle_with, Atv2CommandArtifact,
+    Atv2ComparisonSignature, Atv2CounterexampleBundle, Atv2CounterexampleCaseArtifact,
+    Atv2CounterexampleError, Atv2CounterexampleInput, Atv2CounterexampleInputArtifact,
+    Atv2DifferenceOrigin, Atv2DifferenceSignature, Atv2LimitsArtifact, Atv2ShrinkAttempt,
+    Atv2ShrinkOperation, Atv2ShrinkOutcome, ATV2_COUNTEREXAMPLE_BUNDLE_VERSION,
+};
 pub use atv2_differential::{
     evaluate_atv2_differential, evaluate_atv2_differential_with_host_tape,
     Atv2DifferentialArtifact, Atv2DifferentialError, Atv2DifferentialVerdict, Atv2EngineDigests,
     Atv2ExpectedFrame, Atv2ExpectedFrameKind, Atv2SourceRefinement, ATV2_DIFFERENTIAL_VERSION,
+};
+pub use atv2_matrix::{
+    Atv2AdversarialCase, Atv2AdversarialCaseSpec, Atv2AdversarialMatrix, Atv2CaseId, Atv2HostAxis,
+    Atv2MatrixDigest, Atv2MatrixError, Atv2MatrixLimits, Atv2MatrixSeed, Atv2ResourceAxis,
+    Atv2ScenarioAxis, ATV2_ADVERSARIAL_MATRIX_VERSION,
+};
+pub use atv2_matrix_execution::{
+    evaluate_atv2_adversarial_matrix, Atv2HostInjection, Atv2MatrixCaseArtifact,
+    Atv2MatrixExecutionArtifact, Atv2MatrixExecutionError, ATV2_MATRIX_EXECUTION_VERSION,
 };
 pub use atv2_reference::{
     evaluate_atv2_source_reference, Atv2PublicSequence, Atv2ReferenceArtifact, Atv2ReferenceError,
