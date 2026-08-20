@@ -1,0 +1,73 @@
+version: 1
+compiler_id: noticer.aplot-p0-compiler.v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+
+source:
+  artifact: noticer.aplot-public-source.v1
+  k7_binding: REQUIRED
+  private_ingress: FORBIDDEN
+
+canonical_event_order:
+  - scheduled_tick
+  - event_kind_code
+  - frame_ordinal
+  - fragment_ordinal
+
+event_kinds:
+  fragment_attempt:
+    code: 1
+    count_per_frame: 20
+    host_import: qseal.emit_frame
+  public_loss:
+    code: 20993
+    condition: SOURCE_LOSS_MASK
+    host_import: qseal.public_failure
+  public_reconnect:
+    code: 20994
+    condition: SOURCE_RECONNECT_TICK
+    host_import: qseal.public_failure
+  public_deadline:
+    code: 20995
+    count_per_frame: 1
+    host_import: qseal.public_failure
+
+public_abi:
+  tick: qseal.public.tick(i32_service, i64_public_step, i32_fault) -> i32
+  reset: qseal.public.reset() -> i32
+  handoff: qseal.public.handoff() -> i64
+  status: qseal.public.status() -> i32
+  cursor_rule: NEXT_PUBLIC_STEP_ONLY
+  scheduled_tick_storage: COMPILER_PLACEMENT_ONLY
+
+retry_policy:
+  application_retry_count: 0
+  retry_event_kind: ABSENT
+  secret_dependent_retry: FORBIDDEN
+
+bindings:
+  - source_digest
+  - schedule_digest
+  - certificate_digest
+  - generated_runtime_digest
+  - module_digest
+  - target_ir_digest
+  - abi_digest
+  - compiler_manifest_digest
+  - capsule_digest
+  - observer_registry_digest
+
+limits:
+  max_frames: 1024
+  max_events: 8192
+  max_wasm_bytes: 1048576
+  max_capsule_bytes: 2097152
+
+claims:
+  deterministic_compilation: BYTE_IDENTICAL_REQUIRED
+  malformed_mapping: REJECT
+  extra_host_call: FORBIDDEN
+  private_import: FORBIDDEN
+  p1_equivalence: NOT_VERIFIED
+  source_target_refinement: NOT_VERIFIED
+  real_radio_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
