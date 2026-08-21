@@ -788,6 +788,12 @@ fn validate_commands(
         || commands
             .iter()
             .any(|command| command.kind != command.family.command_kind())
+        || commands.iter().any(|command| {
+            matches!(
+                command.family,
+                ContextFamily::Retry | ContextFamily::Malformed
+            ) || command.payload_tag != 0
+        })
         || limits.fuel == 0
         || limits.max_memory_pages == 0
         || limits.max_host_calls == 0
