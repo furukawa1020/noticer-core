@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
-use noticer_provenance_lease::{NPL1_PROFILE_ID, NPL1_VERSION};
 use noticer_protocol::WireServiceAlias;
+use noticer_provenance_lease::{NPL1_PROFILE_ID, NPL1_VERSION};
 use quotient_forge_caqt::artifact_digest;
 use quotient_seal_abi::{
     quotient_seal_abi_v1_hash, validate_wasm_abi, AbiManifest, AbiVerdict, DeploymentProfile,
@@ -321,10 +321,7 @@ pub fn compile_aepa_p0(
         module_digest,
         target_ir_digest,
         abi_digest: quotient_seal_abi_v1_hash(),
-        compiler_manifest_digest: artifact_digest(
-            MANIFEST_DIGEST_DOMAIN,
-            &compiler_manifest_bytes,
-        ),
+        compiler_manifest_digest: artifact_digest(MANIFEST_DIGEST_DOMAIN, &compiler_manifest_bytes),
         capsule_digest,
         observer_registry_digest: artifact_digest(OBSERVER_DIGEST_DOMAIN, OBSERVER_REGISTRY_V1),
     };
@@ -553,7 +550,10 @@ fn build_compiler_manifest(
         entry("aepa.policy_hash", bytes_hex(&binding.policy_hash().0)),
         entry("aepa.qsm_alias", service_code.qsm_alias.to_string()),
         entry("aepa.source_digest", digest_hex(source.digest())),
-        entry("aepa.transition_count", source.transitions().len().to_string()),
+        entry(
+            "aepa.transition_count",
+            source.transitions().len().to_string(),
+        ),
         entry("aepa.transition_digest", digest_hex(transition_digest)),
         entry(
             "aepa.wire_service_alias",
@@ -578,10 +578,7 @@ fn build_compiler_manifest(
         .map_err(|error| AepaCompileError::CompilerManifest(format!("{error:?}")))
 }
 
-fn build_relation_certificate(
-    k7: &AepaK7Binding,
-    target_ir_digest: Digest,
-) -> RelationCertificate {
+fn build_relation_certificate(k7: &AepaK7Binding, target_ir_digest: Digest) -> RelationCertificate {
     let records = (0..k7.certificate().state_count)
         .map(|source_state| RelationRecord {
             source_state,
@@ -611,8 +608,8 @@ fn render_wat(
     qsm_alias: u32,
     admission_action: u32,
 ) -> Result<String, AepaCompileError> {
-    let action =
-        i32::try_from(admission_action).map_err(|_| AepaCompileError::UnsupportedActionSemantics)?;
+    let action = i32::try_from(admission_action)
+        .map_err(|_| AepaCompileError::UnsupportedActionSemantics)?;
     let mut transition_checks = String::new();
     for transition in transitions {
         transition_checks.push_str(&format!(

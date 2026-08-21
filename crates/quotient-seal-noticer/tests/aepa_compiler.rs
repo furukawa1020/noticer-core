@@ -38,7 +38,7 @@ fn assurance() -> AssuranceProfileDigest {
     AssuranceProfile::lab_reference().digest()
 }
 
-fn source(wire_alias: WireServiceAlias) -> AepaPublicSourceArtifact {
+fn fixture_source(wire_alias: WireServiceAlias) -> AepaPublicSourceArtifact {
     let binding = AepaPublicPolicyBinding::new(
         wire_alias,
         PAIRWISE_ALIAS,
@@ -121,7 +121,7 @@ fn caqt_certificate(required_action: Option<u32>) -> (Vec<u8>, ExpectedContract)
     (certificate.encode(), expected)
 }
 
-fn k7(source: &AepaPublicSourceArtifact, required_action: Option<u32>) -> AepaK7Binding {
+fn fixture_k7(source: &AepaPublicSourceArtifact, required_action: Option<u32>) -> AepaK7Binding {
     let (certificate, expected) = caqt_certificate(required_action);
     let target = TemporaryDirectory::new("aepa-p0-compiler");
     generate_package(
@@ -139,8 +139,7 @@ fn k7(source: &AepaPublicSourceArtifact, required_action: Option<u32>) -> AepaK7
         target.path(),
     )
     .expect("K7 generated package");
-    let runtime =
-        fs::read(target.path().join("codegen-manifest.toml")).expect("runtime manifest");
+    let runtime = fs::read(target.path().join("codegen-manifest.toml")).expect("runtime manifest");
     verify_aepa_k7(
         source,
         &certificate,
@@ -158,17 +157,9 @@ fn service_code() -> AepaServiceCode {
     }
 }
 
-fn compile_fixture(
-    source: &AepaPublicSourceArtifact,
-    k7: &AepaK7Binding,
-) -> AepaCompiledQsm {
-    compile_aepa_p0(
-        source,
-        k7,
-        &[service_code()],
-        AepaCompileLimits::default(),
-    )
-    .expect("AEPA P0 compile")
+fn compile_fixture(source: &AepaPublicSourceArtifact, k7: &AepaK7Binding) -> AepaCompiledQsm {
+    compile_aepa_p0(source, k7, &[service_code()], AepaCompileLimits::default())
+        .expect("AEPA P0 compile")
 }
 
 fn dummy_digest(module: NoticerModuleId, field: u8) -> quotient_forge_caqt::Digest {
@@ -228,16 +219,14 @@ fn transition(
         .transitions()
         .iter()
         .copied()
-        .find(|transition| {
-            transition.source_state == state && transition.public_input == input
-        })
+        .find(|transition| transition.source_state == state && transition.public_input == input)
         .expect("lowered transition")
 }
 
 #[test]
 fn compile_is_byte_identical_and_refines_all_transitions() {
-    let source = source(WIRE_ALIAS);
-    let k7 = k7(&source, Some(action_code()));
+    let source = fixture_source(WIRE_ALIAS);
+    let k7 = fixture_k7(&source, Some(action_code()));
     let first = compile_fixture(&source, &k7);
     let second = compile_fixture(&source, &k7);
 
@@ -297,8 +286,8 @@ fn compile_is_byte_identical_and_refines_all_transitions() {
 
 #[test]
 fn reset_handoff_fault_and_expiry_are_lowered_without_gaps() {
-    let source = source(WIRE_ALIAS);
-    let k7 = k7(&source, Some(action_code()));
+    let source = fixture_source(WIRE_ALIAS);
+    let k7 = fixture_k7(&source, Some(action_code()));
     let compiled = compile_fixture(&source, &k7);
 
     let admitted = transition(
@@ -339,8 +328,8 @@ fn reset_handoff_fault_and_expiry_are_lowered_without_gaps() {
 
 #[test]
 fn registry_capsule_binding_and_tamper_fail_closed() {
-    let source = source(WIRE_ALIAS);
-    let k7 = k7(&source, Some(action_code()));
+    let source = fixture_source(WIRE_ALIAS);
+    let k7 = fixture_k7(&source, Some(action_code()));
     let compiled = compile_fixture(&source, &k7);
     let registry = manifest(&source, &k7, &compiled);
     let binding = bind_aepa_compiled_manifest(&registry, &source, &k7, &compiled)
@@ -367,8 +356,8 @@ fn registry_capsule_binding_and_tamper_fail_closed() {
 
 #[test]
 fn unsupported_action_mapping_and_resource_limits_fail_closed() {
-    let source = source(WIRE_ALIAS);
-    let k7 = k7(&source, Some(action_code()));
+    let source = fixture_source(WIRE_ALIAS);
+    let k7 = fixture_k7(&source, Some(action_code()));
     let compile = |codes: &[AepaServiceCode], limits| compile_aepa_p0(&source, &k7, codes, limits);
 
     assert!(compile(&[], AepaCompileLimits::default()).is_err());
@@ -413,7 +402,7 @@ fn unsupported_action_mapping_and_resource_limits_fail_closed() {
         assert!(compile(&[service_code()], limits).is_err());
     }
 
-    let no_action_k7 = k7(&source, None);
+    let no_action_k7 = fixture_k7(&source, None);
     assert_eq!(
         compile_aepa_p0(
             &source,
@@ -424,8 +413,8 @@ fn unsupported_action_mapping_and_resource_limits_fail_closed() {
         Err(AepaCompileError::UnsupportedActionSemantics)
     );
 
-    let other_source = source(WireServiceAlias([0x22; 8]));
-    let other_k7 = k7(&other_source, Some(action_code()));
+    let other_source = fixture_source(WireServiceAlias([0x22; 8]));
+    let other_k7 = fixture_k7(&other_source, Some(action_code()));
     assert_eq!(
         compile_aepa_p0(
             &source,
@@ -439,8 +428,8 @@ fn unsupported_action_mapping_and_resource_limits_fail_closed() {
 
 #[test]
 fn generated_surface_and_frozen_contract_exclude_private_ingress() {
-    let source = source(WIRE_ALIAS);
-    let k7 = k7(&source, Some(action_code()));
+    let source = fixture_source(WIRE_ALIAS);
+    let k7 = fixture_k7(&source, Some(action_code()));
     let compiled = compile_fixture(&source, &k7);
     let wasm_text = String::from_utf8_lossy(compiled.wasm());
     for required in ["qseal", "emit_frame", "emit_action", "public_failure"] {
