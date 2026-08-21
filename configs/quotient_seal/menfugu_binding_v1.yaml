@@ -1,0 +1,77 @@
+schema_version: 1
+profile: P0_PUBLIC_QUOTIENT_ONLY
+module: MENFUGU_EXECUTION_PLANNER
+spec_family: noticer.menfugu.public-execution.v1
+
+source_machine:
+  format_version: 1
+  states:
+    - READY
+    - EXECUTING
+    - COOLDOWN
+    - FAIL_CLOSED
+  inputs:
+    - AUTHORIZED_ACTION
+    - COVER
+    - REPLAY_REJECTED
+    - EXPIRED_REJECTED
+    - WRONG_SERVICE_REJECTED
+    - WRONG_POLICY_REJECTED
+    - WRONG_KEY_REJECTED
+    - DUPLICATE_TRANSPORT
+    - PUMP_STOPPED
+    - COOLDOWN_ELAPSED
+    - RESET
+    - HANDOFF
+    - DEADLINE
+    - FAULT
+  externally_visible_outputs:
+    - NO_OP
+    - COVER
+    - EXECUTE_ONCE
+    - REJECT
+    - STOP
+    - STOP_AND_RESET
+    - STOP_AND_HANDOFF
+    - FAIL_CLOSED
+  total_transition_count: 56
+
+exactly_once:
+  action_output: EXECUTE_ONCE
+  authorized_in_ready: 1
+  authorized_outside_ready: 0
+  unauthorized_or_duplicate: 0
+  rejection_classes_share_output: REJECT
+
+public_policy_binding:
+  - service_alias
+  - epoch
+  - policy_hash
+  - verifier_key_id
+  - allowed_action
+  - pump_ticks
+  - maximum_pump_ticks
+  - cooldown_slots
+  - execution_period_slots
+  - execution_offset_slots
+  - public_deadline_slots
+
+k7_manifest_binding:
+  - public_policy_digest
+  - source_digest
+  - source_certificate_digest
+  - generated_runtime_digest
+  - qsm_capsule_digest
+  - observer_registry_digest
+
+forbidden_fields:
+  - token_id
+  - token_ciphertext
+  - replay_set
+  - replay_counter
+  - raw_ppg
+  - raw_biosignal
+  - private_baseline
+  - private_feature
+
+hardware_verification: NOT_VERIFIED

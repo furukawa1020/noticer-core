@@ -8,6 +8,7 @@ description = "Public-only Noticer module registry and QSM integration bindings"
 
 [dependencies]
 noticer-aetp.workspace = true
+noticer-menfugu-core = { path = "../noticer-menfugu-core" }
 noticer-protocol.workspace = true
 noticer-provenance.workspace = true
 noticer-provenance-lease.workspace = true
