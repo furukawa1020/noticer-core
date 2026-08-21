@@ -142,8 +142,7 @@ fn fixture_k7(source: &AepaPublicSourceArtifact) -> AepaK7Binding {
         target.path(),
     )
     .expect("K7 generated package");
-    let runtime =
-        fs::read(target.path().join("codegen-manifest.toml")).expect("runtime manifest");
+    let runtime = fs::read(target.path().join("codegen-manifest.toml")).expect("runtime manifest");
     verify_aepa_k7(
         source,
         &certificate,
@@ -207,11 +206,7 @@ fn lifecycle_command(family: ContextFamily) -> ContextCommand {
 fn commands() -> Vec<ContextCommand> {
     vec![
         input_command(ContextFamily::Tick, AepaPublicInput::PublicTick, 0),
-        input_command(
-            ContextFamily::Tick,
-            AepaPublicInput::ValidatedAdmission,
-            1,
-        ),
+        input_command(ContextFamily::Tick, AepaPublicInput::ValidatedAdmission, 1),
         input_command(ContextFamily::Tick, AepaPublicInput::PublicTick, 2),
         input_command(
             ContextFamily::CrossServiceReplay,
@@ -219,11 +214,7 @@ fn commands() -> Vec<ContextCommand> {
             3,
         ),
         lifecycle_command(ContextFamily::Reset),
-        input_command(
-            ContextFamily::Tick,
-            AepaPublicInput::ValidatedAdmission,
-            0,
-        ),
+        input_command(ContextFamily::Tick, AepaPublicInput::ValidatedAdmission, 0),
         input_command(ContextFamily::Deadline, AepaPublicInput::Expired, 1),
         lifecycle_command(ContextFamily::Handoff),
         input_command(ContextFamily::FaultTimeout, AepaPublicInput::Fault, 2),
@@ -231,17 +222,13 @@ fn commands() -> Vec<ContextCommand> {
     ]
 }
 
-fn public_sequence(
-    compiled: &AepaCompiledQsm,
-    max_host_calls: u64,
-) -> AepaPublicSequence {
+fn public_sequence(compiled: &AepaCompiledQsm, max_host_calls: u64) -> AepaPublicSequence {
     AepaPublicSequence::new(compiled, commands(), limits(max_host_calls), 32)
         .expect("AEPA public sequence")
 }
 
 fn engine_digests() -> AepaEngineDigests {
-    AepaEngineDigests::new("1".repeat(64), "2".repeat(64), "3".repeat(64))
-        .expect("engine digests")
+    AepaEngineDigests::new("1".repeat(64), "2".repeat(64), "3".repeat(64)).expect("engine digests")
 }
 
 #[test]
@@ -282,7 +269,10 @@ fn actual_three_engines_match_source_and_are_byte_reproducible() {
             .count(),
         2
     );
-    assert_eq!(first.canonical_json().unwrap(), second.canonical_json().unwrap());
+    assert_eq!(
+        first.canonical_json().unwrap(),
+        second.canonical_json().unwrap()
+    );
     assert_eq!(
         first.artifact_sha256().unwrap(),
         second.artifact_sha256().unwrap()
@@ -319,20 +309,14 @@ fn target_only_admission_and_extra_host_call_are_typed_injected_counterexamples(
         target_only_oracle.verdict,
         DifferentialVerdict::Counterexample
     );
-    let target_only = build_aepa_injected_fixture_artifact(
-        &matched,
-        target_only_oracle,
-        "TARGET_ONLY_ADMISSION",
-    )
-    .expect("target-only fixture artifact");
+    let target_only =
+        build_aepa_injected_fixture_artifact(&matched, target_only_oracle, "TARGET_ONLY_ADMISSION")
+            .expect("target-only fixture artifact");
     assert_eq!(
         target_only.evidence_origin,
         AepaDifferentialEvidenceOrigin::InjectedTestFixture
     );
-    assert_eq!(
-        target_only.verdict,
-        AepaDifferentialVerdict::Counterexample
-    );
+    assert_eq!(target_only.verdict, AepaDifferentialVerdict::Counterexample);
     assert!(target_only
         .oracle
         .counterexamples
@@ -366,16 +350,10 @@ fn target_only_admission_and_extra_host_call_are_typed_injected_counterexamples(
     let extra_host_oracle =
         DifferentialOracle::evaluate(matched.oracle.reference.clone(), extra_host_engines)
             .expect("extra-host oracle");
-    let extra_host = build_aepa_injected_fixture_artifact(
-        &matched,
-        extra_host_oracle,
-        "EXTRA_HOST_CALL",
-    )
-    .expect("extra-host fixture artifact");
-    assert_eq!(
-        extra_host.verdict,
-        AepaDifferentialVerdict::Counterexample
-    );
+    let extra_host =
+        build_aepa_injected_fixture_artifact(&matched, extra_host_oracle, "EXTRA_HOST_CALL")
+            .expect("extra-host fixture artifact");
+    assert_eq!(extra_host.verdict, AepaDifferentialVerdict::Counterexample);
     assert!(extra_host
         .oracle
         .counterexamples

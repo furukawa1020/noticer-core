@@ -385,15 +385,12 @@ fn source_transitions_are_canonical(
         });
     }
     lowered.sort_by_key(|transition| (transition.source_state, transition.public_input));
-    let canonical = lowered
-        .iter()
-        .enumerate()
-        .all(|(index, transition)| {
-            let state_index = index / AepaPublicInput::ALL.len();
-            let input_index = index % AepaPublicInput::ALL.len();
-            transition.source_state == AepaPublicState::ALL[state_index]
-                && transition.public_input == AepaPublicInput::ALL[input_index]
-        });
+    let canonical = lowered.iter().enumerate().all(|(index, transition)| {
+        let state_index = index / AepaPublicInput::ALL.len();
+        let input_index = index % AepaPublicInput::ALL.len();
+        transition.source_state == AepaPublicState::ALL[state_index]
+            && transition.public_input == AepaPublicInput::ALL[input_index]
+    });
     canonical && hex(aepa_transition_digest(&lowered).as_bytes()) == expected_digest
 }
 
@@ -414,9 +411,7 @@ fn valid_injection_label(label: &str) -> bool {
     !label.is_empty()
         && label.len() <= 128
         && label.bytes().all(|byte| {
-            byte.is_ascii_uppercase()
-                || byte.is_ascii_digit()
-                || matches!(byte, b'_' | b'-' | b'.')
+            byte.is_ascii_uppercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-' | b'.')
         })
 }
 
@@ -550,9 +545,7 @@ fn plan_tick(
     let transition = compiled
         .transitions()
         .iter()
-        .find(|transition| {
-            transition.source_state == state && transition.public_input == input
-        })
+        .find(|transition| transition.source_state == state && transition.public_input == input)
         .ok_or(AepaDifferentialError::TransitionCoverage)?;
     let mut calls = vec![PlannedHostCall::Frame {
         label: command.service_alias,
@@ -1529,18 +1522,16 @@ const fn aggregate_verdict(
         (AepaDifferentialVerdict::Unresolved, _) | (_, DifferentialVerdict::Unresolved) => {
             AepaDifferentialVerdict::Unresolved
         }
-        (AepaDifferentialVerdict::Counterexample, _)
-        | (_, DifferentialVerdict::Counterexample) => AepaDifferentialVerdict::Counterexample,
+        (AepaDifferentialVerdict::Counterexample, _) | (_, DifferentialVerdict::Counterexample) => {
+            AepaDifferentialVerdict::Counterexample
+        }
         (AepaDifferentialVerdict::Match, DifferentialVerdict::Match) => {
             AepaDifferentialVerdict::Match
         }
     }
 }
 
-fn engine_digests_match(
-    expected: &AepaEngineDigests,
-    oracle: &DifferentialOracleArtifact,
-) -> bool {
+fn engine_digests_match(expected: &AepaEngineDigests, oracle: &DifferentialOracleArtifact) -> bool {
     oracle.reference.input.engine.executable_sha256 == expected.small_step_sha256()
         && oracle.engines.len() == 2
         && oracle.engines[0].input.engine.name == "wasmi"
