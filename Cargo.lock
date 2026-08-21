@@ -2103,6 +2103,7 @@ dependencies = [
  "quotient-seal-context",
  "quotient-seal-engine",
  "quotient-seal-relation",
+ "quotient-seal-resource",
  "quotient-seal-small-step",
  "quotient-seal-target-ir",
  "serde",
