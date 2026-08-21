@@ -1,0 +1,57 @@
+version: 1
+schema_version: noticer-aepa-p1-resource-witness/v1
+deployment_profile: P1_SEALED_ADMISSION
+
+checker:
+  mode: STRICT_ONLY
+  resource_axes: 6
+  normalization: FORBIDDEN
+  normalized_verdict: REJECT
+  counterexample: REJECT
+  inconclusive: REJECT
+
+witness:
+  construction: STRICT_RESOURCE_REPORT_ONLY
+  fresh_revalidation: REQUIRED_AT_ADMISSION
+  private_case_commitment: PAIRWISE_SERVICE_AND_EPOCH_BOUND
+  private_resource_values: FORBIDDEN
+  private_resource_events: FORBIDDEN
+  checked_case_count: REQUIRED_NONZERO
+  checked_resource_event_count: REQUIRED_NONZERO
+
+bindings:
+  - wire_service_alias
+  - pairwise_service_alias
+  - public_epoch
+  - policy_hash
+  - lease_verifier_key_id
+  - pipeline_measurement_hash
+  - assurance_profile_digest
+  - atv2_issuer_key_id
+  - admission_window
+  - source_digest
+  - transition_digest
+  - certificate_digest
+  - generated_runtime_digest
+  - module_digest
+  - target_ir_digest
+  - abi_digest
+  - capsule_digest
+  - relation_binding_digest
+  - private_case_commitment
+  - witness_digest
+
+profile_gate:
+  p0_with_witness: REJECT
+  p1_without_witness: REJECT
+  p1_without_manifest_evidence: REJECT
+  p0_to_p1_implicit_upgrade: FORBIDDEN
+  stale_witness: REJECT
+  mismatched_witness: REJECT
+
+claims:
+  missing_witness_acceptance_rate: ZERO_BY_CONSTRUCTION
+  software_resource_check: VERIFIED
+  hardware_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
+  priority_claim: NOT_MADE
