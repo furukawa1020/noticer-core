@@ -15,7 +15,10 @@ mod aets_matrix_execution;
 mod aets_reference;
 mod aplot;
 mod aplot_compile;
+mod aplot_counterexample;
 mod aplot_differential;
+mod aplot_matrix;
+mod aplot_matrix_execution;
 mod aplot_reference;
 mod atv2;
 mod atv2_compile;
@@ -73,11 +76,29 @@ pub use aplot_compile::{
     APLOT_FRAGMENT_ATTEMPT_KIND, APLOT_PUBLIC_DEADLINE, APLOT_PUBLIC_LOSS, APLOT_PUBLIC_RECONNECT,
     APLOT_QSM_COMPILER_VERSION, APLOT_RECONNECT_KIND,
 };
+pub use aplot_counterexample::{
+    build_aplot_counterexample_bundle, shrink_aplot_counterexample,
+    verify_aplot_counterexample_bundle, verify_aplot_counterexample_bundle_with,
+    AplotCommandArtifact, AplotComparisonSignature, AplotCounterexampleBundle,
+    AplotCounterexampleCaseArtifact, AplotCounterexampleError, AplotCounterexampleInput,
+    AplotCounterexampleInputArtifact, AplotDifferenceOrigin, AplotDifferenceSignature,
+    AplotLimitsArtifact, AplotShrinkAttempt, AplotShrinkOperation, AplotShrinkOutcome,
+    APLOT_COUNTEREXAMPLE_BUNDLE_VERSION,
+};
 pub use aplot_differential::{
     evaluate_aplot_differential, evaluate_aplot_differential_with_host_tape,
     AplotDifferentialArtifact, AplotDifferentialError, AplotDifferentialVerdict,
     AplotEngineDigests, AplotExpectedEvent, AplotExpectedEventKind, AplotSourceRefinement,
     APLOT_DIFFERENTIAL_VERSION,
+};
+pub use aplot_matrix::{
+    AplotAdversarialCase, AplotAdversarialCaseSpec, AplotAdversarialMatrix, AplotCaseId,
+    AplotHostAxis, AplotMatrixDigest, AplotMatrixError, AplotMatrixLimits, AplotMatrixSeed,
+    AplotResourceAxis, AplotScenarioAxis, APLOT_ADVERSARIAL_MATRIX_VERSION,
+};
+pub use aplot_matrix_execution::{
+    evaluate_aplot_adversarial_matrix, AplotHostInjection, AplotMatrixCaseArtifact,
+    AplotMatrixExecutionArtifact, AplotMatrixExecutionError, APLOT_MATRIX_EXECUTION_VERSION,
 };
 pub use aplot_reference::{
     evaluate_aplot_source_reference, AplotPublicSequence, AplotReferenceArtifact,
