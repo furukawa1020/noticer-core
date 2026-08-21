@@ -1,0 +1,75 @@
+version: 1
+matrix_schema: noticer-aplot-adversarial-matrix/v1
+execution_schema: noticer-aplot-matrix-execution/v1
+bundle_schema: noticer-aplot-counterexample-bundle/v1
+
+seed:
+  bytes: 32
+  case_id_binding:
+    - seed
+    - source_digest
+    - module_digest
+    - capsule_digest
+    - abi_digest
+    - scenario_axis
+    - host_axis
+    - resource_axis
+    - commands
+    - execution_limits
+
+scenario_axes:
+  - NORMAL
+  - DECLARED_LOSS
+  - DECLARED_RECONNECT
+  - PUBLIC_FAULT_TIMEOUT
+  - PUBLIC_FAULT_RECONNECT
+  - PUBLIC_FAULT_LOSS
+  - DUPLICATE_STEP
+  - CAPACITY_BOUNDARY
+  - SECRET_RETRY_ATTEMPT
+  - RESET
+  - HANDOFF
+  - DEADLINE_BEFORE
+  - DEADLINE_AT
+  - DEADLINE_AFTER
+  - UNKNOWN_SERVICE
+
+host_axes:
+  - CONTINUE
+  - TERMINATE
+  - TIMEOUT
+  - RECONNECT
+  - LOSS
+
+resource_axes:
+  - NOMINAL
+  - FUEL_BOUNDARY
+  - MEMORY_BOUNDARY
+  - HOST_CALL_BOUNDARY
+
+invariants:
+  application_retry_count: 0
+  retry_command_family: FORBIDDEN
+  secret_retry_encoding: DUPLICATE_PUBLIC_STEP
+  cadence_source_binding: REQUIRED
+  extra_emit_frame: COUNTEREXAMPLE
+  fault_resource_conflation: FORBIDDEN
+  parser_timeout_resource_success: FORBIDDEN
+
+counterexample:
+  first_typed_difference: REQUIRED
+  shrink_order:
+    - DROP_COMMAND_SUFFIX
+    - ZERO_PUBLIC_FAULT
+    - REDUCE_FUEL
+    - REDUCE_MEMORY_PAGES
+    - REDUCE_HOST_CALLS
+  original_reproduction: BYTE_IDENTICAL_REQUIRED
+  minimized_reproduction: BYTE_IDENTICAL_REQUIRED
+  verification: FULL_BUNDLE_RECOMPUTATION
+
+claims:
+  injected_mismatch: TEST_INSTRUMENTATION_NOT_SCIENTIFIC_RESULT
+  adversarial_completeness: BOUNDED_DECLARED_MATRIX_ONLY
+  real_radio_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
