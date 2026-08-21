@@ -1,0 +1,72 @@
+schema_version: noticer-aepa-public-source/v1
+k7_spec_family: noticer_aepa_admission
+lease_profile:
+  profile_id: NPL1
+  version: 1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+
+states:
+  - WAITING
+  - ADMITTED
+  - COVER_REQUIRED
+  - FAULTED
+
+public_inputs:
+  - PUBLIC_TICK
+  - VALIDATED_ADMISSION
+  - REPLAY
+  - EXPIRED
+  - DOWNGRADE
+  - WRONG_BINDING
+  - RESET
+  - HANDOFF
+  - FAULT
+
+public_outputs:
+  - COVER
+  - ADMIT_ONCE
+  - REJECT
+  - FAULT
+
+transition_contract:
+  total: true
+  initial_state: WAITING
+  validated_admission_from_waiting: ADMIT_ONCE
+  duplicate_admission: REJECT
+  replay: REJECT
+  expired: REJECT
+  downgrade: REJECT
+  wrong_binding: REJECT
+  reset: WAITING
+  handoff: WAITING
+  fault: FAULTED
+
+bindings:
+  - wire_service_alias
+  - pairwise_service_alias
+  - public_epoch
+  - policy_hash
+  - lease_verifier_key_id
+  - pipeline_measurement_hash
+  - assurance_profile_digest
+  - atv2_issuer_key_id
+  - admission_window
+  - source_digest
+  - k7_certificate_digest
+  - generated_runtime_digest
+
+erased_or_forbidden:
+  - raw_biosignal
+  - private_feature
+  - private_appraisal
+  - provenance_lease_bytes
+  - lease_nonce
+  - collector_session_public_key_hash
+  - attestation_certificate_chain
+  - evidence_permit
+  - private_resource_trace
+
+validated_admission_semantics: POST_VALIDATION_PUBLIC_SYMBOL_ONLY
+p1_admission: FORBIDDEN_PENDING_RESOURCE_EQUALITY_EVIDENCE
+hardware_status: NOT_VERIFIED
+priority_claim: NOT_MADE
