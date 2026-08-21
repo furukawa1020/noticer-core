@@ -1,0 +1,69 @@
+version: 1
+artifact_schema: noticer-aplot-differential/v1
+
+participants:
+  source_expectation:
+    kind: SOURCE_DERIVED_EXPECTATION_NOT_INTERPRETER
+    executable_digest: REQUIRED
+  small_step:
+    kind: QUOTIENT_SEAL_SMALL_STEP
+    executable_digest: REQUIRED
+  wasmi:
+    kind: ACTUAL_WASM_ENGINE
+    executable_digest: REQUIRED
+  wasmtime:
+    kind: ACTUAL_WASM_ENGINE
+    executable_digest: REQUIRED
+
+shared_execution_input:
+  - module_digest
+  - abi_digest
+  - public_command_sequence
+  - public_host_tape
+  - fuel_limit
+  - memory_page_limit
+  - host_call_limit
+  - timeout_limit
+
+source_event_semantics:
+  fragment_attempt: qseal.emit_frame
+  declared_loss: qseal.public_failure(20993)
+  declared_reconnect: qseal.public_failure(20994)
+  declared_deadline: qseal.public_failure(20995)
+  application_retry: FORBIDDEN
+  retry_command_family: REJECT
+  host_injected_reconnect: DISTINCT_FROM_SOURCE_RECONNECT
+
+comparison_axes:
+  - output
+  - public_state
+  - return
+  - host_import
+  - termination
+  - reset
+  - handoff
+
+verdicts:
+  - MATCH
+  - COUNTEREXAMPLE
+  - UNRESOLVED
+  first_typed_difference: REQUIRED_ON_COUNTEREXAMPLE
+  parser_failure: UNRESOLVED
+  timeout: UNRESOLVED
+  resource_bound: UNRESOLVED
+  engine_failure: UNRESOLVED
+
+artifact_binding:
+  canonical_json: REQUIRED
+  source_digest: REQUIRED
+  schedule_digest: REQUIRED
+  sequence_digest: REQUIRED
+  engine_digests: REQUIRED
+  all_participant_runs: REQUIRED_WHEN_EXECUTED
+
+claims:
+  byte_identical_same_input: REQUIRED
+  bounded_loss_refinement: EVALUATED_FOR_DECLARED_SEQUENCE
+  adversarial_completeness: NOT_VERIFIED
+  real_radio_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
