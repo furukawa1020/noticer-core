@@ -257,9 +257,10 @@ pub fn evaluate_aepa_differential_with_host_tape(
     validate_host_tape_shape(sequence.host_tape(), host_tape)?;
     let source_verdict = evaluate_source_reference(compiled, sequence)?;
     let (source_reference, source_unresolved) = match source_verdict {
-        SourceReferenceVerdict::Executed(artifact) => {
-            (Some(project_source_reference(&artifact, host_tape)?), None)
-        }
+        SourceReferenceVerdict::Executed(artifact) => (
+            Some(project_source_reference(artifact.as_ref(), host_tape)?),
+            None,
+        ),
         SourceReferenceVerdict::Unresolved(reason) => (None, Some(reason)),
     };
     let small_step = execute_small_step(
@@ -608,7 +609,7 @@ fn expected_host_tape(
 }
 
 enum SourceReferenceVerdict {
-    Executed(EngineRunArtifact),
+    Executed(Box<EngineRunArtifact>),
     Unresolved(String),
 }
 
@@ -639,7 +640,7 @@ fn evaluate_source_reference(
     };
     let run = EngineRunArtifact::new(input, trace, termination, EngineRunVerdict::Executed)
         .map_err(|error| AepaDifferentialError::EngineContract(error.to_string()))?;
-    Ok(SourceReferenceVerdict::Executed(run))
+    Ok(SourceReferenceVerdict::Executed(Box::new(run)))
 }
 
 fn expected_trace(
