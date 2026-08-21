@@ -1,0 +1,80 @@
+version: 1
+compiler_id: noticer.aepa-p0-compiler.v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+
+source:
+  artifact: noticer-aepa-public-source/v1
+  k7_binding: REQUIRED
+  private_ingress: FORBIDDEN
+
+canonical_transition_order:
+  - source_state_code
+  - public_input_code
+
+machine:
+  states: 4
+  public_inputs: 9
+  total_transitions: 36
+  initial_state: WAITING
+  admission_action_source: K7_REQUIRED_ACTION
+
+public_abi:
+  tick: qseal.public.tick(i32_service, i64_public_step, i32_public_symbol) -> i32
+  reset: qseal.public.reset() -> i32
+  handoff: qseal.public.handoff() -> i64
+  status: qseal.public.status() -> i32
+  cursor_rule: NEXT_PUBLIC_STEP_ONLY
+  imports:
+    qseal.emit_frame: EVERY_VALID_PUBLIC_TRANSITION
+    qseal.emit_action: ADMIT_ONCE_ONLY
+    qseal.public_failure: REJECT_FAULT_OR_MALFORMED_ONLY
+
+lowering:
+  PUBLIC_TICK: COVER
+  VALIDATED_ADMISSION: ADMIT_ONCE_FROM_WAITING
+  REPLAY: REJECT
+  EXPIRED: REJECT_AS_PUBLIC_DEADLINE
+  DOWNGRADE: REJECT
+  WRONG_BINDING: REJECT
+  RESET: WAITING_WITH_COVER
+  HANDOFF: WAITING_WITH_COVER
+  FAULT: FAULTED
+
+bindings:
+  - source_digest
+  - transition_digest
+  - certificate_digest
+  - generated_runtime_digest
+  - module_digest
+  - target_ir_digest
+  - abi_digest
+  - compiler_manifest_digest
+  - capsule_digest
+  - observer_registry_digest
+  - wire_service_alias
+  - pairwise_service_alias
+  - public_epoch
+  - policy_hash
+  - lease_verifier_key_id
+  - pipeline_measurement_hash
+  - assurance_profile_digest
+  - admission_window
+
+limits:
+  max_states: 4
+  max_public_inputs: 9
+  max_transitions: 36
+  max_wasm_bytes: 1048576
+  max_capsule_bytes: 2097152
+
+claims:
+  deterministic_compilation: BYTE_IDENTICAL_REQUIRED
+  source_target_refinement: CHECKED_ALL_36_TRANSITIONS
+  malformed_mapping: REJECT
+  unsupported_action_semantics: REJECT
+  resource_bound: NOT_SUCCESS
+  private_import: FORBIDDEN
+  p1_equivalence: NOT_VERIFIED
+  three_engine_equivalence: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
+  priority_claim: NOT_MADE

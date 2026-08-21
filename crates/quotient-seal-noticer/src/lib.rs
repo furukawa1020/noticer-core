@@ -7,6 +7,7 @@
 //! private fields.
 
 mod aepa;
+mod aepa_compile;
 mod aets;
 mod aets_compile;
 mod aets_counterexample;
@@ -34,6 +35,11 @@ pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
     AepaPublicInput, AepaPublicOutput, AepaPublicPolicyBinding, AepaPublicSourceArtifact,
     AepaPublicState, AepaPublicTransition, AEPA_K7_SPEC_FAMILY, AEPA_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use aepa_compile::{
+    bind_aepa_compiled_manifest, compile_aepa_p0, AepaCompileError, AepaCompileLimits,
+    AepaCompiledManifestBinding, AepaCompiledQsm, AepaLoweredTransition, AepaP0Binding,
+    AepaServiceCode, AEPA_PUBLIC_FAULT, AEPA_PUBLIC_REJECT, AEPA_QSM_COMPILER_VERSION,
 };
 pub use aets::{
     aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
