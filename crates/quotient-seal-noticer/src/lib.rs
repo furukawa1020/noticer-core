@@ -7,7 +7,9 @@
 //! private fields.
 
 mod aepa;
+mod aepa_adversarial;
 mod aepa_compile;
+mod aepa_counterexample;
 mod aepa_differential;
 mod aepa_p1;
 mod aets;
@@ -38,12 +40,27 @@ pub use aepa::{
     AepaPublicInput, AepaPublicOutput, AepaPublicPolicyBinding, AepaPublicSourceArtifact,
     AepaPublicState, AepaPublicTransition, AEPA_K7_SPEC_FAMILY, AEPA_PUBLIC_SOURCE_FORMAT_VERSION,
 };
+pub use aepa_adversarial::{
+    evaluate_aepa_adversarial_case_spec, evaluate_aepa_adversarial_matrix,
+    verify_aepa_adversarial_execution, AepaAdversarialCase, AepaAdversarialCaseArtifact,
+    AepaAdversarialCaseSpec, AepaAdversarialExecutionArtifact, AepaAdversarialMatrix,
+    AepaAdversarialMatrixError, AepaAdversarialMatrixLimits, AepaAdversarialMatrixSeed,
+    AepaCaseOutcome, AepaProfileAxis, AepaScenarioAxis, AEPA_ADVERSARIAL_MATRIX_VERSION,
+};
 pub use aepa_compile::{
     aepa_transition_digest, bind_aepa_compiled_manifest, compile_aepa_p0, AepaCompileError,
     AepaCompileLimits, AepaCompiledManifestBinding, AepaCompiledQsm, AepaLoweredTransition,
     AepaP0Binding, AepaServiceCode, AEPA_OUT_OF_ORDER_PUBLIC_STEP, AEPA_PUBLIC_FAULT,
     AEPA_PUBLIC_REJECT, AEPA_QSM_COMPILER_VERSION, AEPA_UNKNOWN_PUBLIC_INPUT,
     AEPA_UNKNOWN_PUBLIC_SERVICE,
+};
+pub use aepa_counterexample::{
+    build_aepa_counterexample_bundle, shrink_aepa_counterexample,
+    verify_aepa_counterexample_bundle, verify_aepa_counterexample_bundle_with, AepaCommandArtifact,
+    AepaComparisonSignature, AepaCounterexampleBundle, AepaCounterexampleCaseArtifact,
+    AepaCounterexampleError, AepaCounterexampleInput, AepaCounterexampleInputArtifact,
+    AepaDifferenceOrigin, AepaDifferenceSignature, AepaLimitsArtifact, AepaShrinkAttempt,
+    AepaShrinkOperation, AepaShrinkOutcome, AEPA_COUNTEREXAMPLE_BUNDLE_VERSION,
 };
 pub use aepa_differential::{
     build_aepa_injected_fixture_artifact, evaluate_aepa_differential,
