@@ -8,6 +8,7 @@
 
 mod aepa;
 mod aepa_compile;
+mod aepa_differential;
 mod aets;
 mod aets_compile;
 mod aets_counterexample;
@@ -37,9 +38,17 @@ pub use aepa::{
     AepaPublicState, AepaPublicTransition, AEPA_K7_SPEC_FAMILY, AEPA_PUBLIC_SOURCE_FORMAT_VERSION,
 };
 pub use aepa_compile::{
-    bind_aepa_compiled_manifest, compile_aepa_p0, AepaCompileError, AepaCompileLimits,
-    AepaCompiledManifestBinding, AepaCompiledQsm, AepaLoweredTransition, AepaP0Binding,
-    AepaServiceCode, AEPA_PUBLIC_FAULT, AEPA_PUBLIC_REJECT, AEPA_QSM_COMPILER_VERSION,
+    aepa_transition_digest, bind_aepa_compiled_manifest, compile_aepa_p0, AepaCompileError,
+    AepaCompileLimits, AepaCompiledManifestBinding, AepaCompiledQsm, AepaLoweredTransition,
+    AepaP0Binding, AepaServiceCode, AEPA_OUT_OF_ORDER_PUBLIC_STEP, AEPA_PUBLIC_FAULT,
+    AEPA_PUBLIC_REJECT, AEPA_QSM_COMPILER_VERSION, AEPA_UNKNOWN_PUBLIC_INPUT,
+    AEPA_UNKNOWN_PUBLIC_SERVICE,
+};
+pub use aepa_differential::{
+    build_aepa_injected_fixture_artifact, evaluate_aepa_differential,
+    evaluate_aepa_differential_with_host_tape, AepaDifferentialArtifact, AepaDifferentialError,
+    AepaDifferentialEvidenceOrigin, AepaDifferentialVerdict, AepaEngineDigests,
+    AepaExpectedTransition, AepaPublicSequence, AepaSourceRefinement, AEPA_DIFFERENTIAL_VERSION,
 };
 pub use aets::{
     aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
