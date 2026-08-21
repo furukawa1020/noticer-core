@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use noticer_aetp::{
@@ -19,6 +20,8 @@ use quotient_seal_noticer::{
     AetsArtifactSet, AetsBindingError, AetsPublicSourceArtifact, NoticerModuleBinding,
     NoticerModuleId, NoticerQsmManifest, P1ResourceEvidence, AETS_PUBLIC_SOURCE_FORMAT_VERSION,
 };
+
+static TEMPORARY_DIRECTORY_ID: AtomicU64 = AtomicU64::new(0);
 
 const SERVICE_ALIAS: WireServiceAlias = WireServiceAlias([0x31; 8]);
 const POLICY_HASH: PolicyHash = PolicyHash([0x41; 32]);
@@ -445,8 +448,9 @@ impl TemporaryDirectory {
             .duration_since(UNIX_EPOCH)
             .expect("system time")
             .as_nanos();
+        let id = TEMPORARY_DIRECTORY_ID.fetch_add(1, Ordering::Relaxed);
         Self(std::env::temp_dir().join(format!(
-            "quotient-seal-{label}-{}-{nonce}",
+            "quotient-seal-{label}-{}-{nonce}-{id}",
             std::process::id()
         )))
     }
