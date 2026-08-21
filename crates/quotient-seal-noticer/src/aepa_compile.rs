@@ -31,9 +31,9 @@ const MANIFEST_DIGEST_DOMAIN: &[u8] = b"noticer-core/aepa/p0-compiler-manifest/v
 const OBSERVER_DIGEST_DOMAIN: &[u8] = b"noticer-core/aepa/p0-observer-registry/v1";
 const ROBUST_PENDING: &[u8] = b"AEPA_ROBUST_CERTIFICATE_PENDING_K8_13E5_NOT_VERIFIED_V1";
 const RESOURCE_PENDING: &[u8] = b"AEPA_RESOURCE_CERTIFICATE_PENDING_K8_13E4_NOT_VERIFIED_V1";
-const UNKNOWN_PUBLIC_SERVICE: i32 = 0x4501;
-const UNKNOWN_PUBLIC_INPUT: i32 = 0x4502;
-const OUT_OF_ORDER_PUBLIC_STEP: i32 = 0x4503;
+pub const AEPA_UNKNOWN_PUBLIC_SERVICE: i32 = 0x4501;
+pub const AEPA_UNKNOWN_PUBLIC_INPUT: i32 = 0x4502;
+pub const AEPA_OUT_OF_ORDER_PUBLIC_STEP: i32 = 0x4503;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct AepaServiceCode {
@@ -236,7 +236,7 @@ pub fn compile_aepa_p0(
     }
 
     let transitions = canonicalize_transitions(source)?;
-    let transition_digest = transition_digest(&transitions);
+    let transition_digest = aepa_transition_digest(&transitions);
     let service_code = canonicalize_service_code(source, service_codes)?;
     let admission_action = canonical_admission_action(k7)?;
     let wat = render_wat(&transitions, service_code.qsm_alias, admission_action)?;
@@ -353,7 +353,7 @@ pub fn bind_aepa_compiled_manifest(
     ensure_digest(
         "transition",
         binding.transition_digest,
-        transition_digest(compiled.transitions()),
+        aepa_transition_digest(compiled.transitions()),
     )?;
     ensure_digest(
         "certificate",
@@ -494,7 +494,8 @@ fn canonical_admission_action(k7: &AepaK7Binding) -> Result<u32, AepaCompileErro
     Ok(action)
 }
 
-fn transition_digest(transitions: &[AepaLoweredTransition]) -> Digest {
+#[must_use]
+pub fn aepa_transition_digest(transitions: &[AepaLoweredTransition]) -> Digest {
     let mut bytes = Vec::with_capacity(2 + transitions.len() * 4);
     bytes.extend_from_slice(&(transitions.len() as u16).to_le_bytes());
     for transition in transitions {
@@ -635,11 +636,11 @@ fn render_wat(
     (local.set $next_state (i32.const -1))
     (local.set $output (i32.const -1))
     (if (i32.ne (local.get $service) (i32.const {qsm_alias}))
-      (then (return (call $public_failure (i32.const {UNKNOWN_PUBLIC_SERVICE})))))
+      (then (return (call $public_failure (i32.const {AEPA_UNKNOWN_PUBLIC_SERVICE})))))
     (if (i64.ne (local.get $step) (i64.add (global.get $cursor) (i64.const 1)))
-      (then (return (call $public_failure (i32.const {OUT_OF_ORDER_PUBLIC_STEP})))))
+      (then (return (call $public_failure (i32.const {AEPA_OUT_OF_ORDER_PUBLIC_STEP})))))
 {transition_checks}    (if (i32.eq (local.get $output) (i32.const -1))
-      (then (return (call $public_failure (i32.const {UNKNOWN_PUBLIC_INPUT})))))
+      (then (return (call $public_failure (i32.const {AEPA_UNKNOWN_PUBLIC_INPUT})))))
     (local.set $result (call $emit_frame (local.get $service) (local.get $step)))
     (if (i32.ne (local.get $result) (i32.const 0))
       (then (return (local.get $result))))

@@ -1,0 +1,61 @@
+version: 1
+schema_version: noticer-aepa-differential/v1
+deployment_profile: P0_PUBLIC_QUOTIENT_ONLY
+
+engines:
+  - small_step_reference
+  - wasmi
+  - wasmtime
+
+bindings:
+  - source_digest
+  - transition_digest
+  - sequence_digest
+  - module_digest
+  - abi_digest
+  - small_step_executable_sha256
+  - wasmi_executable_sha256
+  - wasmtime_executable_sha256
+
+comparison_axes:
+  - api_call
+  - api_return
+  - host_import
+  - emit_frame
+  - emit_action
+  - public_failure
+  - reset
+  - handoff
+  - public_state
+  - termination
+  - resource_exhaustion
+
+verdicts:
+  MATCH: ALL_EXECUTED_OBSERVABLES_EQUAL
+  COUNTEREXAMPLE: FIRST_TYPED_DIFFERENCE_REQUIRED
+  UNRESOLVED: PARSER_ENGINE_OR_RESOURCE_INCOMPLETE
+
+source_refinement:
+  gate: REQUIRED
+  transition_table: ALL_36_CANONICAL_TRANSITIONS
+  target_only_admission: COUNTEREXAMPLE
+  extra_host_call: COUNTEREXAMPLE
+
+injection_policy:
+  injected_mismatch_origin: INJECTED_TEST_FIXTURE
+  injected_mismatch_scientific_result: FORBIDDEN
+  injection_label: REQUIRED
+
+resource_policy:
+  parser_disagreement: UNRESOLVED
+  engine_failure: UNRESOLVED
+  resource_bound: UNRESOLVED
+  unresolved_as_match: FORBIDDEN
+
+claims:
+  software_three_engine_execution: REQUIRED
+  deterministic_artifact: BYTE_IDENTICAL_REQUIRED
+  p1_equivalence: NOT_VERIFIED
+  adversarial_completeness: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
+  priority_claim: NOT_MADE
