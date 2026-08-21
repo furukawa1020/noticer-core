@@ -22,6 +22,7 @@ quotient-seal-capsule.workspace = true
 quotient-seal-context.workspace = true
 quotient-seal-engine.workspace = true
 quotient-seal-relation.workspace = true
+quotient-seal-resource.workspace = true
 quotient-seal-small-step = { workspace = true, features = ["checker-internals"] }
 quotient-seal-target-ir.workspace = true
 serde.workspace = true
