@@ -1,0 +1,63 @@
+version: 1
+schema_version: noticer-aepa-adversarial-bundle/v1
+seed: DETERMINISTIC_32_BYTES
+
+matrix:
+  profile_axes:
+    - P0_PUBLIC_QUOTIENT_ONLY
+    - P1_SEALED_ADMISSION
+  scenario_axes:
+    - NORMAL
+    - REPLAY
+    - EXPIRY
+    - DOWNGRADE
+    - WRONG_BINDING
+    - DUPLICATE
+    - TARGET_ONLY_ADMISSION
+    - FUEL_BOUNDARY
+    - HOST_CALL_BOUNDARY
+  required_case_count: 18
+  duplicate_tuple: REJECT
+  canonical_order: PROFILE_THEN_SCENARIO
+  case_id_binding:
+    - seed
+    - source_digest
+    - transition_digest
+    - profile
+    - scenario
+    - sequence_digest
+    - execution_limits
+
+evaluation:
+  engines:
+    - source_reference
+    - small_step
+    - wasmi
+    - wasmtime
+  p0_authorization: REQUIRED
+  p1_fresh_revalidation: REQUIRED
+  replay_expiry_downgrade_wrong_binding: TYPED_PUBLIC_FAULTS
+  fault_resource_conflation: FORBIDDEN
+  target_only_admission: COUNTEREXAMPLE
+  resource_exhaustion: UNRESOLVED
+
+counterexample:
+  shrink_order:
+    - REMOVE_NON_STOP_COMMANDS_REVERSE_INDEX_KEEP_ONE
+    - ZERO_PAYLOAD_TAG_ASCENDING_INDEX
+  bind:
+    - original_input
+    - minimized_input
+    - first_typed_difference
+    - matrix_digest
+    - case_id
+  verification: FULL_BUNDLE_RECOMPUTATION
+
+claims:
+  injected_mismatch_origin: INJECTED_TEST_FIXTURE
+  injected_mismatch_scientific_result: FORBIDDEN
+  software_execution: VERIFIED
+  hardware_status: NOT_VERIFIED
+  real_device_status: NOT_VERIFIED
+  polar_verity_sense_status: NOT_VERIFIED
+  priority_claim: NOT_MADE
