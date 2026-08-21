@@ -9,6 +9,7 @@
 mod aepa;
 mod aepa_compile;
 mod aepa_differential;
+mod aepa_p1;
 mod aets;
 mod aets_compile;
 mod aets_counterexample;
@@ -49,6 +50,11 @@ pub use aepa_differential::{
     evaluate_aepa_differential_with_host_tape, AepaDifferentialArtifact, AepaDifferentialError,
     AepaDifferentialEvidenceOrigin, AepaDifferentialVerdict, AepaEngineDigests,
     AepaExpectedTransition, AepaPublicSequence, AepaSourceRefinement, AEPA_DIFFERENTIAL_VERSION,
+};
+pub use aepa_p1::{
+    authorize_aepa_profile, issue_aepa_p1_resource_witness, prove_aepa_p1_resource_equality,
+    revalidate_aepa_p1_resource_witness, AepaP1Error, AepaP1ResourceWitness, AepaP1Revalidation,
+    AepaProfileAuthorization,
 };
 pub use aets::{
     aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
