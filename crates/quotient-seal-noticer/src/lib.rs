@@ -6,6 +6,7 @@
 //! feature dependency. Its fixed binary registry cannot encode arbitrary
 //! private fields.
 
+mod aepa;
 mod aets;
 mod aets_compile;
 mod aets_counterexample;
@@ -29,6 +30,11 @@ mod atv2_matrix_execution;
 mod atv2_reference;
 mod manifest;
 
+pub use aepa::{
+    bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
+    AepaPublicInput, AepaPublicOutput, AepaPublicPolicyBinding, AepaPublicSourceArtifact,
+    AepaPublicState, AepaPublicTransition, AEPA_K7_SPEC_FAMILY, AEPA_PUBLIC_SOURCE_FORMAT_VERSION,
+};
 pub use aets::{
     aets_observer_registry_digest, aets_qsm_capsule_digest, bind_aets_p0, codegen_manifest_digest,
     verify_aets_k7, AetsArtifactSet, AetsBindingError, AetsK7Binding, AetsP0Binding,

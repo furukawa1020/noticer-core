@@ -9,6 +9,8 @@ description = "Public-only Noticer module registry and QSM integration bindings"
 [dependencies]
 noticer-aetp.workspace = true
 noticer-protocol.workspace = true
+noticer-provenance.workspace = true
+noticer-provenance-lease.workspace = true
 noticer-release = { workspace = true, default-features = false }
 noticer-trace-shaper.workspace = true
 noticer-transport-core = { path = "../noticer-transport-core" }
