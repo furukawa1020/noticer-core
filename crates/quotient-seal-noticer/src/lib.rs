@@ -7,6 +7,7 @@
 //! private fields.
 
 mod aepa;
+mod aepa_adversarial;
 mod aepa_compile;
 mod aepa_differential;
 mod aepa_p1;
@@ -37,6 +38,13 @@ pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
     AepaPublicInput, AepaPublicOutput, AepaPublicPolicyBinding, AepaPublicSourceArtifact,
     AepaPublicState, AepaPublicTransition, AEPA_K7_SPEC_FAMILY, AEPA_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use aepa_adversarial::{
+    evaluate_aepa_adversarial_case_spec, evaluate_aepa_adversarial_matrix,
+    verify_aepa_adversarial_execution, AepaAdversarialCase, AepaAdversarialCaseArtifact,
+    AepaAdversarialCaseSpec, AepaAdversarialExecutionArtifact, AepaAdversarialMatrix,
+    AepaAdversarialMatrixError, AepaAdversarialMatrixLimits, AepaAdversarialMatrixSeed,
+    AepaCaseOutcome, AepaProfileAxis, AepaScenarioAxis, AEPA_ADVERSARIAL_MATRIX_VERSION,
 };
 pub use aepa_compile::{
     aepa_transition_digest, bind_aepa_compiled_manifest, compile_aepa_p0, AepaCompileError,
