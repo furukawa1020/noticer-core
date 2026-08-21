@@ -44,7 +44,7 @@ impl AepaProfileAxis {
         }
     }
 
-    const fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             Self::P0PublicQuotientOnly => "P0_PUBLIC_QUOTIENT_ONLY",
             Self::P1SealedAdmission => "P1_SEALED_ADMISSION",
@@ -80,7 +80,7 @@ impl AepaScenarioAxis {
         Self::HostCallBoundary,
     ];
 
-    const fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             Self::Normal => "NORMAL",
             Self::Replay => "REPLAY",
@@ -357,7 +357,7 @@ pub struct AepaAdversarialCaseArtifact {
 }
 
 impl AepaAdversarialCaseArtifact {
-    fn validate(&self) -> Result<(), AepaAdversarialMatrixError> {
+    pub fn validate(&self) -> Result<(), AepaAdversarialMatrixError> {
         if !is_sha256(&self.case_id_sha256)
             || !is_sha256(&self.authorization_sha256)
             || !is_sha256(&self.sequence_digest_sha256)
