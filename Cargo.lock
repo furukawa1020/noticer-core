@@ -2088,6 +2088,7 @@ name = "quotient-seal-noticer"
 version = "0.1.0"
 dependencies = [
  "noticer-aetp",
+ "noticer-menfugu-core",
  "noticer-protocol",
  "noticer-provenance",
  "noticer-provenance-lease",

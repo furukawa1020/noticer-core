@@ -34,6 +34,7 @@ mod atv2_matrix;
 mod atv2_matrix_execution;
 mod atv2_reference;
 mod manifest;
+mod menfugu;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -189,6 +190,12 @@ pub use manifest::{
     existing_binding_type_names, ManifestDecodeError, ManifestError, NoticerModuleBinding,
     NoticerModuleId, NoticerQsmManifest, P1ResourceEvidence, NOTICER_QSM_MANIFEST_BYTES,
     NOTICER_QSM_MANIFEST_MAGIC, NOTICER_QSM_MANIFEST_VERSION,
+};
+pub use menfugu::{
+    bind_menfugu_k7_manifest, MenfuguBindingError, MenfuguK7Binding, MenfuguK7ManifestBinding,
+    MenfuguPublicInput, MenfuguPublicOutput, MenfuguPublicPolicyBinding,
+    MenfuguPublicSourceArtifact, MenfuguPublicState, MenfuguPublicTransition,
+    MENFUGU_K7_SPEC_FAMILY, MENFUGU_PUBLIC_SOURCE_FORMAT_VERSION,
 };
 
 pub use noticer_protocol::WireServiceAlias;
