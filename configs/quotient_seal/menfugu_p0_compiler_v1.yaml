@@ -1,0 +1,54 @@
+schema_version: 1
+issue: 198
+profile: P0_PUBLIC_QUOTIENT_ONLY
+compiler_id: noticer.menfugu-p0-compiler.v1
+
+source:
+  spec_family: noticer.menfugu.public-execution.v1
+  state_count: 4
+  public_input_count: 14
+  transition_count: 56
+  source_target_refinement: CHECKED_ALL_56_TRANSITIONS
+
+fixed_abi:
+  imports:
+    - qseal.emit_frame
+    - qseal.emit_action
+    - qseal.public_failure
+  exports:
+    - qseal.public.tick
+    - qseal.public.reset
+    - qseal.public.handoff
+    - qseal.public.status
+  private_import: FORBIDDEN
+  private_export: FORBIDDEN
+
+artifact_binding:
+  - public_policy_digest
+  - source_digest
+  - transition_digest
+  - source_certificate_digest
+  - generated_runtime_digest
+  - wasm_module_digest
+  - target_ir_digest
+  - abi_digest
+  - compiler_manifest_digest
+  - qsm_capsule_digest
+  - observer_registry_digest
+
+resource_limits:
+  max_states: 4
+  max_public_inputs: 14
+  max_transitions: 56
+  max_certificate_bytes: 1048576
+  max_generated_runtime_bytes: 1048576
+  max_wasm_bytes: 1048576
+  max_capsule_bytes: 2097152
+
+verification:
+  deterministic_compile: REQUIRED
+  capsule_redecode: REQUIRED
+  artifact_recomputation: REQUIRED
+  three_engine_equivalence: NOT_VERIFIED
+  adversarial_exactly_once: NOT_VERIFIED
+  hardware_status: NOT_VERIFIED
