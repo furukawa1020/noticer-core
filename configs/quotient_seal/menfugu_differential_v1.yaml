@@ -1,0 +1,50 @@
+schema_version: 1
+issue: 199
+evaluator: noticer-menfugu-differential/v1
+
+execution_paths:
+  source_reference: REQUIRED
+  small_step: REQUIRED
+  wasmi: REQUIRED
+  wasmtime: REQUIRED
+
+observable_trace:
+  - api_call
+  - api_return
+  - host_import
+  - emit_frame
+  - emit_action
+  - public_failure
+  - reset
+  - handoff
+  - public_state
+  - termination
+
+verdicts:
+  equivalent: MATCH
+  semantic_difference: COUNTEREXAMPLE
+  resource_bound: UNRESOLVED
+
+injected_negative_controls:
+  target_only_action: COUNTEREXAMPLE
+  extra_host_call: COUNTEREXAMPLE
+  target_only_trap: COUNTEREXAMPLE
+  injected_mismatch_origin: INJECTED_TEST_FIXTURE
+  injected_mismatch_scientific_result: FORBIDDEN
+
+reproduction_binding:
+  - source_digest
+  - transition_digest
+  - module_digest
+  - capsule_digest
+  - abi_digest
+  - public_sequence_digest
+  - small_step_executable_sha256
+  - wasmi_executable_sha256
+  - wasmtime_executable_sha256
+
+limits:
+  zero_limit: FORBIDDEN
+  resource_exhaustion_as_success: FORBIDDEN
+
+hardware_status: NOT_VERIFIED
