@@ -36,6 +36,7 @@ mod atv2_reference;
 mod manifest;
 mod menfugu;
 mod menfugu_compile;
+mod menfugu_differential;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -205,6 +206,13 @@ pub use menfugu_compile::{
     MenfuguK7Artifacts, MenfuguLoweredTransition, MenfuguP0Binding, MenfuguServiceCode,
     MENFUGU_OUT_OF_ORDER_PUBLIC_STEP, MENFUGU_PUBLIC_FAULT, MENFUGU_PUBLIC_REJECT,
     MENFUGU_QSM_COMPILER_VERSION, MENFUGU_UNKNOWN_PUBLIC_INPUT, MENFUGU_UNKNOWN_PUBLIC_SERVICE,
+};
+pub use menfugu_differential::{
+    build_menfugu_injected_fixture_artifact, evaluate_menfugu_differential,
+    evaluate_menfugu_differential_with_host_tape, MenfuguDifferentialArtifact,
+    MenfuguDifferentialError, MenfuguDifferentialEvidenceOrigin, MenfuguDifferentialVerdict,
+    MenfuguEngineDigests, MenfuguExpectedTransition, MenfuguPublicSequence,
+    MenfuguSourceRefinement, MENFUGU_DIFFERENTIAL_VERSION,
 };
 
 pub use noticer_protocol::WireServiceAlias;
