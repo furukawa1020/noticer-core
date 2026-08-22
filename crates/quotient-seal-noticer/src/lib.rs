@@ -35,6 +35,7 @@ mod atv2_matrix_execution;
 mod atv2_reference;
 mod manifest;
 mod menfugu;
+mod menfugu_compile;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -196,6 +197,14 @@ pub use menfugu::{
     MenfuguPublicInput, MenfuguPublicOutput, MenfuguPublicPolicyBinding,
     MenfuguPublicSourceArtifact, MenfuguPublicState, MenfuguPublicTransition,
     MENFUGU_K7_SPEC_FAMILY, MENFUGU_PUBLIC_SOURCE_FORMAT_VERSION,
+};
+pub use menfugu_compile::{
+    bind_menfugu_compiled_manifest, compile_menfugu_p0, menfugu_generated_runtime_digest,
+    menfugu_observer_registry_digest, menfugu_source_certificate_digest, menfugu_transition_digest,
+    MenfuguCompileError, MenfuguCompileLimits, MenfuguCompiledManifestBinding, MenfuguCompiledQsm,
+    MenfuguK7Artifacts, MenfuguLoweredTransition, MenfuguP0Binding, MenfuguServiceCode,
+    MENFUGU_OUT_OF_ORDER_PUBLIC_STEP, MENFUGU_PUBLIC_FAULT, MENFUGU_PUBLIC_REJECT,
+    MENFUGU_QSM_COMPILER_VERSION, MENFUGU_UNKNOWN_PUBLIC_INPUT, MENFUGU_UNKNOWN_PUBLIC_SERVICE,
 };
 
 pub use noticer_protocol::WireServiceAlias;
