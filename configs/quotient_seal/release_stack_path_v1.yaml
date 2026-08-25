@@ -1,0 +1,38 @@
+schema_version: quotient-seal-release-stack-path/v1
+seed:
+  policy: fixed
+  value_hex: 4e4f544943455231
+public_input:
+  variants:
+    ACTION:
+      action_code: required
+    COVER:
+      action_code: forbidden
+  private_payload: forbidden
+stages:
+  - AETS
+  - ATV2_FRAME_PLANNER
+  - APLOT
+  - AEPA
+  - MENFUGU_EXECUTION_PLANNER
+receipt_binding:
+  - composition_digest
+  - stage_index
+  - module_id
+  - input_commitment
+  - output_commitment
+  - predecessor_receipt_digest
+  - source_digest
+  - qsm_capsule_digest
+  - observer_registry_digest
+outcomes:
+  ACTION:
+    authorized_action_count: 1
+    cover_count: 0
+  COVER:
+    authorized_action_count: 0
+    cover_count: 1
+claim_boundary:
+  execution_level: specification_receipt
+  engine_execution: deferred_to_k8_13g5
+  hardware_execution: NOT_VERIFIED
