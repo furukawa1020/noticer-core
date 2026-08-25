@@ -1,0 +1,26 @@
+schema_version: quotient-seal-release-stack-profile/v1
+verdicts:
+  - AUTHORIZED
+  - PROFILE_UNRESOLVED
+profiles:
+  P0_PUBLIC_QUOTIENT_ONLY:
+    module_topology: all_p0
+    aepa_authorization: forbidden
+  P1_SEALED_ADMISSION:
+    module_topology: aepa_only_p1
+    aepa_authorization: required
+    source: sealed_AepaProfileAuthorization
+    bindings:
+      - profile
+      - exact_public_step
+      - manifest_equivalence_certificate_digest
+      - nonzero_authorization_digest
+failure_policy:
+  implicit_p1_to_p0_downgrade: forbidden
+  missing_authorization: PROFILE_UNRESOLVED
+  stale_authorization: PROFILE_UNRESOLVED
+  evidence_mismatch: PROFILE_UNRESOLVED
+  profile_topology_mismatch: PROFILE_UNRESOLVED
+claim_boundary:
+  strict_resource_revalidation: delegated_to_existing_aepa_p1_gate
+  hardware_execution: NOT_VERIFIED

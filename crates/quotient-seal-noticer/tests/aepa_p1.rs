@@ -18,11 +18,14 @@ use quotient_seal_context::{
     EventKind, ProductCheckReport, ProductVerdict, RelationBinding, TargetEvent,
 };
 use quotient_seal_noticer::{
-    authorize_aepa_profile, compile_aepa_p0, issue_aepa_p1_resource_witness,
+    authorize_aepa_profile, compile_aepa_p0, evaluate_release_stack_profile,
+    execute_canonical_release_path, issue_aepa_p1_resource_witness,
     prove_aepa_p1_resource_equality, revalidate_aepa_p1_resource_witness, verify_aepa_k7,
-    AepaCompileLimits, AepaCompiledQsm, AepaK7Binding, AepaP1Error, AepaP1ResourceWitness,
-    AepaPublicPolicyBinding, AepaPublicSourceArtifact, AepaServiceCode, NoticerModuleBinding,
-    NoticerModuleId, NoticerQsmManifest, P1ResourceEvidence,
+    verify_release_stack_profile, AepaCompileLimits, AepaCompiledQsm, AepaK7Binding, AepaP1Error,
+    AepaP1ResourceWitness, AepaPublicPolicyBinding, AepaPublicSourceArtifact, AepaServiceCode,
+    NoticerModuleBinding, NoticerModuleId, NoticerQsmManifest, P1ResourceEvidence, ReleasePathKind,
+    ReleaseStackCompositionContract, ReleaseStackProfileUnresolvedReason,
+    ReleaseStackProfileVerdict, ReleaseStackPublicInput,
 };
 use quotient_seal_relation::{RelationValidationReport, RelationVerdict};
 use quotient_seal_resource::{
@@ -78,6 +81,67 @@ fn strict_witness_is_reproducible_and_authorizes_p1() {
     assert_eq!(authorization.witness_digest(), Some(first.digest()));
     assert_eq!(authorization.public_step(), WINDOW_START + 1);
     assert_ne!(authorization.authorization_digest(), Digest::zero());
+}
+
+#[test]
+fn release_stack_reuses_fresh_aepa_authorization_without_downgrade() {
+    let fixture = fixture();
+    let cases = equal_cases(PRIVATE_SENTINEL);
+    let witness = prove_witness(&fixture, &cases).expect("strict P1 witness");
+    let fresh = revalidate(&fixture, &cases, &witness).expect("fresh strict revalidation");
+    let manifest = manifest(
+        &fixture,
+        DeploymentProfile::P1SealedAdmission,
+        Some(&witness),
+    );
+    let public_step = WINDOW_START + 1;
+    let authorization = authorize_aepa_profile(
+        DeploymentProfile::P1SealedAdmission,
+        &manifest,
+        &fixture.source,
+        &fixture.k7,
+        &fixture.compiled,
+        Some(&fresh),
+        public_step,
+    )
+    .expect("sealed AEPA authorization");
+    let contract = ReleaseStackCompositionContract::new(manifest).expect("composition");
+    let input =
+        ReleaseStackPublicInput::new(ReleasePathKind::Action, u64::from(public_step), Some(7))
+            .expect("public input");
+    let path = execute_canonical_release_path(&contract, input).expect("release path");
+
+    let accepted = evaluate_release_stack_profile(
+        &contract,
+        &path,
+        DeploymentProfile::P1SealedAdmission,
+        public_step,
+        Some(&authorization),
+    )
+    .expect("stack profile");
+    assert_eq!(accepted.verdict, ReleaseStackProfileVerdict::Authorized);
+    assert_eq!(
+        accepted.effective_profile,
+        Some(DeploymentProfile::P1SealedAdmission)
+    );
+    assert_eq!(accepted.manifest_evidence_digest, Some(witness.digest()));
+    verify_release_stack_profile(&contract, &path, &accepted, Some(&authorization))
+        .expect("verify stack profile");
+
+    let stale = evaluate_release_stack_profile(
+        &contract,
+        &path,
+        DeploymentProfile::P1SealedAdmission,
+        public_step + 1,
+        Some(&authorization),
+    )
+    .expect("stale profile result");
+    assert_eq!(stale.verdict, ReleaseStackProfileVerdict::ProfileUnresolved);
+    assert_eq!(stale.effective_profile, None);
+    assert_eq!(
+        stale.unresolved_reason,
+        Some(ReleaseStackProfileUnresolvedReason::AuthorizationStepMismatch)
+    );
 }
 
 #[test]
