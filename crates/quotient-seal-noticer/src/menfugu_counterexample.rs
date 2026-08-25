@@ -572,15 +572,13 @@ fn difference_matches_origin(signature: &MenfuguDifferenceSignature) -> bool {
                 right_axis: Some(ObservableAxis::Output),
                 ..
             },
-        )
-        | (
+        ) | (
             MenfuguDifferenceOrigin::ExtraHostCall,
             ComparisonPoint::Trace {
                 right_axis: Some(ObservableAxis::HostImport),
                 ..
             },
-        )
-        | (
+        ) | (
             MenfuguDifferenceOrigin::TargetOnlyTrap,
             ComparisonPoint::Termination {
                 right_axis: ObservableAxis::Trap,
