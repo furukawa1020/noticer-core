@@ -1,0 +1,41 @@
+schema_version: quotient-seal-release-stack-adversarial-matrix/v1
+seed_hex: 4b38313347340001
+profiles:
+  - P0_PUBLIC_QUOTIENT_ONLY
+  - P1_SEALED_ADMISSION
+scenarios_per_profile: 21
+total_cases: 42
+canonical:
+  - CANONICAL_ACTION
+  - CANONICAL_COVER
+handoff_injections:
+  boundaries: 4
+  per_boundary:
+    - RESET
+    - FAULT
+    - DEADLINE
+other_injections:
+  - REPLAY_RECEIPT
+  - DUPLICATE_RECEIPT
+  - WRONG_SERVICE
+  - WRONG_POLICY
+  - STAGE_SKIP
+  - STAGE_REORDER
+  - RECEIPT_SUBSTITUTION
+outcomes:
+  - MATCH
+  - ATTACK_REJECTED
+  - PROFILE_UNRESOLVED
+  - INVARIANT_VIOLATION
+invariants:
+  authorized_action_at_most_once: true
+  unauthorized_action_count: 0
+  profile_unresolved_is_not_pass: true
+  every_case_evaluated_exactly_once: true
+provenance:
+  canonical: SPECIFICATION_PATH
+  attacks: INJECTED_TEST_FIXTURE
+claim_boundary:
+  real_exploit: false
+  engine_execution: deferred_to_k8_13g5
+  hardware_execution: NOT_VERIFIED

@@ -40,6 +40,7 @@ mod menfugu_counterexample;
 mod menfugu_differential;
 mod menfugu_matrix;
 mod release_stack;
+mod release_stack_matrix;
 mod release_stack_path;
 mod release_stack_profile;
 
@@ -248,6 +249,15 @@ pub use release_stack_profile::{
     evaluate_release_stack_profile, verify_release_stack_profile, ReleaseStackProfileArtifact,
     ReleaseStackProfileError, ReleaseStackProfileUnresolvedReason, ReleaseStackProfileVerdict,
     RELEASE_STACK_PROFILE_VERSION,
+};
+
+pub use release_stack_matrix::{
+    evaluate_release_stack_adversarial_matrix, verify_release_stack_adversarial_matrix,
+    ReleaseStackAdversarialCaseArtifact, ReleaseStackAdversarialMatrixArtifact,
+    ReleaseStackEvidenceOrigin, ReleaseStackMatrixError, ReleaseStackMatrixLimits,
+    ReleaseStackMatrixOutcome, ReleaseStackMatrixProfile, ReleaseStackPathErrorKind,
+    ReleaseStackScenario, RELEASE_STACK_ADVERSARIAL_CASES, RELEASE_STACK_MATRIX_SEED,
+    RELEASE_STACK_MATRIX_VERSION,
 };
 
 pub use noticer_protocol::WireServiceAlias;
