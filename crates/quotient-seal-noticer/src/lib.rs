@@ -41,6 +41,7 @@ mod menfugu_differential;
 mod menfugu_matrix;
 mod release_stack;
 mod release_stack_path;
+mod release_stack_profile;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -242,6 +243,11 @@ pub use release_stack_path::{
     execute_canonical_release_path, verify_canonical_release_path, ReleasePathKind,
     ReleaseStackPathArtifact, ReleaseStackPathError, ReleaseStackPublicInput, ReleaseStageReceipt,
     RELEASE_STACK_CANONICAL_SEED, RELEASE_STACK_PATH_VERSION,
+};
+pub use release_stack_profile::{
+    evaluate_release_stack_profile, verify_release_stack_profile, ReleaseStackProfileArtifact,
+    ReleaseStackProfileError, ReleaseStackProfileUnresolvedReason, ReleaseStackProfileVerdict,
+    RELEASE_STACK_PROFILE_VERSION,
 };
 
 pub use noticer_protocol::WireServiceAlias;
