@@ -1,0 +1,48 @@
+schema_version: 1
+issue: 201
+bundle_version: noticer-menfugu-counterexample-bundle/v1
+
+source_case:
+  profile: P0_PUBLIC_QUOTIENT_ONLY
+  scenario: COVER
+  rationale: target-only action has no authorized source action
+
+supported_injections:
+  - TARGET_ONLY_ACTION
+  - EXTRA_HOST_CALL
+  - TARGET_ONLY_TRAP
+
+binding:
+  - matrix_digest
+  - case_id
+  - source_digest
+  - transition_digest
+  - module_digest
+  - capsule_digest
+  - engine_executable_digests
+  - original_input_digest
+  - minimized_input_digest
+  - original_result_digest
+  - minimized_result_digest
+  - first_typed_difference
+
+shrink:
+  shrink_order: DETERMINISTIC
+  operations:
+    - REMOVE_TRAILING_STOP
+    - REMOVE_PRIMARY_STIMULUS
+  preserve_same_typed_difference: REQUIRED
+  evaluation_error_as_accept: FORBIDDEN
+  unresolved_as_accept: FORBIDDEN
+
+verification:
+  canonical_json: REQUIRED
+  full_bundle_recomputation: REQUIRED
+  tamper_rejection: REQUIRED
+  different_difference_rejection: REQUIRED
+
+claims:
+  injected_mismatch_origin: INJECTED_TEST_FIXTURE
+  injected_mismatch_scientific_result: FORBIDDEN
+  hardware_status: NOT_VERIFIED
+  real_device_status: NOT_VERIFIED
