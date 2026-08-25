@@ -564,7 +564,8 @@ fn derive_difference(
 }
 
 fn difference_matches_origin(signature: &MenfuguDifferenceSignature) -> bool {
-    match (&signature.origin, &signature.first_difference) {
+    matches!(
+        (&signature.origin, &signature.first_difference),
         (
             MenfuguDifferenceOrigin::TargetOnlyAction,
             ComparisonPoint::Trace {
@@ -585,9 +586,8 @@ fn difference_matches_origin(signature: &MenfuguDifferenceSignature) -> bool {
                 right_axis: ObservableAxis::Trap,
                 ..
             },
-        ) => true,
-        _ => false,
-    }
+        )
+    )
 }
 
 fn same_typed_difference(
