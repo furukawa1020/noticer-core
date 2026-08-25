@@ -1,0 +1,48 @@
+schema_version: 1
+issue: 200
+matrix_version: noticer-menfugu-adversarial-matrix/v1
+required_case_count: 26
+
+profile_axis:
+  - P0_PUBLIC_QUOTIENT_ONLY
+  - P1_SEALED_ADMISSION
+
+scenario_axis:
+  - VALID_ACTION
+  - COVER
+  - REPLAY
+  - EXPIRY
+  - WRONG_SERVICE
+  - WRONG_POLICY
+  - WRONG_KEY
+  - DUPLICATE
+  - RESET
+  - HANDOFF
+  - DEADLINE
+  - FUEL_BOUNDARY
+  - HOST_CALL_BOUNDARY
+
+classification:
+  authorized_action: EXACTLY_ONCE
+  cover_fallback: ZERO_ACTION
+  unauthorized_action: ZERO_ACTION_REJECTED
+  duplicate_action: EXACTLY_ONCE_TOTAL_DUPLICATE_REJECTED
+  lifecycle: ZERO_ACTION
+  deadline: EXACTLY_ONCE_THEN_STOP
+  resource_boundary: UNRESOLVED
+  p1_without_resource_witness: UNRESOLVED
+
+profile_policy:
+  p1_to_p0_implicit_downgrade: FORBIDDEN
+  p1_unimplemented_as_match: FORBIDDEN
+
+artifact_policy:
+  deterministic_seed: REQUIRED
+  canonical_case_id: REQUIRED
+  byte_identical_recomputation: REQUIRED
+  semantic_resource_conflation: FORBIDDEN
+  resource_exhaustion_as_match: FORBIDDEN
+  private_token_material: FORBIDDEN
+  replay_set_material: FORBIDDEN
+
+hardware_status: NOT_VERIFIED

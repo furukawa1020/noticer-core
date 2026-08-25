@@ -37,6 +37,7 @@ mod manifest;
 mod menfugu;
 mod menfugu_compile;
 mod menfugu_differential;
+mod menfugu_matrix;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -213,6 +214,13 @@ pub use menfugu_differential::{
     MenfuguDifferentialError, MenfuguDifferentialEvidenceOrigin, MenfuguDifferentialVerdict,
     MenfuguEngineDigests, MenfuguExpectedTransition, MenfuguPublicSequence,
     MenfuguSourceRefinement, MENFUGU_DIFFERENTIAL_VERSION,
+};
+pub use menfugu_matrix::{
+    evaluate_menfugu_adversarial_matrix, verify_menfugu_adversarial_execution,
+    MenfuguActionClassification, MenfuguAdversarialCase, MenfuguAdversarialCaseArtifact,
+    MenfuguAdversarialExecutionArtifact, MenfuguAdversarialMatrix, MenfuguAdversarialMatrixError,
+    MenfuguAdversarialMatrixLimits, MenfuguAdversarialMatrixSeed, MenfuguCaseOutcome,
+    MenfuguProfileAxis, MenfuguScenarioAxis, MENFUGU_ADVERSARIAL_MATRIX_VERSION,
 };
 
 pub use noticer_protocol::WireServiceAlias;
