@@ -36,6 +36,7 @@ mod atv2_reference;
 mod manifest;
 mod menfugu;
 mod menfugu_compile;
+mod menfugu_counterexample;
 mod menfugu_differential;
 mod menfugu_matrix;
 
@@ -207,6 +208,13 @@ pub use menfugu_compile::{
     MenfuguK7Artifacts, MenfuguLoweredTransition, MenfuguP0Binding, MenfuguServiceCode,
     MENFUGU_OUT_OF_ORDER_PUBLIC_STEP, MENFUGU_PUBLIC_FAULT, MENFUGU_PUBLIC_REJECT,
     MENFUGU_QSM_COMPILER_VERSION, MENFUGU_UNKNOWN_PUBLIC_INPUT, MENFUGU_UNKNOWN_PUBLIC_SERVICE,
+};
+pub use menfugu_counterexample::{
+    build_menfugu_counterexample_bundle, verify_menfugu_counterexample_bundle,
+    MenfuguCommandArtifact, MenfuguCounterexampleBundle, MenfuguCounterexampleCaseArtifact,
+    MenfuguCounterexampleError, MenfuguCounterexampleInputArtifact, MenfuguDifferenceOrigin,
+    MenfuguDifferenceSignature, MenfuguInjection, MenfuguLimitsArtifact, MenfuguShrinkAttempt,
+    MenfuguShrinkOperation, MenfuguShrinkOutcome, MENFUGU_COUNTEREXAMPLE_BUNDLE_VERSION,
 };
 pub use menfugu_differential::{
     build_menfugu_injected_fixture_artifact, evaluate_menfugu_differential,
