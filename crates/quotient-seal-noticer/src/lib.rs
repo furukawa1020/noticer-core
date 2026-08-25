@@ -39,6 +39,7 @@ mod menfugu_compile;
 mod menfugu_counterexample;
 mod menfugu_differential;
 mod menfugu_matrix;
+mod release_stack;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -229,6 +230,12 @@ pub use menfugu_matrix::{
     MenfuguAdversarialExecutionArtifact, MenfuguAdversarialMatrix, MenfuguAdversarialMatrixError,
     MenfuguAdversarialMatrixLimits, MenfuguAdversarialMatrixSeed, MenfuguCaseOutcome,
     MenfuguProfileAxis, MenfuguScenarioAxis, MENFUGU_ADVERSARIAL_MATRIX_VERSION,
+};
+pub use release_stack::{
+    ReleaseStackCompositionContract, ReleaseStackCompositionError, RELEASE_STACK_COMPOSITION_BYTES,
+    RELEASE_STACK_COMPOSITION_MAGIC, RELEASE_STACK_COMPOSITION_VERSION,
+    RELEASE_STACK_FORBIDDEN_FIELDS, RELEASE_STACK_HANDOFFS, RELEASE_STACK_HANDOFF_COUNT,
+    RELEASE_STACK_HARDWARE_STATUS, RELEASE_STACK_STAGE_COUNT,
 };
 
 pub use noticer_protocol::WireServiceAlias;

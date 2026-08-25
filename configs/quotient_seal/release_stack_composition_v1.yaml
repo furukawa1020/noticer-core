@@ -1,0 +1,40 @@
+schema_version: quotient-seal-release-stack-composition/v1
+format:
+  magic: NQSMCMP1
+  version: 1
+  encoding: fixed-little-endian
+  canonical_bytes: manifest_bytes_plus_64
+composition:
+  stages:
+    - AETS
+    - ATV2_FRAME_PLANNER
+    - APLOT
+    - AEPA
+    - MENFUGU_EXECUTION_PLANNER
+  handoffs:
+    - AETS_TO_ATV2_FRAME_PLANNER
+    - ATV2_FRAME_PLANNER_TO_APLOT
+    - APLOT_TO_AEPA
+    - AEPA_TO_MENFUGU_EXECUTION_PLANNER
+  bindings:
+    - noticer_qsm_manifest_bytes
+    - stage_order
+    - handoff_graph
+    - private_field_registry_digest
+    - hardware_status
+profiles:
+  declaration: bound_from_noticer_qsm_manifest
+  authorization: deferred_to_k8_13g3
+privacy:
+  representation: registry_digest_only
+  arbitrary_trailing_fields: forbidden
+  forbidden_fields:
+    - raw_ppg
+    - private_baseline
+    - k1_raw_feature
+    - private_token_material
+    - replay_state
+claim_boundary:
+  hardware_execution: NOT_VERIFIED
+  sensor_input: NOT_VERIFIED
+  tee_execution: NOT_VERIFIED
