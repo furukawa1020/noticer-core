@@ -1,0 +1,26 @@
+schema: quotient-seal.generic-benchmark.v1
+hardware_status: NOT_VERIFIED
+evidence_origin: INJECTED_TEST_FIXTURE
+family_counts:
+  valid: 8
+  negative: 8
+evaluators:
+  - BASELINE
+  - FULL_QUOTIENT_SEAL
+outcomes:
+  - VALID
+  - INVALID
+  - INCONCLUSIVE_UNSUPPORTED
+  - INCONCLUSIVE_RESOURCE_BOUND
+  - INCONCLUSIVE_ENGINE_DISAGREEMENT
+observer_surfaces:
+  - API
+  - CONTROL
+  - INSTRUCTION
+  - MEMORY
+  - RESOURCE
+forbidden_artifact_fields:
+  - private_value
+  - private_trace
+  - secret
+  - stable_identifier

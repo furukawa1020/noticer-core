@@ -53,6 +53,7 @@ members = [
     "crates/quotient-seal-noticer",
     "crates/quotient-seal-matrix",
     "crates/quotient-seal-mutation",
+    "crates/quotient-seal-benchmark",
     "crates/quotient-seal-target-ir",
     "crates/quotient-seal-small-step",
     "crates/quotient-seal-relation",
