@@ -2022,6 +2022,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-seal-benchmark"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "quotient-seal-capsule"
 version = "0.1.0"
 dependencies = [
