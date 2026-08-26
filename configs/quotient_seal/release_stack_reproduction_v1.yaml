@@ -1,0 +1,29 @@
+schema: noticer.release_stack.reproduction.v1
+status: deterministic_fixture_and_software_evidence
+hardware_status: NOT_VERIFIED
+reproduction_command: cargo run -p quotient-seal-noticer --example release_stack_reproduction -- --output artifacts/release_stack
+canonical_components:
+  - CONFIG
+  - COMPOSITION_CONTRACT
+  - CANONICAL_PATH
+  - PROFILE_GATE
+  - ADVERSARIAL_MATRIX
+  - DIFFERENTIAL_ORACLE
+required_bindings:
+  - source_tree_sha256
+  - seed
+  - config_sha256
+  - composition_contract_sha256
+  - path_contract_sha256
+  - profile_contract_sha256
+  - adversarial_matrix_sha256
+  - differential_oracle_sha256
+  - module_artifact_sha256
+  - reference_sha256
+  - wasmi_sha256
+  - wasmtime_sha256
+outputs:
+  - release_stack_bundle.json
+  - release_stack_summary.json
+generated_artifacts_committed: false
+evidence_origin: INJECTED_TEST_FIXTURE
