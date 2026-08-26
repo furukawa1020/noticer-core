@@ -44,6 +44,7 @@ mod release_stack_differential;
 mod release_stack_matrix;
 mod release_stack_path;
 mod release_stack_profile;
+mod release_stack_reproduction;
 
 pub use aepa::{
     bind_aepa_k7_manifest, verify_aepa_k7, AepaBindingError, AepaK7Binding, AepaK7ManifestBinding,
@@ -271,4 +272,12 @@ pub use release_stack_differential::{
     ReleaseStackDifferentialArtifact, ReleaseStackDifferentialBindings,
     ReleaseStackDifferentialError, ReleaseStackDifferentialVerdict,
     RELEASE_STACK_DIFFERENTIAL_SCHEMA,
+};
+pub use release_stack_reproduction::{
+    injected_reproduction_fixture_inputs, ReleaseStackCaseProfile, ReleaseStackCaseReceipt,
+    ReleaseStackCaseVerdict, ReleaseStackComponentBinding, ReleaseStackComponentKind,
+    ReleaseStackFirstDifference, ReleaseStackHardwareStatus, ReleaseStackReproductionBundle,
+    ReleaseStackReproductionError, ReleaseStackReproductionInputs, ReleaseStackReproductionSummary,
+    ReleaseStackReproductionVerdict, RELEASE_STACK_REPRODUCTION_COMMAND,
+    RELEASE_STACK_REPRODUCTION_SCHEMA,
 };
