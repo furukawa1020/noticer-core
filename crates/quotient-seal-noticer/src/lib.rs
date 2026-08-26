@@ -40,6 +40,7 @@ mod menfugu_counterexample;
 mod menfugu_differential;
 mod menfugu_matrix;
 mod release_stack;
+mod release_stack_differential;
 mod release_stack_matrix;
 mod release_stack_path;
 mod release_stack_profile;
@@ -264,3 +265,10 @@ pub use noticer_protocol::WireServiceAlias;
 pub use noticer_types::{Epoch, PolicyHash};
 pub use quotient_forge_caqt::Digest;
 pub use quotient_seal_abi::DeploymentProfile;
+pub use release_stack_differential::{
+    DifferentialDifference, DifferentialDifferenceKind, DifferentialEvidenceOrigin,
+    DifferentialUnresolvedReason, EngineArtifactDigests, ModuleDifferentialEvidence,
+    ReleaseStackDifferentialArtifact, ReleaseStackDifferentialBindings,
+    ReleaseStackDifferentialError, ReleaseStackDifferentialVerdict,
+    RELEASE_STACK_DIFFERENTIAL_SCHEMA,
+};

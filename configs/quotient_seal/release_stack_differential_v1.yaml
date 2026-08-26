@@ -1,0 +1,31 @@
+schema: noticer.release_stack.differential.v1
+status: software_evidence_only
+hardware_status: NOT_VERIFIED
+canonical_modules:
+  - AETS
+  - ATV2_FRAME_PLANNER
+  - APLOT
+  - AEPA
+  - MENFUGU_EXECUTION_PLANNER
+engines:
+  - REFERENCE_SMALL_STEP
+  - WASMI
+  - WASMTIME
+verdict_lattice:
+  counterexample: dominates_unresolved_and_match
+  unresolved: dominates_match
+  match: requires_all_five_modules_match
+required_bindings:
+  - manifest_sha256
+  - composition_contract_sha256
+  - path_contract_sha256
+  - profile_contract_sha256
+evidence_origins:
+  - EXECUTED_SOFTWARE
+  - INJECTED_TEST_FIXTURE
+privacy_boundary:
+  forbidden_fields:
+    - private_ingress_capability
+    - biosignal_sample
+    - subject_identifier
+    - raw_witness
