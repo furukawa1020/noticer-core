@@ -1,0 +1,20 @@
+schema: quotient-seal.generic-benchmark-reproduction.v1
+reproduction_command: cargo run -p quotient-seal-benchmark --example generic_benchmark_reproduction -- --output artifacts/generic_benchmark
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+master_seed_derives:
+  - registry_seed
+  - split_seed
+bound_components:
+  - source_tree_sha256
+  - config_sha256
+  - registry_sha256
+  - valid_family_sha256[8]
+  - negative_family_sha256[8]
+  - split_plan_sha256
+  - comparison_sha256
+outputs:
+  - generic_benchmark_bundle.json
+  - generic_benchmark_summary.json
+generated_artifacts_committed: false
+runtime_engine_evidence: false
