@@ -4,6 +4,7 @@
 
 mod contract;
 mod negative;
+mod split_gate;
 mod valid;
 
 pub use contract::{
@@ -18,6 +19,12 @@ pub use negative::{
     NegativeDifferenceKind, NegativeExecutionReceipt, NegativeFamilyError, NegativeFamilyFixture,
     NegativeMutationClass, NegativeObserverSurface, NegativeVariant, NEGATIVE_FAMILY_COUNT,
     NEGATIVE_VARIANTS_PER_FAMILY,
+};
+pub use split_gate::{
+    build_family_split, evaluate_held_out_comparison, BenchmarkComparisonArtifact,
+    BenchmarkComparisonError, BenchmarkComparisonRecord, BenchmarkComparisonSummary,
+    BenchmarkGateVerdict, BenchmarkSplit, FamilySplitAssignment, FamilySplitPlan,
+    BASELINE_SPECIFICATION, COMPARISON_CASE_COUNT, FULL_QUOTIENT_SEAL_SPECIFICATION,
 };
 pub use valid::{
     execute_valid_family, generate_valid_families, SyntheticPrivateHistory, ValidExecutionReceipt,
