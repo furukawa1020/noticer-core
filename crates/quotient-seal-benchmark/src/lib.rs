@@ -4,6 +4,7 @@
 
 mod contract;
 mod negative;
+mod reproduction;
 mod split_gate;
 mod valid;
 
@@ -19,6 +20,12 @@ pub use negative::{
     NegativeDifferenceKind, NegativeExecutionReceipt, NegativeFamilyError, NegativeFamilyFixture,
     NegativeMutationClass, NegativeObserverSurface, NegativeVariant, NEGATIVE_FAMILY_COUNT,
     NEGATIVE_VARIANTS_PER_FAMILY,
+};
+pub use reproduction::{
+    injected_benchmark_reproduction_inputs, GenericBenchmarkComponentDigests,
+    GenericBenchmarkMachineSummary, GenericBenchmarkReproductionBundle,
+    GenericBenchmarkReproductionError, GenericBenchmarkReproductionInputs,
+    GENERIC_BENCHMARK_REPRODUCTION_COMMAND, GENERIC_BENCHMARK_REPRODUCTION_SCHEMA,
 };
 pub use split_gate::{
     build_family_split, evaluate_held_out_comparison, BenchmarkComparisonArtifact,
