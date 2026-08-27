@@ -3,6 +3,7 @@
 //! Generic action-quotient robust-compilation benchmark contracts.
 
 mod contract;
+mod valid;
 
 pub use contract::{
     frozen_registry, ActionClass, BenchmarkCaseInput, BenchmarkExpectedVerdict,
@@ -10,4 +11,9 @@ pub use contract::{
     BenchmarkInputError, BenchmarkObserverContract, BenchmarkOutcome, BenchmarkRegistry,
     BenchmarkResourceBudget, EvaluatorKind, PrivatePredicateClass, BENCHMARK_FAMILY_COUNT,
     GENERIC_BENCHMARK_MAGIC, GENERIC_BENCHMARK_SCHEMA, HARDWARE_STATUS,
+};
+pub use valid::{
+    execute_valid_family, generate_valid_families, SyntheticPrivateHistory, ValidExecutionReceipt,
+    ValidFamilyError, ValidFamilyFixture, ValidPublicEvent, ValidSourceOp, ValidVariant,
+    VALID_FAMILY_COUNT, VALID_VARIANTS_PER_FAMILY,
 };

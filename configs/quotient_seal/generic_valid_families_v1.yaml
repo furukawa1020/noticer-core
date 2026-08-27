@@ -1,0 +1,27 @@
+schema: quotient-seal.generic-valid-families.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+family_count: 8
+variants_per_family: 4
+families:
+  - PRIVATE_DEADLINE_ADMISSION
+  - MEDICAL_ALERT_CLASS
+  - SMART_HOME_ACTION
+  - PRIVATE_SCHEDULER
+  - CREDENTIAL_RELEASE
+  - FRAUD_REVIEW
+  - SAFETY_INTERLOCK
+  - RESOURCE_ADMISSION
+canonical_source_ops:
+  - EVALUATE_PRIVATE_PREDICATE
+  - PROJECT_ACTION_SEMANTICS
+  - EMIT_CONSTANT_RATE_SLOT
+  - RESET_PUBLIC_STATE
+  - HANDOFF_PUBLIC_STATE
+public_receipt_events:
+  - TICK
+  - DECISION_SLOT
+  - ACTION_OR_COVER
+  - RESET_ACK
+  - HANDOFF_ACK
+generated_from_real_private_data: false
