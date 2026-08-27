@@ -1,0 +1,19 @@
+schema: quotient-seal.generic-held-out-comparison.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+family_partition:
+  development_pairs: 4
+  validation_pairs: 2
+  held_out_pairs: 2
+variants_per_family: 4
+case_count: 64
+evaluators:
+  baseline: ACTION_COUNT_BASELINE_FIXTURE_V1
+  full: FULL_QUOTIENT_SEAL_SPECIFICATION_ORACLE_V1
+full_gate:
+  escaped_negative: 0
+  inconclusive: 0
+  valid_correct: 32
+  negative_detected: 32
+baseline_expected_negative_escapes: 24
+runtime_engine_evidence: false
