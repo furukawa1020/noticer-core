@@ -1,0 +1,25 @@
+schema: quotient-seal.generic-negative-families.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+family_count: 8
+variants_per_family: 4
+pairing: one_to_one_with_valid_family
+families:
+  - class: EXTRA_CALL
+    observer: API
+  - class: PRIVATE_TRAP
+    observer: CONTROL
+  - class: RESOURCE_LEAK
+    observer: RESOURCE
+  - class: EXPORTED_MEMORY
+    observer: MEMORY
+  - class: RESET_LEAK
+    observer: STATE
+  - class: STATE_CORRUPTION
+    observer: STATE
+  - class: DUPLICATE_ACTION
+    observer: API
+  - class: HANDOFF_CARRYOVER
+    observer: HANDOFF
+expected_verdict: INVALID
+real_vulnerability_claim: false
