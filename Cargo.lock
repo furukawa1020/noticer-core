@@ -2070,6 +2070,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "quotient-seal-fuzz"
+version = "0.1.0"
+dependencies = [
+ "quotient-seal-context",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "quotient-seal-matrix"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,21 @@
+schema: quotient-seal.adaptive-host-context.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+actions:
+  - TICK
+  - RESET
+  - HANDOFF
+  - MALFORMED
+  - REPEAT
+  - STALE_SLOT
+  - FUTURE_SLOT
+  - FAULT
+  - RECONNECT
+  - SERVICE_SWITCH
+feedback_boundary: PUBLIC_OBSERVATION_ONLY
+bounds:
+  max_steps: required
+  max_service_alias: required
+  max_repeat: required
+  max_faults: required
+  max_public_events: required
