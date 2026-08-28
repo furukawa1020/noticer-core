@@ -17,9 +17,7 @@ const HARD_MAX_ENTRIES: u32 = 4_096;
 const HARD_MAX_COVERAGE_POINTS: u32 = 65_536;
 const HARD_MAX_ACTIONS_PER_ENTRY: u32 = 65_536;
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum CoverageKind {
     TargetBlock,
@@ -82,9 +80,7 @@ impl CoveragePoint {
                 step,
                 public_state_sha256,
                 ..
-            } if *step == 0 || *public_state_sha256 == [0; 32] => {
-                Err(CoverageError::InvalidPoint)
-            }
+            } if *step == 0 || *public_state_sha256 == [0; 32] => Err(CoverageError::InvalidPoint),
             Self::UtilityViolation { violation_code, .. } if *violation_code == 0 => {
                 Err(CoverageError::InvalidPoint)
             }
@@ -169,13 +165,11 @@ impl CoverageFeedback {
             })?,
         ];
         if let Some(divergence) = snapshot.observer_divergence {
-            records.push(CoverageRecord::build(
-                CoveragePoint::ObserverDivergence {
-                    observer_profile: divergence.observer_profile,
-                    divergence_code: divergence.divergence_code,
-                    public_trace_sha256: divergence.public_trace_sha256,
-                },
-            )?);
+            records.push(CoverageRecord::build(CoveragePoint::ObserverDivergence {
+                observer_profile: divergence.observer_profile,
+                divergence_code: divergence.divergence_code,
+                public_trace_sha256: divergence.public_trace_sha256,
+            })?);
         }
         if let Some(violation) = snapshot.utility_violation {
             records.push(CoverageRecord::build(CoveragePoint::UtilityViolation {
@@ -281,8 +275,8 @@ impl CorpusEntry {
         if action_program_sha256 == [0; 32] || action_count == 0 {
             return Err(CoverageError::InvalidEntry);
         }
-        let score = u32::try_from(feedback.records.len())
-            .map_err(|_| CoverageError::FeedbackBound)?;
+        let score =
+            u32::try_from(feedback.records.len()).map_err(|_| CoverageError::FeedbackBound)?;
         let mut entry = Self {
             seed,
             action_program_sha256,

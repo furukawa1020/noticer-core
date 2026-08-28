@@ -64,7 +64,10 @@ fn corpus_bounds(max_entries: u32) -> CorpusBounds {
 fn five_public_feedback_categories_have_stable_sorted_ids() {
     let first = feedback(3, 11);
     let second = feedback(3, 11);
-    assert_eq!(first.canonical_json().unwrap(), second.canonical_json().unwrap());
+    assert_eq!(
+        first.canonical_json().unwrap(),
+        second.canonical_json().unwrap()
+    );
     assert_eq!(first.records.len(), 5);
     assert!(first
         .records
@@ -104,7 +107,10 @@ fn same_seed_and_insert_sequence_produce_byte_identical_corpus() {
             CorpusInsertDisposition::Inserted
         );
     }
-    assert_eq!(left.canonical_json().unwrap(), right.canonical_json().unwrap());
+    assert_eq!(
+        left.canonical_json().unwrap(),
+        right.canonical_json().unwrap()
+    );
     assert_eq!(left.artifact_sha256, right.artifact_sha256);
     assert!(left
         .global_coverage
@@ -142,7 +148,10 @@ fn collision_tamper_and_bounds_fail_closed() {
 
     let mut tampered = original.clone();
     tampered.feedback_sha256[0] ^= 0xff;
-    assert_eq!(tampered.validate().unwrap_err(), CoverageError::ArtifactMismatch);
+    assert_eq!(
+        tampered.validate().unwrap_err(),
+        CoverageError::ArtifactMismatch
+    );
 
     let mut corpus = DeterministicCorpus::new(99, corpus_bounds(1)).unwrap();
     corpus
