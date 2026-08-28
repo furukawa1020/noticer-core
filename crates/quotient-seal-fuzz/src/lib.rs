@@ -4,6 +4,7 @@
 
 mod action_state;
 mod coverage;
+mod fuzzer;
 
 pub use action_state::{
     apply_public_feedback, AdaptiveContextBounds, AdaptiveContextState, AdaptiveHostAction,
@@ -15,4 +16,10 @@ pub use coverage::{
     CoverageFeedback, CoverageKind, CoveragePoint, CoverageRecord, DeterministicCorpus,
     PublicCoverageSnapshot, PublicObserverDivergence, PublicUtilityViolation,
     COVERAGE_CORPUS_SCHEMA, COVERAGE_FEEDBACK_SCHEMA,
+};
+pub use fuzzer::{
+    run_adaptive_fuzz, AdaptiveActionClass, AdaptiveFuzzBudget, AdaptiveFuzzConfig,
+    AdaptiveFuzzReport, FuzzCounterexample, FuzzError, FuzzInconclusiveReason, FuzzStep,
+    FuzzVerdict, FuzzViolationKind, PublicFuzzInput, PublicFuzzTarget, PublicTargetStatus,
+    PublicTargetStep, ADAPTIVE_FUZZ_REPORT_SCHEMA,
 };
