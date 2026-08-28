@@ -1,0 +1,28 @@
+schema: quotient-seal.counterexample-shrink.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+
+bounds:
+  max_actions: 1024
+  max_replay_attempts: 100000
+
+phases:
+  - INITIAL_REPLAY
+  - CALL_DELETION
+  - INPUT_SIMPLIFICATION
+  - CONTEXT_REDUCTION
+  - FINAL_MINIMALITY
+  - FINAL_REPLAY
+
+acceptance:
+  require_primary_checker: true
+  require_secondary_checker: true
+  preserve_same_violation_kind: true
+  preserve_same_violation_code: true
+  require_one_minimal: true
+
+fail_closed:
+  checker_disagreement: INCONCLUSIVE
+  unsupported: INCONCLUSIVE
+  resource_bound: INCONCLUSIVE
+  replay_bound: INCONCLUSIVE

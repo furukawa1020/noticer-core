@@ -5,6 +5,7 @@
 mod action_state;
 mod coverage;
 mod fuzzer;
+mod shrinker;
 
 pub use action_state::{
     apply_public_feedback, AdaptiveContextBounds, AdaptiveContextState, AdaptiveHostAction,
@@ -22,4 +23,9 @@ pub use fuzzer::{
     AdaptiveFuzzReport, FuzzCounterexample, FuzzError, FuzzInconclusiveReason, FuzzStep,
     FuzzVerdict, FuzzViolationKind, PublicFuzzInput, PublicFuzzTarget, PublicTargetStatus,
     PublicTargetStep, ADAPTIVE_FUZZ_REPORT_SCHEMA,
+};
+pub use shrinker::{
+    shrink_counterexample, CheckerRole, IndependentReplayChecker, ReplayResult, ShrinkAttempt,
+    ShrinkAttemptDecision, ShrinkBounds, ShrinkError, ShrinkInconclusiveReason, ShrinkPhase,
+    ShrinkReport, ShrinkVerdict, SHRINK_REPORT_SCHEMA,
 };
