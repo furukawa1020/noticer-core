@@ -1,0 +1,31 @@
+schema: quotient-seal.adaptive-fuzz-report.v1
+seed: 24301
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+
+budget:
+  max_steps: 10
+  max_states: 16
+  max_logical_time_units: 100
+
+selection:
+  feedback: PUBLIC_COVERAGE_AND_CONTEXT_ONLY
+  finite_action_classes: 10
+  save_selector_word: true
+  save_parameter_word: true
+
+verdicts:
+  counterexample: COUNTEREXAMPLE
+  complete_finite_search: EXHAUSTED
+  resource_or_checker_limit: INCONCLUSIVE
+  inconclusive_reasons:
+    - STEP_BOUND
+    - STATE_BOUND
+    - TIME_BUDGET
+    - UNSUPPORTED
+    - CHECKER_DISAGREEMENT
+
+privacy_boundary:
+  private_feedback_allowed: false
+  private_trace_allowed: false
+  stable_subject_identifier_allowed: false
