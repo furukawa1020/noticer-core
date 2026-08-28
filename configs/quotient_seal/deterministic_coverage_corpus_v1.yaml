@@ -1,0 +1,32 @@
+schema: quotient-seal.deterministic-corpus.v1
+seed: 99
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+
+bounds:
+  max_entries: 256
+  max_coverage_points: 4096
+  max_actions_per_entry: 1024
+
+feedback_categories:
+  - TARGET_BLOCK
+  - PRODUCT_STATE
+  - OBSERVER_DIVERGENCE
+  - CONTEXT_STATE
+  - UTILITY_VIOLATION
+
+retention:
+  require_new_coverage: true
+  stable_priority:
+    - score_descending
+    - action_count_ascending
+    - entry_sha256_ascending
+  collision_policy: FAIL_CLOSED
+
+privacy_boundary:
+  accepted_inputs: PUBLIC_FEEDBACK_ONLY
+  forbidden_inputs:
+    - private_biosignal
+    - private_trace
+    - secret_key
+    - stable_subject_identifier
