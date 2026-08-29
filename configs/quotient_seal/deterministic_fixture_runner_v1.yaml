@@ -1,0 +1,26 @@
+schema: quotient-seal.fixture-run.v1
+seed: 24301
+warmup_iterations: 2
+measured_iterations: 10
+max_tasks: 128
+max_invocations: 100000
+provenance: SOFTWARE_FIXTURE
+hardware_status: NOT_VERIFIED
+
+runner:
+  wall_clock_allowed: false
+  public_randomness_saved: true
+  panic_mapping: FAILURE_TOOL_ERROR
+  unsupported_mapping: INCONCLUSIVE_UNSUPPORTED
+  resource_bound_mapping: INCONCLUSIVE_RESOURCE_BOUND
+  timeout_mapping: INCONCLUSIVE_TIMEOUT
+
+fixture_metrics:
+  - LOGICAL_FUEL
+  - HOST_CALL_COUNT
+  - MEMORY_ACCESS_COUNT
+  - ARTIFACT_SIZE
+  - PEAK_MEMORY
+  - ATTACK_SCORE
+
+generated_artifacts_committed: false
