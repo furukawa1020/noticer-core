@@ -1,0 +1,28 @@
+schema: quotient-seal.adaptive-fuzz-reproduction-bundle.v1
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+
+required_artifacts:
+  - FUZZ_REPORT
+  - ACTION_PROGRAM_IF_NONEMPTY
+  - COVERAGE_FEEDBACK_PER_STEP
+  - FINAL_CORPUS
+  - SHRINK_REPORT_FOR_COUNTEREXAMPLE
+
+cross_checks:
+  seed: EXACT
+  action_sequence: EXACT
+  coverage_digest_per_step: EXACT
+  global_coverage_membership: EXACT
+  final_corpus_digest: EXACT
+  violation_kind_and_code: EXACT
+
+verdict_mapping:
+  reproduced_and_one_minimal: COUNTEREXAMPLE_REPRODUCED
+  finite_search_complete: EXHAUSTED
+  fuzz_bound: INCONCLUSIVE
+  shrink_bound_or_disagreement: INCONCLUSIVE
+
+output:
+  format: CANONICAL_JSON
+  generated_artifacts_committed: false
