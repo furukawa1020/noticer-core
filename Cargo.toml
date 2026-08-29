@@ -55,6 +55,7 @@ members = [
     "crates/quotient-seal-mutation",
     "crates/quotient-seal-benchmark",
     "crates/quotient-seal-fuzz",
+    "crates/quotient-seal-performance",
     "crates/quotient-seal-target-ir",
     "crates/quotient-seal-small-step",
     "crates/quotient-seal-relation",

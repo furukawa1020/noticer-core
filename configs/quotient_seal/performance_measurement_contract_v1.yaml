@@ -1,0 +1,33 @@
+schema: quotient-seal.performance-campaign.v1
+seed: 24301
+warmup_iterations: 2
+measured_iterations: 10
+max_samples: 10000
+wall_clock_opt_in: false
+evidence_origin: INJECTED_TEST_FIXTURE
+hardware_status: NOT_VERIFIED
+
+stages:
+  - COMPILE
+  - PARSE
+  - EXTRACT
+  - VALIDATE
+  - CONTEXT_CHECK
+  - CAPSULE_ENCODE
+  - CAPSULE_CHECK
+  - RUNTIME
+  - QUOTIENT_PAD
+  - ATTACK_EVALUATION
+
+outcomes:
+  - SUCCESS
+  - FAILURE
+  - INCONCLUSIVE
+
+forbidden_metadata:
+  - hostname
+  - username
+  - filesystem_path
+  - machine_serial
+  - raw_private_biosignal
+  - stable_subject_identifier
