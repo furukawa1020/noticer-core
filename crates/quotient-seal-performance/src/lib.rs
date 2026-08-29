@@ -4,6 +4,7 @@
 
 mod contract;
 mod runner;
+mod statistics;
 
 pub use contract::{
     BenchmarkCase, BenchmarkRunConfig, CpuCountBucket, HardwareStatus, MachineArchitecture,
@@ -18,4 +19,11 @@ pub use runner::{
     FixtureInvocationRecord, FixtureRunArtifact, FixtureRunSummary, FixtureRunnerConfig,
     FixtureRunnerError, FixtureTask, SoftwareFixtureBenchmark, FIXTURE_PLAN_SCHEMA,
     FIXTURE_RUN_SCHEMA,
+};
+pub use statistics::{
+    aggregate_campaigns, AttackAucAggregate, AttackAucKey, AttackAucStatus, AttackClass,
+    AttackLabelBinding, CensoredCounts, EffectSizeAggregate, EffectSizePair, EffectSizeStatus,
+    FailureReasonCount, InconclusiveReasonCount, MetricAggregate, MetricGroupKey,
+    MetricStatisticsStatus, StatisticsArtifact, StatisticsError, StatisticsInconclusiveReason,
+    StatisticsPlan, STATISTICS_ARTIFACT_SCHEMA, STATISTICS_PLAN_SCHEMA,
 };
