@@ -1,0 +1,20 @@
+schema: quotient-seal.performance-reproduction-request.v1
+evidence_origin: SOFTWARE_FIXTURE
+hardware_status: NOT_VERIFIED
+security_interpretation: NOT_A_SECURITY_VERDICT
+fixture:
+  baseline_seed: 41
+  candidate_seed: 42
+  warmup_iterations: 1
+  measured_iterations: 5
+  public_randomness: DETERMINISTIC_FROM_SEED
+statistics:
+  min_success_samples: 3
+  censored_outcomes: PRESERVE
+outputs:
+  json: artifacts/quotient_seal/performance/performance_bundle.json
+  report: artifacts/quotient_seal/performance/performance_report.md
+claims:
+  - Performance PASS is not a security proof.
+  - Software fixture measurements are not hardware measurements.
+  - Hardware remains NOT_VERIFIED until an explicit hardware campaign is supplied.
