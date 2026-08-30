@@ -1,0 +1,30 @@
+schema: quotient-seal.statistics-artifact.v1
+min_success_samples: 5
+max_campaigns: 1000
+max_total_samples: 1000000
+hardware_status: NOT_VERIFIED
+
+percentiles:
+  method: NEAREST_RANK
+  values:
+    - 50
+    - 95
+    - 99
+
+dispersion:
+  metric: MEDIAN_ABSOLUTE_DEVIATION
+
+effect_size:
+  metric: CLIFFS_DELTA
+  fixed_point_scale: 1000000
+
+attack_auc:
+  fixed_point_scale: 1000000
+  tie_credit: HALF
+  missing_label: INCONCLUSIVE
+  single_class: INCONCLUSIVE
+
+censored_outcomes:
+  include_in_percentiles: false
+  include_in_counts: true
+  preserve_reason_histogram: true
