@@ -1,0 +1,63 @@
+schema: quotient-seal.performance-budget-plan.v1
+interpretation: NOT_A_SECURITY_VERDICT
+hardware_status: NOT_VERIFIED
+notes:
+  - Performance PASS means only that every comparable measurement stayed inside its declared budget.
+  - Missing groups, incompatible units, insufficient successful samples, and a zero relative baseline are INCONCLUSIVE.
+  - Failure and inconclusive rates remain censored outcomes and are never rewritten as successful measurements.
+rules:
+  - rule_id: runtime-p95-relative
+    selector:
+      stage: Runtime
+      metric: LogicalFuel
+      unit: FuelUnits
+      case: quotient-seal-runtime
+      provenance: SoftwareFixture
+    statistic: P95
+    constraint:
+      RelativeMaximum:
+        ratio_millionths: 1100000
+  - rule_id: compile-p99-absolute-increase
+    selector:
+      stage: Compile
+      metric: LogicalFuel
+      unit: FuelUnits
+      case: quotient-seal-compile
+      provenance: SoftwareFixture
+    statistic: P99
+    constraint:
+      AbsoluteIncreaseMaximum:
+        limit: 5000
+  - rule_id: capsule-size-median-absolute
+    selector:
+      stage: CapsuleEncode
+      metric: ArtifactSize
+      unit: Bytes
+      case: quotient-seal-capsule
+      provenance: SoftwareFixture
+    statistic: Median
+    constraint:
+      AbsoluteMaximum:
+        limit: 65536
+  - rule_id: runtime-failure-rate
+    selector:
+      stage: Runtime
+      metric: LogicalFuel
+      unit: FuelUnits
+      case: quotient-seal-runtime
+      provenance: SoftwareFixture
+    statistic: FailureRateMillionths
+    constraint:
+      AbsoluteMaximum:
+        limit: 10000
+  - rule_id: runtime-inconclusive-rate
+    selector:
+      stage: Runtime
+      metric: LogicalFuel
+      unit: FuelUnits
+      case: quotient-seal-runtime
+      provenance: SoftwareFixture
+    statistic: InconclusiveRateMillionths
+    constraint:
+      AbsoluteMaximum:
+        limit: 10000
