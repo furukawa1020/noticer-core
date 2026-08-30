@@ -3,6 +3,7 @@
 //! Typed performance and resource measurement contracts for QuotientSeal.
 
 mod contract;
+mod gate;
 mod runner;
 mod statistics;
 
@@ -13,6 +14,11 @@ pub use contract::{
     MeasurementProvenance, MeasurementSample, MeasurementStage, MeasurementUnit, MemoryBucket,
     OsFamily, SanitizedMachineMetadata, TimerKind, PERFORMANCE_CAMPAIGN_SCHEMA,
     PERFORMANCE_SAMPLE_SCHEMA,
+};
+pub use gate::{
+    evaluate_budget, BudgetConstraint, BudgetPlan, BudgetRule, BudgetStatistic, GateEvaluation,
+    GateInconclusiveReason, GateRuleOutcome, PerformanceGateArtifact, PerformanceGateError,
+    PerformanceGateVerdict, GATE_ARTIFACT_SCHEMA, GATE_PLAN_SCHEMA,
 };
 pub use runner::{
     run_software_fixture, DeterministicFixturePlan, FixtureInvocation, FixtureInvocationPhase,
