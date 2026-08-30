@@ -2,11 +2,16 @@
 
 //! Typed performance and resource measurement contracts for QuotientSeal.
 
+mod bundle;
 mod contract;
 mod gate;
 mod runner;
 mod statistics;
 
+pub use bundle::{
+    write_reproduction_artifacts, GateOutcomeCounts, PerformanceBundleError,
+    PerformanceBundleSummary, PerformanceReproductionBundle, PERFORMANCE_BUNDLE_SCHEMA,
+};
 pub use contract::{
     BenchmarkCase, BenchmarkRunConfig, CpuCountBucket, HardwareStatus, MachineArchitecture,
     MeasurementCampaign, MeasurementContractError, MeasurementEvidenceOrigin,
