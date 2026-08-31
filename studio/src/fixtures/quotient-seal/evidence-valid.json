@@ -1,0 +1,31 @@
+{
+  "schema": "quotient-seal.studio-evidence.v1",
+  "kind": "PERFORMANCE_BUNDLE",
+  "verdict": "VALID",
+  "artifact_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "provenance": "SOFTWARE_FIXTURE",
+  "hardware_status": "NOT_VERIFIED",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "facts": {
+    "rule_count": 3,
+    "pass_count": 3,
+    "fail_count": 0,
+    "inconclusive_count": 0,
+    "fixture_samples": 10
+  },
+  "links": [
+    {
+      "relation": "BASELINE_STATISTICS",
+      "artifact_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "relation": "CANDIDATE_STATISTICS",
+      "artifact_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    {
+      "relation": "BUDGET_GATE",
+      "artifact_sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  ],
+  "diagnostics": []
+}
