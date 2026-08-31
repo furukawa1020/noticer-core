@@ -153,7 +153,77 @@ const frontier = [
           </div>
         </section>
 
-        <section class="output-grid reveal" style="--delay: 370ms">
+        <section id="qsm-observatory" class="qsm-observatory reveal" style="--delay: 350ms">
+          <header class="section-heading qsm-heading">
+            <div>
+              <span class="step">06 / QSM OBSERVATORY</span>
+              <h2>Audit the sealed module.</h2>
+            </div>
+            <div class="qsm-actions">
+              <label class="button ghost qsm-file-label" for="qsm-file">Open .qseal</label>
+              <input id="qsm-file" type="file" accept=".qseal,application/octet-stream" />
+              <button id="qsm-load-fixture" class="button primary" type="button">Load fixture</button>
+              <button id="qsm-tamper" class="button tamper-compact" type="button" disabled>
+                Flip certificate bit
+              </button>
+            </div>
+          </header>
+
+          <div class="qsm-status" aria-live="polite">
+            <div id="qsm-verdict" class="qsm-verdict pending">WAIT</div>
+            <p id="qsm-reason">Preparing a bounded QSEALCAP fixture.</p>
+            <dl>
+              <div><dt>format</dt><dd id="qsm-format">--</dd></div>
+              <div><dt>bytes</dt><dd id="qsm-bytes">--</dd></div>
+              <div><dt>capsule digest</dt><dd id="qsm-digest">--</dd></div>
+              <div><dt>ABI profile</dt><dd id="qsm-abi-profile">--</dd></div>
+            </dl>
+          </div>
+
+          <div class="qsm-grid">
+            <article class="panel qsm-map-panel">
+              <header class="panel-head compact">
+                <div><span class="step">SECTION MAP</span><h2>Canonical order</h2></div>
+                <span class="tag neutral">9 frozen sections</span>
+              </header>
+              <div id="qsm-section-map" class="qsm-section-map"></div>
+            </article>
+
+            <article class="panel qsm-detail-panel">
+              <header class="panel-head compact">
+                <div><span class="step">DIGEST CHAIN</span><h2 id="qsm-section-name">No section</h2></div>
+              </header>
+              <div class="qsm-detail-body">
+                <p id="qsm-section-detail">Select a bounded capsule section.</p>
+                <div class="qsm-digest-pair">
+                  <div><span>declared</span><code id="qsm-declared-digest">--</code></div>
+                  <div><span>recomputed</span><code id="qsm-actual-digest">--</code></div>
+                </div>
+                <div class="qsm-chain" aria-label="Source certificate to target and ABI digest chain">
+                  <div><b>SOURCE CERT</b><code id="qsm-chain-source">--</code></div>
+                  <i aria-hidden="true">→</i>
+                  <div><b>WASM TARGET</b><code id="qsm-chain-wasm">--</code></div>
+                  <i aria-hidden="true">→</i>
+                  <div><b>ABI MANIFEST</b><code id="qsm-chain-abi">--</code></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel qsm-abi-panel">
+              <header class="panel-head compact">
+                <div><span class="step">CAPABILITY GRAPH</span><h2>Private stays outside WASM</h2></div>
+                <span class="tag valid">frozen ABI v1</span>
+              </header>
+              <div id="qsm-abi-graph" class="qsm-abi-graph"></div>
+              <p class="qsm-boundary-note">
+                Browser digest inspection is not native semantic certificate verification. A
+                structurally matching upload remains INCONCLUSIVE.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="output-grid reveal" style="--delay: 410ms">
           <article class="panel code-panel">
             <header class="panel-head compact">
               <div>
