@@ -223,7 +223,81 @@ const frontier = [
           </div>
         </section>
 
-        <section class="output-grid reveal" style="--delay: 410ms">
+        <section id="relational-trace" class="trace-microscope reveal" style="--delay: 410ms">
+          <header class="section-heading trace-heading">
+            <div>
+              <span class="step">07 / RELATIONAL TRACE MICROSCOPE</span>
+              <h2>Scrub the relation,<br /><em>not the secret.</em></h2>
+            </div>
+            <div class="trace-actions">
+              <button id="trace-load-valid" class="button ghost" type="button">Congruent fixture</button>
+              <button id="trace-load-divergence" class="button primary" type="button">Divergence fixture</button>
+              <button id="trace-jump-divergence" class="button signal" type="button">Jump to first ≠</button>
+            </div>
+          </header>
+
+          <div class="trace-status" aria-live="polite">
+            <div id="trace-verdict" class="trace-verdict pending">WAIT</div>
+            <p id="trace-reason">Preparing a deterministic relational trace.</p>
+            <dl>
+              <div><dt>termination</dt><dd id="trace-termination">--</dd></div>
+              <div><dt>total steps</dt><dd id="trace-total">--</dd></div>
+              <div><dt>first divergence</dt><dd id="trace-divergence">--</dd></div>
+            </dl>
+          </div>
+
+          <div class="trace-observer-bar" aria-label="Observer projection">
+            <span>OBSERVER PROJECTION</span>
+            {[
+              ["API", true],
+              ["CONTROL", false],
+              ["INSTRUCTION", false],
+              ["MEMORY", true],
+              ["RESOURCE", true],
+            ].map(([channel, checked]) => (
+              <label>
+                <input type="checkbox" data-trace-observer={channel} checked={checked} />
+                <span>{channel}</span>
+              </label>
+            ))}
+          </div>
+
+          <div class="trace-scrubber-wrap">
+            <label for="trace-scrubber">SYNCHRONIZED STEP <b id="trace-position">--</b></label>
+            <input id="trace-scrubber" type="range" min="0" max="95" value="37" />
+          </div>
+
+          <div class="trace-layout">
+            <article class="panel trace-window-panel">
+              <header class="panel-head compact">
+                <div><span class="step">BOUNDED WINDOW</span><h2>Source ≈ Target</h2></div>
+                <span class="tag neutral">9 DOM rows max</span>
+              </header>
+              <div id="trace-window" class="trace-window"></div>
+            </article>
+
+            <aside class="trace-detail-column">
+              <article class="panel trace-state-card">
+                <span class="step">SELECTED RELATION</span>
+                <dl>
+                  <div><dt>source</dt><dd id="trace-source-state">--</dd></div>
+                  <div><dt>target</dt><dd id="trace-target-pc">--</dd></div>
+                  <div><dt>relation</dt><dd id="trace-relation-record">--</dd></div>
+                </dl>
+              </article>
+              <article class="panel trace-event-card">
+                <span class="step">VISIBLE EVENTS</span>
+                <div id="trace-observer-events" class="trace-observer-events"></div>
+              </article>
+              <article class="compiler-note trace-boundary-note">
+                <span class="annotation">Virtualization boundary</span>
+                <p>Omitted rows are counted, never presented as inspected. Observer toggles project an immutable artifact.</p>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section class="output-grid reveal" style="--delay: 470ms">
           <article class="panel code-panel">
             <header class="panel-head compact">
               <div>
