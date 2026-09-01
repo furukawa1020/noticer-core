@@ -36,8 +36,22 @@ class QuotientPadRevalidation extends HTMLElement {
     if (this.initialized) return;
     this.initialized = true;
     this.addEventListener("click", this.handleClick);
+    window.addEventListener("quotient-seal:demo-repair", this.handleDemoRepair as EventListener);
     this.render();
   }
+
+  disconnectedCallback(): void {
+    window.removeEventListener("quotient-seal:demo-repair", this.handleDemoRepair as EventListener);
+  }
+
+  private readonly handleDemoRepair = (event: CustomEvent<{ fixtureId?: RepairFixtureId }>): void => {
+    const fixture = REPAIR_FIXTURES.find((item) => item.id === event.detail?.fixtureId);
+    if (!fixture) return;
+    this.fixtureId = fixture.id;
+    this.comparison = createRepairComparison(this.fixtureId);
+    this.phase = "AFTER";
+    this.render();
+  };
 
   private readonly handleClick = (event: Event): void => {
     const target = event.target;

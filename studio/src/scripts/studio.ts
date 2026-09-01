@@ -4,6 +4,7 @@ import "./quotient-seal/qsm-observatory";
 import "./quotient-seal/relational-trace-microscope";
 import "./quotient-seal/adversarial-lab-ui";
 import "./quotient-seal/repair-revalidation-ui";
+import "./quotient-seal/demo-director";
 
 type MonacoHost = typeof globalThis & {
   MonacoEnvironment?: { getWorker: () => Worker };
