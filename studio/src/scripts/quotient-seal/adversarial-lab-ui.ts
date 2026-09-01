@@ -44,8 +44,22 @@ class AdversarialScenarioLab extends HTMLElement {
     if (this.initialized) return;
     this.initialized = true;
     this.addEventListener("click", this.handleClick);
+    window.addEventListener("quotient-seal:demo-scenario", this.handleDemoScenario as EventListener);
     this.render();
   }
+
+  disconnectedCallback(): void {
+    window.removeEventListener("quotient-seal:demo-scenario", this.handleDemoScenario as EventListener);
+  }
+
+  private readonly handleDemoScenario = (event: CustomEvent<{ scenarioId?: ScenarioId }>): void => {
+    const scenario = SCENARIO_CATALOG.find((item) => item.id === event.detail?.scenarioId);
+    if (!scenario) return;
+    this.scenarioId = scenario.id;
+    this.actions = [...scenario.defaultActions];
+    this.result = replayScenario(this.scenarioId, this.actions);
+    this.render();
+  };
 
   private readonly handleClick = (event: Event): void => {
     const target = event.target;
