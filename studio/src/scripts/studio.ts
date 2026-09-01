@@ -1,6 +1,7 @@
 import * as monaco from "monaco-editor";
 import EditorWorker from "./editor.worker?worker";
 import "./quotient-seal/qsm-observatory";
+import "./quotient-seal/relational-trace-microscope";
 
 type MonacoHost = typeof globalThis & {
   MonacoEnvironment?: { getWorker: () => Worker };

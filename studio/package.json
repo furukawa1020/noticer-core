@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build:wasm": "node scripts/build-wasm.mjs",
-    "test:evidence": "node --test src/scripts/quotient-seal/evidence.test.mjs src/scripts/quotient-seal/qsm.test.mjs",
+    "test:evidence": "node --test src/scripts/quotient-seal/evidence.test.mjs src/scripts/quotient-seal/qsm.test.mjs src/scripts/quotient-seal/relational-trace.test.mjs",
     "check": "npm run test:evidence && astro check",
     "build": "npm run build:wasm && astro build",
     "dev": "npm run build:wasm && astro dev"
