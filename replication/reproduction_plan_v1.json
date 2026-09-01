@@ -1,0 +1,123 @@
+{
+  "schema": "quotient-seal.reproduction-plan.v1",
+  "profiles": ["smoke", "core", "full"],
+  "offline_environment": {
+    "CARGO_NET_OFFLINE": "true",
+    "PIP_NO_INDEX": "1",
+    "NPM_CONFIG_OFFLINE": "true"
+  },
+  "steps": [
+    {
+      "id": "manifest",
+      "phase": "MANIFEST",
+      "minimum_profile": "smoke",
+      "command": ["${PYTHON}", "-m", "noticer_core.replication.manifest", "--output", "artifacts/replication/manifest.json"],
+      "cwd": ".",
+      "timeout_seconds": 60,
+      "depends_on": []
+    },
+    {
+      "id": "python_smoke",
+      "phase": "PYTHON",
+      "minimum_profile": "smoke",
+      "command": ["${PYTHON}", "-m", "pytest", "tests/test_replication_manifest.py", "tests/test_reproduction_runner.py"],
+      "cwd": ".",
+      "timeout_seconds": 180,
+      "depends_on": ["manifest"]
+    },
+    {
+      "id": "rust_contract_smoke",
+      "phase": "RUST_CONTRACT",
+      "minimum_profile": "smoke",
+      "command": ["cargo", "test", "-p", "quotient-seal-capsule", "-p", "quotient-seal-relation", "--lib"],
+      "cwd": ".",
+      "timeout_seconds": 420,
+      "depends_on": ["manifest"]
+    },
+    {
+      "id": "studio_evidence_smoke",
+      "phase": "STUDIO",
+      "minimum_profile": "smoke",
+      "command": ["npm", "run", "test:evidence"],
+      "cwd": "studio",
+      "timeout_seconds": 180,
+      "depends_on": ["manifest"]
+    },
+    {
+      "id": "rust_security_core",
+      "phase": "RUST_CONTRACT",
+      "minimum_profile": "core",
+      "command": ["cargo", "test", "-p", "quotient-seal-context", "-p", "quotient-seal-resource", "-p", "quotient-seal-engine"],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "depends_on": ["rust_contract_smoke"]
+    },
+    {
+      "id": "attack_core",
+      "phase": "ATTACK",
+      "minimum_profile": "core",
+      "command": ["cargo", "test", "-p", "quotient-seal-mutation", "-p", "quotient-seal-fuzz", "-p", "quotient-seal-benchmark"],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "depends_on": ["rust_security_core"]
+    },
+    {
+      "id": "performance_core",
+      "phase": "PERFORMANCE",
+      "minimum_profile": "core",
+      "command": ["cargo", "test", "-p", "quotient-seal-performance"],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "depends_on": ["rust_security_core"]
+    },
+    {
+      "id": "lean_core",
+      "phase": "FORMAL",
+      "minimum_profile": "core",
+      "command": ["lake", "env", "lean", "Aqrs/QuotientSeal/Audit.lean"],
+      "cwd": "formal/aqrs",
+      "timeout_seconds": 1200,
+      "depends_on": ["manifest"]
+    },
+    {
+      "id": "studio_core",
+      "phase": "STUDIO",
+      "minimum_profile": "core",
+      "command": ["npm", "run", "check"],
+      "cwd": "studio",
+      "timeout_seconds": 420,
+      "depends_on": ["studio_evidence_smoke"]
+    },
+    {
+      "id": "python_full",
+      "phase": "PYTHON",
+      "minimum_profile": "full",
+      "command": ["${PYTHON}", "-m", "pytest"],
+      "cwd": ".",
+      "timeout_seconds": 1200,
+      "depends_on": ["python_smoke"]
+    },
+    {
+      "id": "workspace_full",
+      "phase": "WORKSPACE",
+      "minimum_profile": "full",
+      "command": ["cargo", "test", "--workspace", "--all-targets"],
+      "cwd": ".",
+      "timeout_seconds": 7200,
+      "depends_on": ["rust_security_core", "attack_core", "performance_core"]
+    },
+    {
+      "id": "studio_build_full",
+      "phase": "STUDIO",
+      "minimum_profile": "full",
+      "command": ["npm", "run", "build"],
+      "cwd": "studio",
+      "timeout_seconds": 900,
+      "depends_on": ["studio_core"]
+    }
+  ],
+  "evidence_origin": "SOFTWARE_REPRODUCTION",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "hardware_status": "NOT_VERIFIED"
+}
+

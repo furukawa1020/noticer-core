@@ -113,6 +113,11 @@
     {"kind": "SOURCE", "path": "studio/src/scripts/quotient-seal/demo-choreography.ts"},
     {"kind": "FORMAL", "path": "formal/aqrs/Aqrs/QuotientSeal/Audit.lean"},
     {"kind": "DOC", "path": "docs/quotient_seal_studio_wiss_demo_v1.md"},
+    {"kind": "DOC", "path": "docs/quotient_seal_reproduction_runner_v1.md"},
+    {"kind": "CONFIG", "path": "replication/reproduction_plan_v1.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_reproduction_report_v1.schema.json"},
+    {"kind": "SOURCE", "path": "src/noticer_core/replication/runner.py"},
+    {"kind": "SOURCE", "path": "scripts/reproduce_quotient_seal.py"},
     {"kind": "CONFIG", "path": "replication/manifest_spec_v1.json"}
   ],
   "evidence_origin": "REPOSITORY_CONTRACT",
