@@ -1,0 +1,122 @@
+{
+  "schema": "quotient-seal.replication-manifest-spec.v1",
+  "manifest_version": 1,
+  "repository": {
+    "name": "furukawa1020/noticer-core",
+    "baseline_commit": "23ad945378e8756d56b2edcb2b8b40d3ca838683",
+    "revision_policy": "DESCENDANT_OF_BASELINE"
+  },
+  "toolchains": [
+    {
+      "name": "lean",
+      "version": "4.30.0",
+      "source": "formal/aqrs/lean-toolchain",
+      "required_marker": "leanprover/lean4:v4.30.0"
+    },
+    {
+      "name": "node",
+      "version": "24",
+      "source": ".github/workflows/ci.yml",
+      "required_marker": "node-version: \"24\""
+    },
+    {
+      "name": "python",
+      "version": "3.11",
+      "source": ".github/workflows/ci.yml",
+      "required_marker": "python-version: \"3.11\""
+    },
+    {
+      "name": "rust",
+      "version": "1.93.0",
+      "source": "rust-toolchain.toml",
+      "required_marker": "channel = \"1.93.0\""
+    },
+    {
+      "name": "wasm-target",
+      "version": "wasm32-unknown-unknown",
+      "source": ".github/workflows/ci.yml",
+      "required_marker": "rustup target add wasm32-unknown-unknown"
+    }
+  ],
+  "k7_dependencies": [
+    {
+      "issue": 76,
+      "name": "bounded AQNI soundness",
+      "commit": "9ae3b9819b6fd90abea22c466d3fb7ece16999d0"
+    },
+    {
+      "issue": 77,
+      "name": "inductive CAQT certificate",
+      "commit": "e267205e2bcc413ddd915ab5847c27cfffb654c7"
+    },
+    {
+      "issue": 88,
+      "name": "no_std WASM translation validation",
+      "commit": "2580fa6112cf565bd933bae2dace58ef26eadffb"
+    }
+  ],
+  "inventory": [
+    {"kind": "TOOLCHAIN", "path": "rust-toolchain.toml"},
+    {"kind": "TOOLCHAIN", "path": "formal/aqrs/lean-toolchain"},
+    {"kind": "LOCKFILE", "path": "Cargo.lock"},
+    {"kind": "LOCKFILE", "path": "studio/package-lock.json"},
+    {"kind": "LOCKFILE", "path": "replication/python-requirements.lock"},
+    {"kind": "CONFIG", "path": "Cargo.toml"},
+    {"kind": "CONFIG", "path": "pyproject.toml"},
+    {"kind": "CONFIG", "path": "studio/package.json"},
+    {"kind": "CONFIG", "path": "formal/aqrs/lakefile.toml"},
+    {"kind": "CONFIG", "path": ".github/workflows/ci.yml"},
+    {"kind": "CONFIG", "path": ".github/workflows/k7-lean-soundness.yml"},
+    {"kind": "CONFIG", "path": ".github/workflows/k8-raqtr-preservation.yml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/k8_research.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/k8_semantics.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/abi_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/target_ir_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/small_step_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/relation_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/context_product_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/resource_trace_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/capsule_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/compilation_matrix_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/wasm_mutation_taxonomy_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/mutation_split_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/cross_engine_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/adaptive_fuzz_bundle_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/generic_benchmark_contract_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/performance_bundle_v1.yaml"},
+    {"kind": "CONFIG", "path": "configs/quotient_seal/overhead_budget_gate_v1.yaml"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_abi_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_target_ir_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_small_step_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_relation_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_context_product_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_resource_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_capsule_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_compilation_matrix_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_wasm_mutation_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_cross_engine_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_replication_manifest_v1.schema.json"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-abi/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-target-ir/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-small-step/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-relation/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-context/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-resource/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-capsule/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-engine/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-matrix/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-mutation/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-benchmark/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-fuzz/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-performance/src/lib.rs"},
+    {"kind": "SOURCE", "path": "crates/quotient-seal-noticer/src/lib.rs"},
+    {"kind": "SOURCE", "path": "studio/src/scripts/quotient-seal/demo-choreography.ts"},
+    {"kind": "FORMAL", "path": "formal/aqrs/Aqrs/QuotientSeal/Audit.lean"},
+    {"kind": "DOC", "path": "docs/quotient_seal_studio_wiss_demo_v1.md"},
+    {"kind": "CONFIG", "path": "replication/manifest_spec_v1.json"}
+  ],
+  "evidence_origin": "REPOSITORY_CONTRACT",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "hardware_status": "NOT_VERIFIED"
+}
+
