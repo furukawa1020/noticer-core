@@ -3,6 +3,7 @@ import EditorWorker from "./editor.worker?worker";
 import "./quotient-seal/qsm-observatory";
 import "./quotient-seal/relational-trace-microscope";
 import "./quotient-seal/adversarial-lab-ui";
+import "./quotient-seal/repair-revalidation-ui";
 
 type MonacoHost = typeof globalThis & {
   MonacoEnvironment?: { getWorker: () => Worker };
