@@ -1,0 +1,65 @@
+{
+  "schema_version": "quotient-forge-solver-matrix/v1",
+  "selection_order": ["cvc5", "z3"],
+  "artifact_fields": ["solver", "version", "platform", "asset_sha256", "matrix_sha256", "argv"],
+  "solvers": [
+    {
+      "id": "cvc5",
+      "version": "1.3.4",
+      "release_tag": "cvc5-1.3.4",
+      "release_url": "https://github.com/cvc5/cvc5/releases/tag/cvc5-1.3.4",
+      "version_output_prefix": "This is cvc5 version 1.3.4",
+      "commands": {
+        "version": ["--version"],
+        "probe": ["--lang=smt2", "--produce-models"],
+        "solve": ["--lang=smt2", "--produce-models"]
+      },
+      "assets": [
+        {
+          "platform": "linux-x86_64",
+          "archive_name": "cvc5-Linux-x86_64-static.zip",
+          "download_url": "https://github.com/cvc5/cvc5/releases/download/cvc5-1.3.4/cvc5-Linux-x86_64-static.zip",
+          "sha256": "dcdbfada0ce493ee98259c0816e0daafc561c223aadb3af298c2968e73ea39c6",
+          "executable_path": "bin/cvc5"
+        },
+        {
+          "platform": "windows-x86_64",
+          "archive_name": "cvc5-Win64-x86_64-static.zip",
+          "download_url": "https://github.com/cvc5/cvc5/releases/download/cvc5-1.3.4/cvc5-Win64-x86_64-static.zip",
+          "sha256": "279fe7e95810cfb62433fcfc2932f35325a665f32d3697ff33f75e31d5c6a179",
+          "executable_path": "bin/cvc5.exe"
+        }
+      ]
+    },
+    {
+      "id": "z3",
+      "version": "4.16.0",
+      "release_tag": "z3-4.16.0",
+      "release_url": "https://github.com/Z3Prover/z3/releases/tag/z3-4.16.0",
+      "version_output_prefix": "Z3 version 4.16.0",
+      "commands": {
+        "version": ["-version"],
+        "probe": ["-in", "-smt2"],
+        "solve": ["-in", "-smt2"]
+      },
+      "assets": [
+        {
+          "platform": "linux-x86_64",
+          "archive_name": "z3-4.16.0-x64-glibc-2.39.zip",
+          "download_url": "https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-glibc-2.39.zip",
+          "sha256": "7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e",
+          "executable_path": "z3-4.16.0-x64-glibc-2.39/bin/z3"
+        },
+        {
+          "platform": "windows-x86_64",
+          "archive_name": "z3-4.16.0-x64-win.zip",
+          "download_url": "https://github.com/Z3Prover/z3/releases/download/z3-4.16.0/z3-4.16.0-x64-win.zip",
+          "sha256": "de4d813e47202394a093547dbdb5699ee076529aa853463e007539775cd7e836",
+          "executable_path": "z3-4.16.0-x64-win/bin/z3.exe"
+        }
+      ]
+    }
+  ],
+  "network_policy": "DOWNLOAD_ONLY_WITH_SHA256",
+  "security_interpretation": "CANDIDATE_GENERATOR_NOT_SECURITY_ORACLE"
+}
