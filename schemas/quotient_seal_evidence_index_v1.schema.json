@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_evidence_index_v1.schema.json",
+  "title": "QuotientSeal Evidence Index v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "manifest_sha256", "reproduction_report_sha256", "records", "summary", "outcomes", "evidence_origin", "hardware_status", "artifact_sha256"],
+  "properties": {
+    "schema": {"const": "quotient-seal.evidence-index.v1"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "reproduction_report_sha256": {"$ref": "#/$defs/sha256"},
+    "records": {"type": "array", "minItems": 1, "maxItems": 512, "items": {"$ref": "#/$defs/record"}},
+    "summary": {"$ref": "#/$defs/summary"},
+    "outcomes": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/outcome"}},
+    "evidence_origin": {"const": "SOFTWARE_EVIDENCE_PACKAGE"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "path", "content_type", "verdict", "reason_codes", "bytes", "sha256"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$"},
+        "kind": {"type": "string"},
+        "path": {"type": "string", "pattern": "^[^\\\\]+$"},
+        "content_type": {"enum": ["JSON", "TEXT", "BINARY"]},
+        "verdict": {"enum": ["PASS", "FAIL", "INCONCLUSIVE", "NOT_RUN"]},
+        "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 134217728},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["PASS", "FAIL", "INCONCLUSIVE", "NOT_RUN"],
+      "properties": {
+        "PASS": {"type": "integer", "minimum": 0},
+        "FAIL": {"type": "integer", "minimum": 0},
+        "INCONCLUSIVE": {"type": "integer", "minimum": 0},
+        "NOT_RUN": {"type": "integer", "minimum": 0}
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "count", "artifact_ids"],
+      "properties": {
+        "code": {"enum": ["ESCAPED_MUTANT", "ENGINE_DISAGREEMENT", "RESOURCE_BOUND", "UNSUPPORTED"]},
+        "count": {"type": "integer", "minimum": 0},
+        "artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+      }
+    }
+  }
+}
+

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_evidence_audit_v1.schema.json",
+  "title": "QuotientSeal Evidence Audit Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "index_sha256", "manifest_sha256", "reproduction_report_sha256", "checked_records", "checked_bytes", "summary", "outcomes", "findings", "verdict", "audit_scope", "evidence_origin", "security_interpretation", "hardware_status", "artifact_sha256"],
+  "properties": {
+    "schema": {"const": "quotient-seal.evidence-audit-report.v1"},
+    "index_sha256": {"$ref": "#/$defs/sha256"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "reproduction_report_sha256": {"$ref": "#/$defs/sha256"},
+    "checked_records": {"type": "integer", "minimum": 0, "maximum": 512},
+    "checked_bytes": {"type": "integer", "minimum": 0, "maximum": 1073741824},
+    "summary": {"type": "object"},
+    "outcomes": {"type": "array"},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "verdict": {"enum": ["PASS", "FAIL", "INCONCLUSIVE"]},
+    "audit_scope": {"const": "BOUNDED_PATTERN_AND_STRUCTURAL_AUDIT"},
+    "evidence_origin": {"const": "SOFTWARE_AUDIT"},
+    "security_interpretation": {"const": "NOT_A_SECURITY_VERDICT"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["severity", "code", "record_id", "path", "message"],
+      "properties": {
+        "severity": {"enum": ["ERROR", "WARNING"]},
+        "code": {"type": "string"},
+        "record_id": {"type": ["string", "null"]},
+        "path": {"type": ["string", "null"]},
+        "message": {"type": "string"}
+      }
+    }
+  }
+}
+
