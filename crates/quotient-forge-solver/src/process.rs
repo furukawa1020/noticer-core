@@ -193,6 +193,13 @@ impl SolverRuntime for BoundedSolverRuntime {
                 if !version.starts_with(&binding.version_output_prefix) {
                     return Err(RuntimeError::VersionMismatch(version));
                 }
+                let probe =
+                    crate::probe::run_capability_probe(self, solver, self.limits.version_timeout);
+                if !probe.available {
+                    return Err(RuntimeError::InvalidConfiguration(
+                        "solver capability probe failed".to_owned(),
+                    ));
+                }
                 Ok(version)
             }
             BoundedProcessOutput::Completed { stderr, .. } => Err(RuntimeError::Io(format!(

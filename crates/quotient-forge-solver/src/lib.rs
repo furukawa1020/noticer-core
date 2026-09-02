@@ -6,12 +6,18 @@
 //! checker remains the security oracle and every counterexample becomes a hard
 //! CEGIS blocking constraint.
 
+mod artifact;
 mod backend;
 mod matrix;
 mod parser;
+mod probe;
 mod process;
 mod smtlib;
 
+pub use artifact::{
+    classify_runtime_output, IndependentCheckerResult, SolverArtifactError, SolverResultArtifact,
+    SolverResultKind, SolverRunMetadata, SOLVER_RESULT_SCHEMA_V1,
+};
 pub use backend::{
     solve, BackendConfig, BackendError, BackendResult, BackendStatus, DetectionRecord,
     OutputStream, PhaseArtifact, RuntimeError, RuntimeOutput, SolverArtifact, SolverKind,
@@ -22,6 +28,10 @@ pub use matrix::{
     SolverPlatform, MAX_SOLVER_MATRIX_BYTES, SOLVER_MATRIX_SCHEMA_V1,
 };
 pub use parser::{parse_solver_output, ParseModelError, ParsedSolverOutput};
+pub use probe::{
+    run_capability_probe, CapabilityProbeArtifact, CapabilityProbeArtifactError,
+    CapabilityProbeCheck, CapabilityProbeStatus, SolverCapability, SOLVER_PROBE_SCHEMA_V1,
+};
 pub use process::{
     run_bounded_process, BoundedProcessOutput, BoundedSolverRuntime, ProcessError, ProcessLimits,
     SolverBinding,
