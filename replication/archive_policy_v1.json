@@ -1,0 +1,29 @@
+{
+  "schema_version": "quotient-seal-archive-policy/v1",
+  "archive_format": "ZIP",
+  "compression": "STORED",
+  "fixed_timestamp": [1980, 1, 1, 0, 0, 0],
+  "unix_mode": "100644",
+  "index_path": "archive-index.json",
+  "max_entries": 32,
+  "max_entry_bytes": 16777216,
+  "max_total_bytes": 134217728,
+  "required_entries": [
+    {"path": "README.md", "media_type": "text/markdown", "role": "OVERVIEW"},
+    {"path": "contracts/archive-policy.json", "media_type": "application/json", "role": "ARCHIVE_POLICY"},
+    {"path": "contracts/decision-policy.json", "media_type": "application/json", "role": "DECISION_POLICY"},
+    {"path": "contracts/evidence-audit-policy.json", "media_type": "application/json", "role": "EVIDENCE_AUDIT_POLICY"},
+    {"path": "contracts/reproduction-plan.json", "media_type": "application/json", "role": "REPRODUCTION_PLAN"},
+    {"path": "evidence/decision-input.json", "media_type": "application/json", "role": "DECISION_INPUT"},
+    {"path": "evidence/decision.json", "media_type": "application/json", "role": "DECISION_REPORT"},
+    {"path": "evidence/evidence-audit.json", "media_type": "application/json", "role": "EVIDENCE_AUDIT"},
+    {"path": "evidence/evidence-index.json", "media_type": "application/json", "role": "EVIDENCE_INDEX"},
+    {"path": "evidence/exact-commands.json", "media_type": "application/json", "role": "EXACT_COMMANDS"},
+    {"path": "evidence/nonpass-outcomes.json", "media_type": "application/json", "role": "NONPASS_OUTCOMES"},
+    {"path": "evidence/replication-manifest.json", "media_type": "application/json", "role": "REPLICATION_MANIFEST"},
+    {"path": "evidence/reproduction-report.json", "media_type": "application/json", "role": "REPRODUCTION_REPORT"},
+    {"path": "evidence/studio-export-summary.json", "media_type": "application/json", "role": "STUDIO_EXPORT_SUMMARY"}
+  ],
+  "prohibited_json_keys": ["access_token", "api_key", "credential", "device_id", "password", "private_baseline", "private_key", "raw_signal", "refresh_token", "stable_identifier", "subject_id", "user_id"],
+  "boundaries": ["DETERMINISTIC_ARCHIVE", "SOFTWARE_EVIDENCE_ONLY", "NOT_A_PROOF", "NOT_VERIFIED", "NO_PRIORITY_CLAIM"]
+}

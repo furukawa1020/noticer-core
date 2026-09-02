@@ -1,5 +1,15 @@
 """Deterministic QuotientSeal replication contracts."""
 
+from noticer_core.replication.archive import (
+    ArchiveError,
+    assemble_archive_staging,
+    build_final_report,
+    build_replication_archive,
+    load_archive_policy,
+    verify_final_report,
+    verify_replication_archive,
+    write_final_report,
+)
 from noticer_core.replication.audit import (
     AuditError,
     audit_evidence_package,
@@ -32,16 +42,21 @@ from noticer_core.replication.runner import (
 )
 
 __all__ = [
+    "ArchiveError",
     "AuditError",
     "DecisionError",
     "ManifestError",
     "ReproductionError",
+    "assemble_archive_staging",
     "audit_evidence_package",
+    "build_final_report",
     "build_manifest",
+    "build_replication_archive",
     "build_dry_run_report",
     "canonical_json",
     "create_evidence_index",
     "evaluate_decision",
+    "load_archive_policy",
     "load_decision_input",
     "load_decision_policy",
     "load_spec",
@@ -49,9 +64,12 @@ __all__ = [
     "run_reproduction",
     "render_audit_markdown",
     "render_decision_markdown",
-    "verify_manifest",
     "verify_decision_report",
+    "verify_final_report",
+    "verify_manifest",
+    "verify_replication_archive",
     "write_manifest",
     "write_audit_report",
     "write_decision_report",
+    "write_final_report",
 ]

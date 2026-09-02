@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_final_report_v1.schema.json",
+  "title": "QuotientSeal final replication report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "archive_name", "archive_sha256", "archive_size_bytes", "archive_index_sha256", "policy_sha256", "source_commit", "hardware_status", "decision", "payload_count", "command_summary", "nonpass_summary", "verification", "boundaries", "integrity"],
+  "properties": {
+    "schema_version": {"const": "quotient-seal-final-report/v1"},
+    "archive_name": {"type": "string", "pattern": "^[A-Za-z0-9._-]+\\.zip$"},
+    "archive_sha256": {"$ref": "#/$defs/digest"},
+    "archive_size_bytes": {"type": "integer", "minimum": 1},
+    "archive_index_sha256": {"$ref": "#/$defs/digest"},
+    "policy_sha256": {"$ref": "#/$defs/digest"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "decision": {"type": "object"},
+    "payload_count": {"const": 14},
+    "command_summary": {"type": "object"},
+    "nonpass_summary": {"type": "object"},
+    "verification": {"type": "object"},
+    "boundaries": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "integrity": {"type": "object"}
+  },
+  "$defs": {"digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
