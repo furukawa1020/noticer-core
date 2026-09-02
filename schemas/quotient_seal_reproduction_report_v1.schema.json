@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_seal_reproduction_report_v1.schema.json",
+  "title": "QuotientSeal Reproduction Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "profile", "mode", "offline", "plan_sha256", "manifest_sha256", "source", "steps", "summary", "verdict", "evidence_origin", "security_interpretation", "hardware_status", "artifact_sha256"],
+  "properties": {
+    "schema": {"const": "quotient-seal.reproduction-report.v1"},
+    "profile": {"enum": ["SMOKE", "CORE", "FULL"]},
+    "mode": {"enum": ["DRY_RUN", "EXECUTE"]},
+    "offline": {"const": true},
+    "plan_sha256": {"$ref": "#/$defs/sha256"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_commit", "revision", "relation", "dirty"],
+      "properties": {
+        "baseline_commit": {"$ref": "#/$defs/commit"},
+        "revision": {"oneOf": [{"$ref": "#/$defs/commit"}, {"type": "null"}]},
+        "relation": {"enum": ["NOT_CHECKED", "DESCENDANT_OF_BASELINE", "NOT_DESCENDANT", "UNRESOLVED"]},
+        "dirty": {"type": ["boolean", "null"]}
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "summary": {"type": "object"},
+    "verdict": {"enum": ["PASS", "FAIL", "INCONCLUSIVE", "NOT_RUN"]},
+    "evidence_origin": {"const": "SOFTWARE_REPRODUCTION"},
+    "security_interpretation": {"const": "NOT_A_SECURITY_VERDICT"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "log": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "bytes", "sha256", "truncated"],
+          "properties": {
+            "path": {"type": "string"},
+            "bytes": {"type": "integer", "minimum": 0, "maximum": 1048576},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "truncated": {"type": "boolean"}
+          }
+        }
+      ]
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "phase", "minimum_profile", "command", "cwd", "timeout_seconds", "depends_on", "status", "exit_code", "duration_ms", "resumed", "stdout", "stderr"],
+      "properties": {
+        "id": {"type": "string"},
+        "phase": {"type": "string"},
+        "minimum_profile": {"enum": ["smoke", "core", "full"]},
+        "command": {"type": "array", "items": {"type": "string"}},
+        "cwd": {"type": "string"},
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 7200},
+        "depends_on": {"type": "array", "items": {"type": "string"}},
+        "status": {"enum": ["PASS", "FAIL", "TIMEOUT", "MISSING_TOOL", "SKIPPED_DEPENDENCY", "NOT_RUN"]},
+        "exit_code": {"type": ["integer", "null"]},
+        "duration_ms": {"type": "integer", "minimum": 0},
+        "resumed": {"type": "boolean"},
+        "stdout": {"$ref": "#/$defs/log"},
+        "stderr": {"$ref": "#/$defs/log"}
+      },
+      "additionalProperties": false
+    }
+  }
+}
+
