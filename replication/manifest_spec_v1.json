@@ -123,6 +123,11 @@
     {"kind": "SCHEMA", "path": "schemas/quotient_seal_evidence_index_v1.schema.json"},
     {"kind": "SCHEMA", "path": "schemas/quotient_seal_evidence_audit_v1.schema.json"},
     {"kind": "SOURCE", "path": "src/noticer_core/replication/audit.py"},
+    {"kind": "DOC", "path": "docs/quotient_seal_decision_gate_v1.md"},
+    {"kind": "CONFIG", "path": "replication/decision_policy_v1.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_decision_input_v1.schema.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_seal_decision_v1.schema.json"},
+    {"kind": "SOURCE", "path": "src/noticer_core/replication/decision.py"},
     {"kind": "CONFIG", "path": "replication/manifest_spec_v1.json"}
   ],
   "evidence_origin": "REPOSITORY_CONTRACT",
