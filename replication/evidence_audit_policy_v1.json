@@ -1,0 +1,65 @@
+{
+  "schema": "quotient-seal.evidence-audit-policy.v1",
+  "required_kinds": [
+    "MANIFEST",
+    "REPRODUCTION_REPORT",
+    "CAPSULE",
+    "CERTIFICATE",
+    "RELATION",
+    "CONTEXT",
+    "COUNTEREXAMPLE",
+    "MUTATION_REPORT",
+    "ENGINE_REPORT",
+    "ATTACK_REPORT",
+    "PERFORMANCE_REPORT",
+    "ABLATION_REPORT",
+    "STUDIO_EXPORT",
+    "INVARIANT_REPORT"
+  ],
+  "required_outcome_codes": [
+    "ESCAPED_MUTANT",
+    "ENGINE_DISAGREEMENT",
+    "RESOURCE_BOUND",
+    "UNSUPPORTED"
+  ],
+  "allowed_content_types": ["JSON", "TEXT", "BINARY"],
+  "limits": {
+    "max_index_bytes": 2097152,
+    "max_records": 512,
+    "max_artifact_bytes": 134217728,
+    "max_total_bytes": 1073741824,
+    "max_json_depth": 32,
+    "max_json_nodes": 100000
+  },
+  "prohibited_keys": [
+    "raw_biosignal",
+    "ppg_samples",
+    "ibi_samples",
+    "ecg_samples",
+    "personal_baseline",
+    "baseline_distribution",
+    "baseline_vector",
+    "subject_id",
+    "participant_id",
+    "stable_identifier",
+    "device_id",
+    "secret_key",
+    "private_key",
+    "api_key",
+    "password",
+    "credential"
+  ],
+  "prohibited_path_suffixes": [".pem", ".key", ".p12", ".pfx", ".env", ".credentials"],
+  "secret_pattern_ids": [
+    "PEM_PRIVATE_KEY",
+    "AWS_ACCESS_KEY",
+    "GITHUB_TOKEN",
+    "BEARER_TOKEN",
+    "GENERIC_SECRET_ASSIGNMENT"
+  ],
+  "audit_scope": "BOUNDED_PATTERN_AND_STRUCTURAL_AUDIT",
+  "evidence_origin": "SOFTWARE_AUDIT",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "hardware_status": "NOT_VERIFIED"
+}
+
