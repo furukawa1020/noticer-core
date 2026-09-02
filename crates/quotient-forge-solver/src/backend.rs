@@ -1,7 +1,4 @@
-use std::io::{ErrorKind, Write};
-use std::process::{Command, Stdio};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use quotient_forge_check::{check, CheckOutcome, CounterexampleKind};
 use quotient_forge_synth::{
@@ -23,7 +20,7 @@ pub enum SolverKind {
 }
 
 impl SolverKind {
-    const fn program(self) -> &'static str {
+    pub(crate) const fn program(self) -> &'static str {
         match self {
             Self::Cvc5 => "cvc5",
             Self::Z3 => "z3",
@@ -42,6 +39,18 @@ pub enum SolverSelection {
 pub enum RuntimeError {
     NotInstalled,
     Io(String),
+    InputLimitExceeded,
+    NonUtf8Output(OutputStream),
+    OutputLimitExceeded(OutputStream),
+    TimedOut,
+    VersionMismatch(String),
+    InvalidConfiguration(String),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum OutputStream {
+    Stdout,
+    Stderr,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -52,9 +61,16 @@ pub enum RuntimeOutput {
         success: bool,
     },
     TimedOut,
+    OutputLimitExceeded {
+        stream: OutputStream,
+    },
 }
 
 pub trait SolverRuntime {
+    fn program(&self, solver: SolverKind) -> String {
+        solver.program().to_owned()
+    }
+
     fn version(&self, solver: SolverKind) -> Result<String, RuntimeError>;
 
     fn run(
@@ -65,92 +81,7 @@ pub trait SolverRuntime {
     ) -> Result<RuntimeOutput, RuntimeError>;
 }
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct StandardRuntime;
-
-impl SolverRuntime for StandardRuntime {
-    fn version(&self, solver: SolverKind) -> Result<String, RuntimeError> {
-        if solver == SolverKind::Exhaustive {
-            return Ok(env!("CARGO_PKG_VERSION").to_owned());
-        }
-        let arguments: &[&str] = match solver {
-            SolverKind::Cvc5 => &["--version"],
-            SolverKind::Z3 => &["-version"],
-            SolverKind::Exhaustive => &[],
-        };
-        let output = Command::new(solver.program())
-            .args(arguments)
-            .output()
-            .map_err(runtime_io)?;
-        if !output.status.success() {
-            return Err(RuntimeError::Io(
-                String::from_utf8_lossy(&output.stderr).trim().to_owned(),
-            ));
-        }
-        Ok(String::from_utf8_lossy(&output.stdout)
-            .lines()
-            .next()
-            .unwrap_or_default()
-            .trim()
-            .to_owned())
-    }
-
-    fn run(
-        &self,
-        solver: SolverKind,
-        script: &str,
-        timeout: Duration,
-    ) -> Result<RuntimeOutput, RuntimeError> {
-        let arguments: &[&str] = match solver {
-            SolverKind::Cvc5 => &["--lang=smt2", "--produce-models"],
-            SolverKind::Z3 => &["-in", "-smt2"],
-            SolverKind::Exhaustive => {
-                return Err(RuntimeError::Io(
-                    "exhaustive backend does not execute a process".to_owned(),
-                ));
-            }
-        };
-        let mut child = Command::new(solver.program())
-            .args(arguments)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(runtime_io)?;
-        child
-            .stdin
-            .take()
-            .ok_or_else(|| RuntimeError::Io("solver stdin unavailable".to_owned()))?
-            .write_all(script.as_bytes())
-            .map_err(runtime_io)?;
-
-        let started = Instant::now();
-        loop {
-            if child.try_wait().map_err(runtime_io)?.is_some() {
-                let output = child.wait_with_output().map_err(runtime_io)?;
-                return Ok(RuntimeOutput::Completed {
-                    stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
-                    stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
-                    success: output.status.success(),
-                });
-            }
-            if started.elapsed() >= timeout {
-                child.kill().map_err(runtime_io)?;
-                let _ = child.wait();
-                return Ok(RuntimeOutput::TimedOut);
-            }
-            thread::sleep(Duration::from_millis(5));
-        }
-    }
-}
-
-fn runtime_io(error: std::io::Error) -> RuntimeError {
-    if error.kind() == ErrorKind::NotFound {
-        RuntimeError::NotInstalled
-    } else {
-        RuntimeError::Io(error.to_string())
-    }
-}
+pub type StandardRuntime = crate::process::BoundedSolverRuntime;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DetectionRecord {
@@ -187,6 +118,7 @@ pub enum BackendStatus {
     MalformedOutput,
     NotInstalled,
     ResourceExhausted,
+    OutputLimitExceeded,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -330,14 +262,14 @@ fn select_solver(
         match runtime.version(solver) {
             Ok(version) => records.push(DetectionRecord {
                 solver,
-                program: solver.program().to_owned(),
+                program: runtime.program(solver),
                 available: true,
                 version: Some(version),
                 error: None,
             }),
             Err(error) => records.push(DetectionRecord {
                 solver,
-                program: solver.program().to_owned(),
+                program: runtime.program(solver),
                 available: false,
                 version: None,
                 error: Some(format!("{error:?}")),
@@ -439,32 +371,47 @@ fn run_external(
                     "solver disappeared after detection",
                 ));
             }
-            Err(RuntimeError::Io(error)) => {
+            Err(error) => {
                 return Ok(result(
                     BackendStatus::MalformedOutput,
                     None,
                     artifact,
-                    &error,
+                    &format!("{error:?}"),
                 ));
             }
         };
-        let RuntimeOutput::Completed {
-            stdout,
-            stderr,
-            success,
-        } = runtime_output
-        else {
-            artifact.phases.push(PhaseArtifact {
-                phase,
-                canonical_smtlib: script,
-                raw_output: None,
-            });
-            return Ok(result(
-                BackendStatus::Timeout,
-                None,
-                artifact,
-                "solver process exceeded its timeout",
-            ));
+        let (stdout, stderr, success) = match runtime_output {
+            RuntimeOutput::Completed {
+                stdout,
+                stderr,
+                success,
+            } => (stdout, stderr, success),
+            RuntimeOutput::TimedOut => {
+                artifact.phases.push(PhaseArtifact {
+                    phase,
+                    canonical_smtlib: script,
+                    raw_output: None,
+                });
+                return Ok(result(
+                    BackendStatus::Timeout,
+                    None,
+                    artifact,
+                    "solver process exceeded its timeout",
+                ));
+            }
+            RuntimeOutput::OutputLimitExceeded { stream } => {
+                artifact.phases.push(PhaseArtifact {
+                    phase,
+                    canonical_smtlib: script,
+                    raw_output: None,
+                });
+                return Ok(result(
+                    BackendStatus::OutputLimitExceeded,
+                    None,
+                    artifact,
+                    &format!("solver {stream:?} exceeded its byte limit"),
+                ));
+            }
         };
         artifact.phases.push(PhaseArtifact {
             phase,
