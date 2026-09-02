@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_replication_archive_v1.schema.json",
+  "title": "QuotientSeal deterministic archive index v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "archive_format", "fixed_timestamp", "policy_sha256", "source_commit", "hardware_status", "decision", "command_summary", "nonpass_summary", "entries", "boundaries", "integrity"],
+  "properties": {
+    "schema_version": {"const": "quotient-seal-replication-archive-index/v1"},
+    "archive_format": {"const": "ZIP_STORED"},
+    "fixed_timestamp": {"const": [1980, 1, 1, 0, 0, 0]},
+    "policy_sha256": {"$ref": "#/$defs/digest"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "decision": {"type": "object"},
+    "command_summary": {"type": "object"},
+    "nonpass_summary": {"type": "object"},
+    "entries": {"type": "array", "minItems": 14, "maxItems": 14, "items": {"$ref": "#/$defs/entry"}},
+    "boundaries": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "integrity": {"type": "object"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "media_type", "size_bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "role": {"type": "string"},
+        "media_type": {"enum": ["application/json", "text/markdown"]},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/digest"}
+      }
+    }
+  }
+}
