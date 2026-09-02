@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_solver_probe_v1.schema.json",
+  "title": "QuotientForge Solver Capability Probe v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "solver", "timeout_ms", "available", "checks"],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.solver_probe.v1" },
+    "solver": { "enum": ["cvc5", "z3", "exhaustive"] },
+    "timeout_ms": { "type": "integer", "minimum": 1 },
+    "available": { "type": "boolean" },
+    "checks": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability", "input_sha256", "stdout_sha256", "stderr_sha256", "status", "diagnostic"],
+        "properties": {
+          "capability": { "enum": ["INTEGER_MODEL", "OPTIMIZATION", "REASON_UNKNOWN"] },
+          "input_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "stdout_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "stderr_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "status": { "enum": ["PASSED", "FAILED"] },
+          "diagnostic": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}
