@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.invalid/schemas/quotient_seal_decision_input_v1.schema.json",
+  "title": "QuotientSeal decision input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "scope", "source_commit", "hardware_status", "artifacts", "axes"],
+  "properties": {
+    "schema_version": {"const": "quotient-seal-decision-input/v1"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+    "scope": {"const": "QUOTIENTSEAL_SOFTWARE_EVALUATION"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_sha256", "reproduction_sha256", "evidence_audit_sha256"],
+      "properties": {
+        "manifest_sha256": {"$ref": "#/$defs/digest"},
+        "reproduction_sha256": {"$ref": "#/$defs/digest"},
+        "evidence_audit_sha256": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "reproduction", "evidence_audit", "security", "utility", "mutation", "engine", "attack", "performance", "ablation"],
+      "properties": {
+        "manifest": {"$ref": "#/$defs/axis"},
+        "reproduction": {"$ref": "#/$defs/axis"},
+        "evidence_audit": {"$ref": "#/$defs/axis"},
+        "security": {"$ref": "#/$defs/axis"},
+        "utility": {"$ref": "#/$defs/axis"},
+        "mutation": {"$ref": "#/$defs/axis"},
+        "engine": {"$ref": "#/$defs/axis"},
+        "attack": {"$ref": "#/$defs/axis"},
+        "performance": {"$ref": "#/$defs/axis"},
+        "ablation": {"$ref": "#/$defs/axis"}
+      }
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "artifact_sha256", "reason_codes", "metrics"],
+      "properties": {
+        "status": {"enum": ["PASS", "FAIL", "INCONCLUSIVE", "MISSING", "NOT_RUN", "UNSUPPORTED"]},
+        "artifact_sha256": {"$ref": "#/$defs/digest"},
+        "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$"}},
+        "metrics": {"type": "object"}
+      }
+    }
+  }
+}

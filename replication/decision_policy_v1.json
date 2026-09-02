@@ -1,0 +1,29 @@
+{
+  "schema_version": "quotient-seal-decision-policy/v1",
+  "decision_precedence": ["KILL", "PIVOT", "GO"],
+  "allowed_statuses": ["PASS", "FAIL", "INCONCLUSIVE", "MISSING", "NOT_RUN", "UNSUPPORTED"],
+  "required_axes": ["manifest", "reproduction", "evidence_audit", "security", "utility", "mutation", "engine", "attack", "performance", "ablation"],
+  "fail_actions": {
+    "manifest": "KILL",
+    "reproduction": "KILL",
+    "evidence_audit": "PIVOT",
+    "security": "KILL",
+    "utility": "KILL",
+    "mutation": "PIVOT",
+    "engine": "PIVOT",
+    "attack": "KILL",
+    "performance": "PIVOT",
+    "ablation": "PIVOT"
+  },
+  "thresholds": [
+    {"axis": "security", "metric": "invalid_cases", "operator": "MAX", "limit": 0, "on_violation": "KILL", "reason_code": "SECURITY_INVALID_CASES_EXCEEDED"},
+    {"axis": "utility", "metric": "retention_ratio", "operator": "MIN", "limit": 0.9, "on_violation": "KILL", "reason_code": "UTILITY_RETENTION_BELOW_FLOOR"},
+    {"axis": "mutation", "metric": "critical_escaped_mutants", "operator": "MAX", "limit": 0, "on_violation": "PIVOT", "reason_code": "CRITICAL_MUTANT_ESCAPED"},
+    {"axis": "engine", "metric": "disagreements", "operator": "MAX", "limit": 0, "on_violation": "PIVOT", "reason_code": "ENGINE_DISAGREEMENT_OBSERVED"},
+    {"axis": "attack", "metric": "identity_advantage", "operator": "MAX", "limit": 0.05, "on_violation": "KILL", "reason_code": "IDENTITY_ADVANTAGE_ABOVE_CEILING"},
+    {"axis": "performance", "metric": "overhead_ratio", "operator": "MAX", "limit": 2.0, "on_violation": "PIVOT", "reason_code": "PERFORMANCE_OVERHEAD_ABOVE_BUDGET"}
+  ],
+  "nonpass_action": "PIVOT",
+  "go_requires_all_pass": true,
+  "boundaries": ["PREDECLARED_RULE_EVALUATION", "SOFTWARE_DECISION_GATE", "NOT_A_PROOF", "NOT_VERIFIED"]
+}
