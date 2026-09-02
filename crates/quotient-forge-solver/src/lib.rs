@@ -7,6 +7,7 @@
 //! CEGIS blocking constraint.
 
 mod backend;
+mod matrix;
 mod parser;
 mod smtlib;
 
@@ -14,6 +15,10 @@ pub use backend::{
     solve, BackendConfig, BackendError, BackendResult, BackendStatus, DetectionRecord,
     PhaseArtifact, RuntimeError, RuntimeOutput, SolverArtifact, SolverKind, SolverRuntime,
     SolverSelection, StandardRuntime,
+};
+pub use matrix::{
+    SolverAsset, SolverCommands, SolverId, SolverMatrix, SolverMatrixError, SolverPin,
+    SolverPlatform, MAX_SOLVER_MATRIX_BYTES, SOLVER_MATRIX_SCHEMA_V1,
 };
 pub use parser::{parse_solver_output, ParseModelError, ParsedSolverOutput};
 pub use smtlib::{

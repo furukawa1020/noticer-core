@@ -134,6 +134,10 @@
     {"kind": "SCHEMA", "path": "schemas/quotient_seal_final_report_v1.schema.json"},
     {"kind": "SOURCE", "path": "src/noticer_core/replication/archive.py"},
     {"kind": "SOURCE", "path": "scripts/build_quotient_seal_archive.py"},
+    {"kind": "DOC", "path": "docs/quotient_forge_solver_matrix_v1.md"},
+    {"kind": "CONFIG", "path": "configs/quotient_forge/solver_matrix_v1.json"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_forge_solver_matrix_v1.schema.json"},
+    {"kind": "SOURCE", "path": "crates/quotient-forge-solver/src/matrix.rs"},
     {"kind": "CONFIG", "path": "replication/manifest_spec_v1.json"}
   ],
   "evidence_origin": "REPOSITORY_CONTRACT",
