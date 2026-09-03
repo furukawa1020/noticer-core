@@ -148,6 +148,9 @@
     {"kind": "SOURCE", "path": "crates/quotient-forge-solver/src/bin/solver-ci.rs"},
     {"kind": "SOURCE", "path": "scripts/install_pinned_solver.py"},
     {"kind": "DOC", "path": "docs/quotient_forge_optional_solver_ci_v1.md"},
+    {"kind": "SOURCE", "path": "crates/quotient-forge-solver/src/qdimacs.rs"},
+    {"kind": "SCHEMA", "path": "schemas/quotient_forge_qdimacs_v1.schema.json"},
+    {"kind": "DOC", "path": "docs/quotient_forge_qdimacs_contract_v1.md"},
     {"kind": "CONFIG", "path": "replication/manifest_spec_v1.json"}
   ],
   "evidence_origin": "REPOSITORY_CONTRACT",

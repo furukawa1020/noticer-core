@@ -12,6 +12,7 @@ mod matrix;
 mod parser;
 mod probe;
 mod process;
+mod qdimacs;
 mod smtlib;
 
 pub use artifact::{
@@ -35,6 +36,13 @@ pub use probe::{
 pub use process::{
     run_bounded_process, BoundedProcessOutput, BoundedSolverRuntime, ProcessError, ProcessLimits,
     SolverBinding,
+};
+pub use qdimacs::{
+    encode_qdimacs, validate_qdimacs, QdimacsArtifact, QdimacsBounds, QdimacsError,
+    QdimacsMetadata, QdimacsSpec, QdimacsValidation, QuantifierBlock, QuantifierKind,
+    SymbolicClause, SymbolicLiteral, VariableKey, VariableRecord, VariableRole,
+    MAX_QDIMACS_CLAUSES, MAX_QDIMACS_VARIABLES, MAX_VARIABLE_COORDINATE, MAX_VARIABLE_COORDINATES,
+    QDIMACS_SCHEMA_V1,
 };
 pub use smtlib::{
     encode_smtlib, expected_variable_names, ConstraintKind, HardBlocker, ObjectiveCost,
