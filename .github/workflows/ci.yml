@@ -56,10 +56,58 @@ jobs:
 
   solver-optional:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_solver }}
-    continue-on-error: true
-    runs-on: ubuntu-latest
+    name: solver-optional / ${{ matrix.solver }} / ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - solver: cvc5
+            platform: linux-x86_64
+            os: ubuntu-latest
+            expected_available: "false"
+          - solver: cvc5
+            platform: windows-x86_64
+            os: windows-latest
+            expected_available: "false"
+          - solver: z3
+            platform: linux-x86_64
+            os: ubuntu-latest
+            expected_available: "true"
+          - solver: z3
+            platform: windows-x86_64
+            os: windows-latest
+            expected_available: "true"
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - run: rustup show
-      - run: sudo apt-get update && sudo apt-get install -y z3
-      - run: cargo run --locked -p quotient-forge-cli --bin quotient-forge -- synthesize --output artifacts/ci-quotient-forge-solver --seed 0 --solver required
+      - name: pinned solverを取得して検証する
+        run: >-
+          python scripts/install_pinned_solver.py
+          --matrix configs/quotient_forge/solver_matrix_v1.json
+          --solver ${{ matrix.solver }}
+          --platform ${{ matrix.platform }}
+          --destination .solver-cache
+          --receipt artifacts/solver-${{ matrix.solver }}-${{ matrix.platform }}/install.json
+      - name: capability probeとcanonical smokeを実行する
+        run: >-
+          cargo run --locked -p quotient-forge-solver --bin solver-ci --
+          --matrix configs/quotient_forge/solver_matrix_v1.json
+          --solver ${{ matrix.solver }}
+          --platform ${{ matrix.platform }}
+          --expect-available ${{ matrix.expected_available }}
+          --install-root .solver-cache
+          --output artifacts/solver-${{ matrix.solver }}-${{ matrix.platform }}
+          --timeout-ms 5000
+          --seed 0
+      - name: solver別証跡を保存する
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: quotient-forge-${{ matrix.solver }}-${{ matrix.platform }}-${{ github.run_id }}
+          path: artifacts/solver-${{ matrix.solver }}-${{ matrix.platform }}
+          if-no-files-found: warn
