@@ -19,6 +19,7 @@ struct Arguments {
     matrix: PathBuf,
     solver: String,
     platform: String,
+    expected_available: bool,
     install_root: PathBuf,
     output: PathBuf,
     timeout_ms: u64,
@@ -64,8 +65,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let probe = run_capability_probe(&runtime, solver, timeout);
     probe.write_canonical(&arguments.output.join("probe.json"))?;
-    if !probe.available {
-        return Err(invalid_input("solver capability probe failed").into());
+    if !should_run_smoke(arguments.expected_available, probe.available)? {
+        println!("solver_expected_unavailable=true");
+        return Ok(());
     }
 
     let version = runtime
@@ -120,6 +122,7 @@ fn parse_arguments() -> Result<Arguments, io::Error> {
     let mut matrix = None;
     let mut solver = None;
     let mut platform = None;
+    let mut expected_available = None;
     let mut install_root = None;
     let mut output = None;
     let mut timeout_ms = None;
@@ -133,6 +136,13 @@ fn parse_arguments() -> Result<Arguments, io::Error> {
             "--matrix" => matrix = Some(PathBuf::from(value)),
             "--solver" => solver = Some(value),
             "--platform" => platform = Some(value),
+            "--expect-available" => {
+                expected_available = Some(match value.as_str() {
+                    "true" => true,
+                    "false" => false,
+                    _ => return Err(invalid_input("expected availability must be true or false")),
+                });
+            }
             "--install-root" => install_root = Some(PathBuf::from(value)),
             "--output" => output = Some(PathBuf::from(value)),
             "--timeout-ms" => {
@@ -160,11 +170,26 @@ fn parse_arguments() -> Result<Arguments, io::Error> {
         matrix: matrix.ok_or_else(|| invalid_input("--matrix is required"))?,
         solver: solver.ok_or_else(|| invalid_input("--solver is required"))?,
         platform: platform.ok_or_else(|| invalid_input("--platform is required"))?,
+        expected_available: expected_available
+            .ok_or_else(|| invalid_input("--expect-available is required"))?,
         install_root: install_root.ok_or_else(|| invalid_input("--install-root is required"))?,
         output: output.ok_or_else(|| invalid_input("--output is required"))?,
         timeout_ms,
         seed: seed.ok_or_else(|| invalid_input("--seed is required"))?,
     })
+}
+
+fn should_run_smoke(expected: bool, observed: bool) -> Result<bool, io::Error> {
+    match (expected, observed) {
+        (true, true) => Ok(true),
+        (false, false) => Ok(false),
+        (true, false) => Err(invalid_input(
+            "solver capability probe failed but availability was required",
+        )),
+        (false, true) => Err(invalid_input(
+            "solver capability profile changed; review and update the pinned expectation",
+        )),
+    }
 }
 
 fn read_manifest_view(
@@ -238,4 +263,17 @@ fn sha256_file(path: &Path) -> Result<String, io::Error> {
 
 fn invalid_input(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_run_smoke;
+
+    #[test]
+    fn availability_expectation_is_fail_closed() {
+        assert!(should_run_smoke(true, true).unwrap());
+        assert!(!should_run_smoke(false, false).unwrap());
+        assert!(should_run_smoke(true, false).is_err());
+        assert!(should_run_smoke(false, true).is_err());
+    }
 }
