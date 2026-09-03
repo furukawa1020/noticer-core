@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "noticer.quotient_forge.qbf_semantics.v1",
+  "title": "QuotientForge bounded QBF semantics artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "quantifier_layout",
+    "quantifier_prefix",
+    "non_production_mutant",
+    "seed",
+    "bounds",
+    "hard_obligations",
+    "candidates",
+    "scenarios",
+    "acceptance",
+    "acceptance_matrix_sha256",
+    "qdimacs_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.qbf_semantics.v1" },
+    "quantifier_layout": {
+      "enum": ["MACHINE_BEFORE_TRACE", "MACHINE_AFTER_TRACE_MUTANT"]
+    },
+    "quantifier_prefix": { "type": "string", "minLength": 1 },
+    "non_production_mutant": { "type": "boolean" },
+    "seed": { "type": "integer", "minimum": 0 },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plant_states",
+        "machine_states",
+        "machine_symbols",
+        "horizon",
+        "outputs",
+        "candidates",
+        "scenarios"
+      ],
+      "properties": {
+        "plant_states": { "type": "integer", "minimum": 1 },
+        "machine_states": { "type": "integer", "minimum": 1 },
+        "machine_symbols": { "type": "integer", "minimum": 1 },
+        "horizon": { "type": "integer", "minimum": 1 },
+        "outputs": { "type": "integer", "minimum": 1 },
+        "candidates": { "type": "integer", "minimum": 1 },
+        "scenarios": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "hard_obligations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/candidate" }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scenario" }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/acceptance" }
+    },
+    "acceptance_matrix_sha256": { "$ref": "#/$defs/sha256" },
+    "qdimacs_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state_count", "symbol_count", "canonical_sha256", "cells"],
+      "properties": {
+        "id": { "type": "integer", "minimum": 0 },
+        "state_count": { "type": "integer", "minimum": 1 },
+        "symbol_count": { "type": "integer", "minimum": 1 },
+        "canonical_sha256": { "$ref": "#/$defs/sha256" },
+        "cells": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["machine_state", "symbol", "next_state", "output"],
+            "properties": {
+              "machine_state": { "type": "integer", "minimum": 0 },
+              "symbol": { "type": "integer", "minimum": 0 },
+              "next_state": { "type": "integer", "minimum": 0 },
+              "output": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "initial_pair",
+        "left_plant_state",
+        "right_plant_state",
+        "left_private_history",
+        "right_private_history",
+        "environment_trace",
+        "fault_trace",
+        "action_equivalent_premise"
+      ],
+      "properties": {
+        "id": { "type": "integer", "minimum": 0 },
+        "initial_pair": { "type": "integer", "minimum": 0 },
+        "left_plant_state": { "type": "integer", "minimum": 0 },
+        "right_plant_state": { "type": "integer", "minimum": 0 },
+        "left_private_history": { "type": "string", "minLength": 1 },
+        "right_private_history": { "type": "string", "minLength": 1 },
+        "environment_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "fault_trace": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": ["string", "null"] }
+        },
+        "action_equivalent_premise": { "const": true }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "scenario", "accepted"],
+      "properties": {
+        "candidate": { "type": "integer", "minimum": 0 },
+        "scenario": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "boolean" }
+      }
+    }
+  }
+}
