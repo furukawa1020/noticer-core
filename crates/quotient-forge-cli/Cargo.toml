@@ -18,4 +18,5 @@ quotient-forge-check.workspace = true
 quotient-forge-codegen.workspace = true
 quotient-forge-noticer.workspace = true
 quotient-forge-repair.workspace = true
+quotient-forge-solver.workspace = true
 quotient-forge-synth.workspace = true

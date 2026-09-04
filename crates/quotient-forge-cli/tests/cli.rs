@@ -10,6 +10,19 @@ fn parser_defaults_to_solver_free_mode() {
     assert_eq!(options.solver, SolverMode::Off);
     assert_eq!(options.seed, 0);
     assert_eq!(options.check_case, CheckCase::ImmediateRelease);
+    assert!(options.symmetry_breaking);
+}
+
+#[test]
+fn parser_accepts_backend_comparison_and_symmetry_record() {
+    let options = Options::parse([
+        OsString::from("compare-backends"),
+        OsString::from("--symmetry-breaking"),
+        OsString::from("off"),
+    ])
+    .unwrap();
+    assert_eq!(options.command, CommandName::CompareBackends);
+    assert!(!options.symmetry_breaking);
 }
 
 #[test]

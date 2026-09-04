@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_qbf_backend_comparison_v1.schema.json",
+  "title": "QuotientForge bounded backend comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "seed",
+    "state_bound",
+    "symmetry_breaking_requested",
+    "symmetry_breaking_effective",
+    "qdimacs_sha256",
+    "exhaustive",
+    "smt",
+    "qbf",
+    "agreements"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "noticer.quotient_forge.backend_comparison.v1"
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "state_bound": { "type": "integer", "minimum": 1 },
+    "symmetry_breaking_requested": { "type": "boolean" },
+    "symmetry_breaking_effective": {
+      "const": "CANONICAL_RELEASE_MACHINE_V1_ALWAYS_ON"
+    },
+    "qdimacs_sha256": { "$ref": "#/$defs/optionalDigest" },
+    "exhaustive": { "$ref": "#/$defs/backend" },
+    "smt": { "$ref": "#/$defs/backend" },
+    "qbf": { "$ref": "#/$defs/backend" },
+    "agreements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exhaustive_qbf_decision",
+        "smt_qbf_decision",
+        "exhaustive_qbf_candidate_sha256",
+        "smt_qbf_candidate_sha256"
+      ],
+      "properties": {
+        "exhaustive_qbf_decision": { "$ref": "#/$defs/optionalBoolean" },
+        "smt_qbf_decision": { "$ref": "#/$defs/optionalBoolean" },
+        "exhaustive_qbf_candidate_sha256": { "$ref": "#/$defs/optionalBoolean" },
+        "smt_qbf_candidate_sha256": { "$ref": "#/$defs/optionalBoolean" }
+      }
+    }
+  },
+  "$defs": {
+    "optionalBoolean": {
+      "type": ["boolean", "null"]
+    },
+    "optionalDigest": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "status": {
+      "enum": [
+        "CANDIDATE_VERIFIED",
+        "UNREALIZABLE_WITHIN_BOUNDS",
+        "TIMEOUT",
+        "RESOURCE_EXHAUSTED",
+        "SOLVER_UNAVAILABLE",
+        "SOLVER_UNKNOWN",
+        "MALFORMED_OUTPUT",
+        "NOT_RUN"
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wall_time_ms",
+        "peak_memory_bytes",
+        "peak_memory_scope",
+        "variables",
+        "clauses",
+        "rounds",
+        "generated_candidates",
+        "checker_calls"
+      ],
+      "properties": {
+        "wall_time_ms": { "type": "integer", "minimum": 0 },
+        "peak_memory_bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "peak_memory_scope": { "type": "string", "minLength": 1 },
+        "variables": { "type": ["integer", "null"], "minimum": 0 },
+        "clauses": { "type": ["integer", "null"], "minimum": 0 },
+        "rounds": { "type": ["integer", "null"], "minimum": 0 },
+        "generated_candidates": { "type": ["integer", "null"], "minimum": 0 },
+        "checker_calls": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend",
+        "engine",
+        "status",
+        "bounded_only",
+        "independently_checked",
+        "candidate_sha256",
+        "resources",
+        "solver_result",
+        "candidate_decision",
+        "diagnostic"
+      ],
+      "properties": {
+        "backend": { "enum": ["exhaustive", "smt", "qbf"] },
+        "engine": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/status" },
+        "bounded_only": { "const": true },
+        "independently_checked": { "type": "boolean" },
+        "candidate_sha256": { "$ref": "#/$defs/optionalDigest" },
+        "resources": { "$ref": "#/$defs/resources" },
+        "solver_result": { "type": ["object", "null"] },
+        "candidate_decision": { "type": ["object", "null"] },
+        "diagnostic": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
