@@ -1,0 +1,26 @@
+{
+  "schema_version": "noticer.quotient_forge.qbf_solver_manifest.v1",
+  "solver": "caqe",
+  "version": "4.0.2",
+  "source_revision": "62ee7692dada5236307f8652234ed7a743651eb7",
+  "source_tag": "4.0.2",
+  "source_archive_name": "caqe-4.0.2.zip",
+  "source_url": "https://github.com/ltentrup/caqe/archive/refs/tags/4.0.2.zip",
+  "source_sha256": "d09ad720a29eedb27b64182eadd51820b5ac8f30784051f033cdf3972b4e5d37",
+  "commands": {
+    "version": ["--version"],
+    "solve": ["--qdo"]
+  },
+  "platforms": [
+    {
+      "platform": "linux-x86_64",
+      "executable_path": "bin/caqe"
+    },
+    {
+      "platform": "windows-x86_64",
+      "executable_path": "bin/caqe.exe"
+    }
+  ],
+  "network_policy": "DOWNLOAD_SOURCE_ONLY_WITH_SHA256",
+  "security_interpretation": "CANDIDATE_GENERATOR_NOT_SECURITY_ORACLE"
+}
