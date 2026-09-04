@@ -10,7 +10,9 @@ K7-05cは、外部QBF solverをsecurity oracleではなくbounded candidate gene
 - manifest、platform、fixed argv、timeout、seed、finite bound
 - build後binaryのSHA-256をinstall receiptへ保存し、実行直前に再照合
 
-公式prebuilt binaryは存在するものとして扱わない。任意CIはSHA検証済みsourceからLinux/Windows binaryをbuildし、生成binary hashをreceiptへ残す。
+公式prebuilt binaryは存在するものとして扱わない。任意CIはSHA検証済みsourceからLinux binaryをbuildし、生成binary hashをreceiptへ残す。
+
+Windows command、path、receipt、binary再hashのadapter契約はsolver-free CIで固定する。一方、CAQE 4.0.2の依存する`cryptominisat`と`jemalloc`はGitHub Windows runnerのMSVC/GNU双方でbuildできなかったため、Windows実solverは`NOT_VERIFIED`とする。installerはWindows指定を明示的に拒否し、動作済みと誤認させない。
 
 ## Result taxonomy
 

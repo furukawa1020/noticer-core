@@ -163,6 +163,10 @@ def main() -> None:
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     args = parser.parse_args()
+    if args.platform == "windows-x86_64":
+        raise InstallerError(
+            "CAQE 4.0.2 Windows source build is NOT_VERIFIED; refusing to claim support"
+        )
     manifest, manifest_sha256 = load_manifest(args.manifest, args.platform)
     asset = next(item for item in manifest["platforms"] if item["platform"] == args.platform)
     with tempfile.TemporaryDirectory(prefix="qbf-source-") as temporary:

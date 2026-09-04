@@ -123,17 +123,12 @@ jobs:
         include:
           - platform: linux-x86_64
             os: ubuntu-latest
-          - platform: windows-x86_64
-            os: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: rustup show
-      - name: Windows GNU targetを準備する
-        if: runner.os == 'Windows'
-        run: rustup target add x86_64-pc-windows-gnu
       - name: pinned CAQE sourceを検証してbuildする
         run: >-
           python scripts/install_pinned_qbf_solver.py
