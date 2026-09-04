@@ -10,3 +10,4 @@ description = "Solver-independent bounded product checker for QuotientForge"
 quotient-forge-ir.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true

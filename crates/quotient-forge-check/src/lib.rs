@@ -9,6 +9,7 @@
 
 mod checker;
 mod counterexample;
+mod counterexample_signature;
 mod model;
 
 use std::marker::PhantomData;
@@ -18,6 +19,12 @@ pub use checker::{
 };
 pub use counterexample::{
     CausalField, Counterexample, CounterexampleKind, Observation, RepairCandidate, Side, TraceStep,
+};
+pub use counterexample_signature::{
+    CanonicalAction, CanonicalCausalField, CanonicalCounterexample, CanonicalCounterexampleKind,
+    CanonicalEnvironmentInput, CanonicalObligation, CanonicalObservation, CanonicalRelease,
+    CanonicalRepairCandidate, CanonicalSide, CanonicalTraceStep, CatalogInsert,
+    CounterexampleCatalog, CounterexampleSignature, COUNTEREXAMPLE_SIGNATURE_SCHEMA_V1,
 };
 pub use model::{
     ActionEmission, ActionId, ActionObligation, CheckerModel, EnvironmentInput, FaultInput,
