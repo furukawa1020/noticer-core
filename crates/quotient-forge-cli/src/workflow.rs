@@ -1,3 +1,4 @@
+use std::env;
 use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -9,6 +10,11 @@ use quotient_forge_check::CheckLimits;
 use quotient_forge_codegen::{generate_package, CodegenConfig};
 use quotient_forge_noticer::{run_handwritten_benchmark, AdapterVerdict, HandwrittenPlan};
 use quotient_forge_repair::{repair, RepairLimits, RepairOperator, RepairOutcome};
+use quotient_forge_solver::{
+    compare_bounded_backends, BackendComparisonConfig, BoundedSolverRuntime, ProcessLimits,
+    QbfPlatform, QbfSolverAdapter, QbfSolverManifest, SolverMatrix, SolverPlatform, SolverRuntime,
+    SolverSelection,
+};
 use quotient_forge_synth::{find_feasible, SynthesisLimits, SynthesisOutcome};
 
 use crate::artifact::{quote, write_binary, write_text};
@@ -31,6 +37,7 @@ pub fn run(options: &Options) -> Result<WorkflowResult, String> {
         CommandName::Verify => run_verify(options),
         CommandName::Frontier => run_repair(options, true),
         CommandName::Generate => run_generate(options),
+        CommandName::CompareBackends => run_compare_backends(options),
     }
 }
 
@@ -323,6 +330,146 @@ fn run_generate(options: &Options) -> Result<WorkflowResult, String> {
         files,
         message_ja: "検証済みcertificateからno_std packageを生成しました".to_owned(),
     })
+}
+
+fn run_compare_backends(options: &Options) -> Result<WorkflowResult, String> {
+    let (problem, _) = repair_fixture();
+    let run_smt = options.solver != crate::SolverMode::Off;
+    let smt_runtime = build_smt_runtime(run_smt)?;
+    let qbf_adapter = build_optional_qbf_adapter()?;
+    let config = BackendComparisonConfig {
+        seed: options.seed,
+        state_bound: 1,
+        symmetry_breaking: options.symmetry_breaking,
+        run_smt,
+        smt_selection: SolverSelection::Auto,
+        solver_timeout: Duration::from_secs(5),
+        max_cegis_rounds: 1_000,
+        qbf_truth_variable_limit: 24,
+        exhaustive_limits: SynthesisLimits {
+            max_states: 1,
+            max_candidates: 100_000,
+            time_limit: Duration::from_secs(5),
+            checker_limits: CheckLimits {
+                max_nodes: 100_000,
+                max_depth: 16,
+                time_limit: Duration::from_secs(5),
+            },
+            seed: options.seed,
+        },
+        checker_limits: CheckLimits {
+            max_nodes: 100_000,
+            max_depth: 16,
+            time_limit: Duration::from_secs(5),
+        },
+    };
+    let smt_runtime_ref = smt_runtime
+        .as_ref()
+        .map(|runtime| runtime as &dyn SolverRuntime);
+    let artifact =
+        compare_bounded_backends(&problem, &config, smt_runtime_ref, qbf_adapter.as_ref())
+            .map_err(|error| error.to_string())?;
+    artifact
+        .write_to_directory(&options.output)
+        .map_err(|error| error.to_string())?;
+
+    let status = match artifact.agreements.exhaustive_qbf_decision {
+        Some(true) => "AGREE",
+        Some(false) => "DISAGREE",
+        None => "INCONCLUSIVE",
+    };
+    Ok(WorkflowResult {
+        status: status.to_owned(),
+        engine: "quotient-forge-backend-comparison",
+        files: vec![
+            PathBuf::from("comparison.json"),
+            PathBuf::from("backends/exhaustive/result.json"),
+            PathBuf::from("backends/smt/result.json"),
+            PathBuf::from("backends/qbf/result.json"),
+        ],
+        message_ja: match status {
+            "AGREE" => "exhaustiveとQBFのbounded decisionが一致しました".to_owned(),
+            "DISAGREE" => "exhaustiveとQBFのbounded decisionが不一致です".to_owned(),
+            _ => "resourceまたはsolver境界により比較は判定不能です".to_owned(),
+        },
+    })
+}
+
+fn build_smt_runtime(enabled: bool) -> Result<Option<BoundedSolverRuntime>, String> {
+    if !enabled {
+        return Ok(None);
+    }
+    let matrix_path = env_path(
+        "QUOTIENT_FORGE_SOLVER_MATRIX",
+        "configs/quotient_forge/solver_matrix_v1.json",
+    );
+    let installation_root = env_path(
+        "QUOTIENT_FORGE_SOLVER_ROOT",
+        "artifacts/quotient-forge-solvers",
+    );
+    let matrix = SolverMatrix::from_path(&matrix_path).map_err(|error| {
+        format!(
+            "solver matrix {} を読めません: {error}",
+            matrix_path.display()
+        )
+    })?;
+    BoundedSolverRuntime::from_matrix(
+        &matrix,
+        &installation_root,
+        current_solver_platform(),
+        ProcessLimits::default(),
+    )
+    .map(Some)
+    .map_err(|error| format!("SMT runtimeを構成できません: {error:?}"))
+}
+
+fn build_optional_qbf_adapter() -> Result<Option<QbfSolverAdapter>, String> {
+    let root = env::var_os("QUOTIENT_FORGE_QBF_ROOT").map(PathBuf::from);
+    let receipt = env::var_os("QUOTIENT_FORGE_QBF_RECEIPT").map(PathBuf::from);
+    let (root, receipt) = match (root, receipt) {
+        (None, None) => return Ok(None),
+        (Some(root), Some(receipt)) => (root, receipt),
+        _ => {
+            return Err(
+                "QUOTIENT_FORGE_QBF_ROOTとQUOTIENT_FORGE_QBF_RECEIPTは同時指定してください"
+                    .to_owned(),
+            )
+        }
+    };
+    if cfg!(target_os = "windows") {
+        return Err("Windows CAQE実solver経路はNOT_VERIFIEDです".to_owned());
+    }
+    let manifest_path = env_path(
+        "QUOTIENT_FORGE_QBF_MANIFEST",
+        "configs/quotient_forge/qbf_solver_manifest_v1.json",
+    );
+    let manifest = QbfSolverManifest::from_path(&manifest_path).map_err(|error| {
+        format!(
+            "QBF solver manifest {} を読めません: {error}",
+            manifest_path.display()
+        )
+    })?;
+    QbfSolverAdapter::from_installation(
+        manifest,
+        &root,
+        &receipt,
+        QbfPlatform::LinuxX86_64,
+        ProcessLimits::default(),
+    )
+    .map(Some)
+    .map_err(|error| format!("QBF solver adapterを構成できません: {error}"))
+}
+
+fn env_path(name: &str, default: &str) -> PathBuf {
+    env::var_os(name).map_or_else(|| PathBuf::from(default), PathBuf::from)
+}
+
+fn current_solver_platform() -> SolverPlatform {
+    if cfg!(target_os = "windows") {
+        SolverPlatform::WindowsX86_64
+    } else {
+        SolverPlatform::LinuxX86_64
+    }
 }
 
 fn certificate_input(options: &Options) -> Result<(Vec<u8>, ExpectedContract), String> {

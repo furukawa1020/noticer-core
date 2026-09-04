@@ -129,6 +129,16 @@ pub struct QbfCompilation {
     pub metadata: QbfSemanticsMetadata,
 }
 
+/// A bounded truth result with only the outer machine-choice assignment exposed.
+///
+/// Universal trace values and dependent witnesses are deliberately excluded.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct QbfReferenceModel {
+    pub truth: bool,
+    pub candidate_id: Option<u32>,
+    pub machine_choice_literals: Vec<i32>,
+}
+
 #[derive(Debug, Error)]
 pub enum QbfCompileError {
     #[error("invalid synthesis problem: {0}")]
@@ -253,6 +263,69 @@ pub fn evaluate_qbf_truth(
         &clauses,
         &mut assignment,
     ))
+}
+
+/// Evaluate a compiled bounded game and extract its outer one-hot machine choice.
+///
+/// This reference path is exponential and intended only for small differential
+/// tests. The selected candidate is derived from the frozen acceptance matrix
+/// after the QDIMACS truth evaluator has independently established the decision.
+pub fn evaluate_qbf_reference_model(
+    compilation: &QbfCompilation,
+    max_variables: usize,
+) -> Result<QbfReferenceModel, QbfCompileError> {
+    let truth = evaluate_qbf_truth(&compilation.spec, max_variables)?;
+    let scenario_count = compilation.metadata.scenarios.len();
+    let candidate_id = compilation
+        .metadata
+        .candidates
+        .iter()
+        .find(|candidate| {
+            let rows = compilation
+                .metadata
+                .acceptance
+                .iter()
+                .filter(|row| row.candidate == candidate.id)
+                .collect::<Vec<_>>();
+            rows.len() == scenario_count && rows.iter().all(|row| row.accepted)
+        })
+        .map(|candidate| candidate.id);
+
+    if truth != candidate_id.is_some() {
+        return Err(QbfCompileError::InternalInvariant(
+            "QDIMACS truth and frozen acceptance matrix disagree",
+        ));
+    }
+
+    let mut selected = 0_usize;
+    let mut machine_choice_literals = Vec::new();
+    for variable in &compilation.qdimacs.metadata.variables {
+        if variable.role != VariableRole::MachineChoice {
+            continue;
+        }
+        let variable_id = i32::try_from(variable.id)
+            .map_err(|_| QbfCompileError::ArithmeticOverflow("QDIMACS variable id"))?;
+        let is_selected = candidate_id
+            .zip(variable.coordinates.first().copied())
+            .is_some_and(|(candidate, coordinate)| candidate == coordinate);
+        if is_selected {
+            selected += 1;
+            machine_choice_literals.push(variable_id);
+        } else {
+            machine_choice_literals.push(-variable_id);
+        }
+    }
+    if truth && selected != 1 {
+        return Err(QbfCompileError::InternalInvariant(
+            "reference model is not a one-hot machine choice",
+        ));
+    }
+
+    Ok(QbfReferenceModel {
+        truth,
+        candidate_id,
+        machine_choice_literals,
+    })
 }
 
 fn compile_with_layout(

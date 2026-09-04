@@ -1941,6 +1941,7 @@ dependencies = [
  "quotient-forge-codegen",
  "quotient-forge-noticer",
  "quotient-forge-repair",
+ "quotient-forge-solver",
  "quotient-forge-synth",
 ]
 

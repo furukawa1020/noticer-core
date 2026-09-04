@@ -14,7 +14,7 @@ pub const HELP: &str = "\
 QuotientForge bounded security compiler\n\
 \n\
 使用法:\n\
-  quotient-forge <check|synthesize|repair|verify|frontier|generate> [options]\n\
+  quotient-forge <check|synthesize|repair|verify|frontier|generate|compare-backends> [options]\n\
 \n\
 共通option:\n\
   --output <path>       artifact出力先（既存directoryは拒否）\n\
@@ -22,6 +22,7 @@ QuotientForge bounded security compiler\n\
   --solver <mode>       off | auto | required（既定: off）\n\
   --certificate <path>  verify/generate用CAQT certificate\n\
   --case <name>         check対象plan（既定: immediate-release）\n\
+  --symmetry-breaking <on|off>  backend比較の記録値（既定: on）\n\
   --help                この日本語診断を表示\n\
   --version             tool versionを表示\n";
 
@@ -33,16 +34,18 @@ pub enum CommandName {
     Verify,
     Frontier,
     Generate,
+    CompareBackends,
 }
 
 impl CommandName {
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::Check,
         Self::Synthesize,
         Self::Repair,
         Self::Verify,
         Self::Frontier,
         Self::Generate,
+        Self::CompareBackends,
     ];
 
     #[must_use]
@@ -54,6 +57,7 @@ impl CommandName {
             Self::Verify => "verify",
             Self::Frontier => "frontier",
             Self::Generate => "generate",
+            Self::CompareBackends => "compare-backends",
         }
     }
 
@@ -65,6 +69,7 @@ impl CommandName {
             "verify" => Ok(Self::Verify),
             "frontier" => Ok(Self::Frontier),
             "generate" => Ok(Self::Generate),
+            "compare-backends" => Ok(Self::CompareBackends),
             _ => Err(CliError::new(format!("未知のsubcommandです: {value}"))),
         }
     }
@@ -141,6 +146,7 @@ pub struct Options {
     pub solver: SolverMode,
     pub certificate: Option<PathBuf>,
     pub check_case: CheckCase,
+    pub symmetry_breaking: bool,
 }
 
 impl Options {
@@ -165,6 +171,7 @@ impl Options {
             .unwrap_or(SolverMode::Off);
         let mut certificate = None;
         let mut check_case = CheckCase::ImmediateRelease;
+        let mut symmetry_breaking = true;
 
         while let Some(flag) = arguments.next() {
             let flag = flag
@@ -187,6 +194,17 @@ impl Options {
                 "--case" => {
                     check_case = CheckCase::parse(&required_utf8(&mut arguments, flag)?)?;
                 }
+                "--symmetry-breaking" => {
+                    symmetry_breaking = match required_utf8(&mut arguments, flag)?.as_str() {
+                        "on" => true,
+                        "off" => false,
+                        value => {
+                            return Err(CliError::new(format!(
+                                "未知のsymmetry-breaking値です: {value}"
+                            )))
+                        }
+                    };
+                }
                 _ => return Err(CliError::new(format!("未知のoptionです: {flag}"))),
             }
         }
@@ -203,6 +221,7 @@ impl Options {
             solver,
             certificate,
             check_case,
+            symmetry_breaking,
         })
     }
 }

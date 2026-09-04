@@ -8,6 +8,7 @@
 
 mod artifact;
 mod backend;
+mod comparison;
 mod matrix;
 mod parser;
 mod probe;
@@ -27,6 +28,11 @@ pub use backend::{
     OutputStream, PhaseArtifact, RuntimeError, RuntimeOutput, SolverArtifact, SolverKind,
     SolverRuntime, SolverSelection, StandardRuntime,
 };
+pub use comparison::{
+    compare_bounded_backends, BackendComparisonArtifact, BackendComparisonConfig,
+    BackendComparisonError, BackendObservation, ComparisonAgreements, ComparisonStatus,
+    ResourceObservation, BACKEND_COMPARISON_SCHEMA_V1,
+};
 pub use matrix::{
     SolverAsset, SolverCommands, SolverId, SolverMatrix, SolverMatrixError, SolverPin,
     SolverPlatform, MAX_SOLVER_MATRIX_BYTES, SOLVER_MATRIX_SCHEMA_V1,
@@ -41,9 +47,10 @@ pub use process::{
     SolverBinding,
 };
 pub use qbf::{
-    compile_bounded_safety_game, compile_quantifier_order_mutant_fixture, evaluate_qbf_truth,
-    AcceptanceRecord, CandidateCellRecord, CandidateRecord, QbfCompilation, QbfCompileError,
-    QbfCompileLimits, QbfFiniteBounds, QbfSemanticsMetadata, QuantifierLayout, ScenarioRecord,
+    compile_bounded_safety_game, compile_quantifier_order_mutant_fixture,
+    evaluate_qbf_reference_model, evaluate_qbf_truth, AcceptanceRecord, CandidateCellRecord,
+    CandidateRecord, QbfCompilation, QbfCompileError, QbfCompileLimits, QbfFiniteBounds,
+    QbfReferenceModel, QbfSemanticsMetadata, QuantifierLayout, ScenarioRecord,
     QBF_SEMANTICS_SCHEMA_V1,
 };
 pub use qbf_model::{

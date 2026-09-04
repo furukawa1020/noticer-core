@@ -37,6 +37,7 @@ fn options(command: CommandName, output: PathBuf) -> Options {
         solver: SolverMode::Off,
         certificate: None,
         check_case: CheckCase::ImmediateRelease,
+        symmetry_breaking: true,
     }
 }
 
@@ -47,6 +48,12 @@ fn six_commands_emit_public_only_canonical_manifests() {
         let output = temporary.path().join(command.as_str());
         let summary = execute(&options(command, output.clone())).unwrap();
         assert_eq!(summary.command, command);
+        if command == CommandName::CompareBackends {
+            let comparison = fs::read_to_string(output.join("comparison.json")).unwrap();
+            assert!(comparison.contains("\"exhaustive_qbf_decision\": true"));
+            assert!(comparison.contains("\"independently_checked\": true"));
+            assert!(comparison.contains("\"status\": \"NOT_RUN\""));
+        }
         let manifest = fs::read_to_string(output.join("manifest.json")).unwrap();
         assert!(manifest.contains("\"privacy_contract\":\"public-only-v1\""));
         assert!(manifest.contains("\"seed\":7"));
