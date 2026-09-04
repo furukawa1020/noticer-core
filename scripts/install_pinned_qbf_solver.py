@@ -125,17 +125,25 @@ def build_and_install(
     destination: Path,
     executable_path: str,
 ) -> str:
+    windows = executable_path.endswith(".exe")
+    target = "x86_64-pc-windows-gnu" if windows else None
+    command = ["cargo", "build", "--release", "--locked"]
+    if target is not None:
+        command.extend(["--target", target])
     try:
         subprocess.run(  # noqa: S603
-            ["cargo", "build", "--release", "--locked"],
+            command,
             cwd=source,
             check=True,
             timeout=15 * 60,
         )
     except (OSError, subprocess.SubprocessError) as error:
         raise InstallerError(f"pinned CAQE build failed: {error}") from error
-    built_name = "caqe.exe" if executable_path.endswith(".exe") else "caqe"
-    built = source / "target" / "release" / built_name
+    built_name = "caqe.exe" if windows else "caqe"
+    built = source / "target"
+    if target is not None:
+        built /= target
+    built = built / "release" / built_name
     if not built.is_file() or built.is_symlink():
         raise InstallerError("CAQE build did not produce a regular executable")
     if destination.exists():
