@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_counterexample_signature_v1.schema.json",
+  "title": "QuotientForge public counterexample signature v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "digest_sha256", "counterexample"],
+  "properties": {
+    "schema_version": {
+      "const": "noticer.quotient_forge.counterexample_signature.v1"
+    },
+    "digest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "counterexample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "slot",
+        "observer",
+        "left_observation",
+        "right_observation",
+        "causal_field",
+        "trace",
+        "repair_candidates"
+      ],
+      "properties": {
+        "kind": { "type": "object", "required": ["kind"] },
+        "slot": { "type": "integer", "minimum": 0 },
+        "observer": { "type": ["string", "null"] },
+        "left_observation": { "$ref": "#/$defs/optionalObservation" },
+        "right_observation": { "$ref": "#/$defs/optionalObservation" },
+        "causal_field": { "type": ["object", "null"] },
+        "trace": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/traceStep" }
+        },
+        "repair_candidates": {
+          "type": "array",
+          "items": { "type": "object", "required": ["kind"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation", "action"],
+      "properties": {
+        "obligation": { "type": "object", "required": ["kind"] },
+        "action": { "type": "string" }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emitted", "fields", "actions"],
+      "properties": {
+        "emitted": { "type": "boolean" },
+        "fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/action" }
+        }
+      }
+    },
+    "optionalObservation": {
+      "oneOf": [
+        { "$ref": "#/$defs/observation" },
+        { "type": "null" }
+      ]
+    },
+    "release": {
+      "$ref": "#/$defs/observation"
+    },
+    "traceStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot", "input", "left_release", "right_release"],
+      "properties": {
+        "slot": { "type": "integer", "minimum": 0 },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "public_symbol", "fault"],
+          "properties": {
+            "id": { "type": "string" },
+            "public_symbol": { "type": "string" },
+            "fault": { "type": ["string", "null"] }
+          }
+        },
+        "left_release": { "$ref": "#/$defs/release" },
+        "right_release": { "$ref": "#/$defs/release" }
+      }
+    }
+  }
+}

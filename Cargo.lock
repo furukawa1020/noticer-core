@@ -1930,6 +1930,7 @@ dependencies = [
  "quotient-forge-ir",
  "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]
