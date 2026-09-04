@@ -12,6 +12,7 @@ mod matrix;
 mod parser;
 mod probe;
 mod process;
+mod qbf;
 mod qdimacs;
 mod smtlib;
 
@@ -36,6 +37,12 @@ pub use probe::{
 pub use process::{
     run_bounded_process, BoundedProcessOutput, BoundedSolverRuntime, ProcessError, ProcessLimits,
     SolverBinding,
+};
+pub use qbf::{
+    compile_bounded_safety_game, compile_quantifier_order_mutant_fixture, evaluate_qbf_truth,
+    AcceptanceRecord, CandidateCellRecord, CandidateRecord, QbfCompilation, QbfCompileError,
+    QbfCompileLimits, QbfFiniteBounds, QbfSemanticsMetadata, QuantifierLayout, ScenarioRecord,
+    QBF_SEMANTICS_SCHEMA_V1,
 };
 pub use qdimacs::{
     encode_qdimacs, validate_qdimacs, QdimacsArtifact, QdimacsBounds, QdimacsError,
