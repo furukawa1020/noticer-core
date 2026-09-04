@@ -6,9 +6,14 @@
 //! finite-state release machines and delegates every security decision to the
 //! independent K6-04 product checker.
 
+mod blocker;
 mod model;
 mod search;
 
+pub use blocker::{
+    synthesis_problem_sha256, BlockerAssignmentRecord, BlockerAudit, BlockerClass, TypedBlocker,
+    TypedBlockerArtifact, TypedBlockerError, TYPED_BLOCKER_SCHEMA_V1,
+};
 pub use model::{
     MachineCell, PlantPair, PlantState, PlantTransition, ProblemError, ReleaseMachine,
     SynthesisCost, SynthesisProblem,
