@@ -111,3 +111,47 @@ jobs:
           name: quotient-forge-${{ matrix.solver }}-${{ matrix.platform }}-${{ github.run_id }}
           path: artifacts/solver-${{ matrix.solver }}-${{ matrix.platform }}
           if-no-files-found: warn
+
+  qbf-solver-optional:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_solver }}
+    name: qbf-solver-optional / caqe / ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x86_64
+            os: ubuntu-latest
+          - platform: windows-x86_64
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: rustup show
+      - name: pinned CAQE sourceを検証してbuildする
+        run: >-
+          python scripts/install_pinned_qbf_solver.py
+          --manifest configs/quotient_forge/qbf_solver_manifest_v1.json
+          --platform ${{ matrix.platform }}
+          --destination .qbf-solver-cache
+          --receipt artifacts/qbf-caqe-${{ matrix.platform }}/install.json
+      - name: bounded QBF SATとUNSAT smokeを実行する
+        run: >-
+          cargo run --locked -p quotient-forge-solver --bin qbf-solver-ci --
+          --manifest configs/quotient_forge/qbf_solver_manifest_v1.json
+          --platform ${{ matrix.platform }}
+          --install-root .qbf-solver-cache
+          --receipt artifacts/qbf-caqe-${{ matrix.platform }}/install.json
+          --output artifacts/qbf-caqe-${{ matrix.platform }}
+          --timeout-ms 5000
+          --seed 0
+      - name: QBF solver provenanceを保存する
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: quotient-forge-qbf-caqe-${{ matrix.platform }}-${{ github.run_id }}
+          path: artifacts/qbf-caqe-${{ matrix.platform }}
+          if-no-files-found: warn
