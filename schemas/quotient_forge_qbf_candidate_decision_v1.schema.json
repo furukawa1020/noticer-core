@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "noticer.quotient_forge.qbf_candidate_decision.v1",
+  "title": "QuotientForge checked QBF candidate decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "solver_result",
+    "decision",
+    "candidate_accepted",
+    "bounded_only",
+    "candidate_id",
+    "candidate_sha256",
+    "qdimacs_sha256",
+    "semantics_sha256",
+    "stdout_sha256",
+    "assignment_sha256",
+    "checker",
+    "diagnostic"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "noticer.quotient_forge.qbf_candidate_decision.v1"
+    },
+    "solver_result": {
+      "enum": ["SAT", "UNSAT_AT_BOUND", "UNKNOWN", "TIMEOUT", "MALFORMED"]
+    },
+    "decision": {
+      "enum": ["ACCEPTED", "REJECTED", "INCONCLUSIVE", "NOT_APPLICABLE"]
+    },
+    "candidate_accepted": { "type": "boolean" },
+    "bounded_only": { "const": true },
+    "candidate_id": { "type": ["integer", "null"], "minimum": 0 },
+    "candidate_sha256": {
+      "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "qdimacs_sha256": { "$ref": "#/$defs/sha256" },
+    "semantics_sha256": { "$ref": "#/$defs/sha256" },
+    "stdout_sha256": { "$ref": "#/$defs/sha256" },
+    "assignment_sha256": {
+      "anyOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "checker": { "$ref": "#/$defs/checker" },
+    "diagnostic": {
+      "anyOf": [{ "$ref": "#/$defs/diagnostic" }, { "type": "null" }]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "decision": { "const": "ACCEPTED" } } },
+      "then": {
+        "properties": {
+          "solver_result": { "const": "SAT" },
+          "candidate_accepted": { "const": true },
+          "candidate_id": { "type": "integer" },
+          "candidate_sha256": { "$ref": "#/$defs/sha256" },
+          "assignment_sha256": { "$ref": "#/$defs/sha256" },
+          "checker": {
+            "allOf": [
+              { "$ref": "#/$defs/checker" },
+              { "properties": { "status": { "const": "VERIFIED" } } }
+            ]
+          },
+          "diagnostic": { "type": "null" }
+        }
+      },
+      "else": {
+        "properties": {
+          "candidate_accepted": { "const": false },
+          "diagnostic": { "$ref": "#/$defs/diagnostic" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "diagnostic": {
+      "enum": [
+        "SOLVER_NOT_SAT",
+        "ARTIFACT_CONTRACT_MISMATCH",
+        "ASSIGNMENT_MISSING",
+        "ASSIGNMENT_MALFORMED",
+        "ASSIGNMENT_OUT_OF_RANGE",
+        "DUPLICATE_ASSIGNMENT",
+        "CONFLICTING_ASSIGNMENT",
+        "MISSING_MACHINE_ASSIGNMENT",
+        "NO_SELECTED_MACHINE",
+        "MULTIPLE_SELECTED_MACHINES",
+        "CANDIDATE_REGISTRY_MISMATCH",
+        "CANDIDATE_RECORD_MALFORMED",
+        "CANDIDATE_HASH_MISMATCH",
+        "CHECKER_MODEL_REJECTED",
+        "CHECKER_COUNTEREXAMPLE",
+        "CHECKER_INCONCLUSIVE",
+        "CHECKER_ERROR"
+      ]
+    },
+    "checker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "limits",
+        "explored_nodes",
+        "reached_depth",
+        "checked_horizon",
+        "counterexample_slot"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["VERIFIED", "COUNTEREXAMPLE", "INCONCLUSIVE", "NOT_RUN"]
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_nodes", "max_depth", "time_limit_ms"],
+          "properties": {
+            "max_nodes": { "type": "integer", "minimum": 0 },
+            "max_depth": { "type": "integer", "minimum": 0 },
+            "time_limit_ms": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "explored_nodes": { "type": ["integer", "null"], "minimum": 0 },
+        "reached_depth": { "type": ["integer", "null"], "minimum": 0 },
+        "checked_horizon": { "type": ["integer", "null"], "minimum": 0 },
+        "counterexample_slot": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    }
+  }
+}

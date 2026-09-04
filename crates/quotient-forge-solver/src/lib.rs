@@ -13,6 +13,7 @@ mod parser;
 mod probe;
 mod process;
 mod qbf;
+mod qbf_model;
 mod qbf_solver;
 mod qdimacs;
 mod smtlib;
@@ -44,6 +45,11 @@ pub use qbf::{
     AcceptanceRecord, CandidateCellRecord, CandidateRecord, QbfCompilation, QbfCompileError,
     QbfCompileLimits, QbfFiniteBounds, QbfSemanticsMetadata, QuantifierLayout, ScenarioRecord,
     QBF_SEMANTICS_SCHEMA_V1,
+};
+pub use qbf_model::{
+    check_qbf_candidate, CheckedQbfCandidate, QbfCandidateArtifactError, QbfCandidateDecision,
+    QbfCandidateDecisionArtifact, QbfCandidateDiagnostic, QbfCheckerLimitsRecord,
+    QbfIndependentCheckerEvidence, QbfIndependentCheckerStatus, QBF_CANDIDATE_DECISION_SCHEMA_V1,
 };
 pub use qbf_solver::{
     classify_qbf_output, QbfCandidateStatus, QbfInstallReceipt, QbfPlatform, QbfSolverAdapter,
