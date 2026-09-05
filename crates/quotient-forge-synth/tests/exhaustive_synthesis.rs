@@ -7,9 +7,10 @@ use quotient_forge_check::{
     Release, SemanticContract, SemanticId,
 };
 use quotient_forge_synth::{
-    blocking_clause_from_counterexample, find_feasible, optimize_cost, InconclusiveReason,
-    MachineCell, PlantPair, PlantState, PlantTransition, ReleaseMachine, SynthesisLimits,
-    SynthesisOutcome, SynthesisProblem,
+    blocking_clause_from_counterexample, find_feasible, optimize_cost, synthesis_problem_sha256,
+    BlockerAudit, BlockerClass, InconclusiveReason, MachineCell, PlantPair, PlantState,
+    PlantTransition, ReleaseMachine, SynthesisLimits, SynthesisOutcome, SynthesisProblem,
+    TypedBlocker, TypedBlockerError,
 };
 
 fn limits(max_states: u32) -> SynthesisLimits {
@@ -325,4 +326,199 @@ fn lowered_model_keeps_private_history_out_of_machine_state() {
         model.states[0].private_history,
         model.states[1].private_history
     );
+}
+
+#[test]
+fn typed_blocker_binds_class_source_problem_epoch_and_public_artifact() {
+    let problem = optimization_problem();
+    let mut renamed_private_histories = problem.clone();
+    renamed_private_histories.plant_states[0].private_history =
+        PrivateHistoryId::from("renamed-left");
+    renamed_private_histories.plant_states[1].private_history =
+        PrivateHistoryId::from("renamed-right");
+    assert_eq!(
+        synthesis_problem_sha256(&problem).unwrap(),
+        synthesis_problem_sha256(&renamed_private_histories).unwrap()
+    );
+    let source = ReleaseMachine {
+        state_count: 1,
+        symbol_count: 2,
+        cells: vec![
+            MachineCell {
+                next_state: 0,
+                output: 0,
+            },
+            MachineCell {
+                next_state: 0,
+                output: 1,
+            },
+        ],
+    };
+    let CheckOutcome::Counterexample(counterexample) = check(
+        &problem.lower_candidate(&source).unwrap(),
+        limits(1).checker_limits,
+    )
+    .unwrap() else {
+        panic!("expected a security counterexample");
+    };
+    let blocker = TypedBlocker::from_counterexample(&problem, &source, &counterexample, 7).unwrap();
+    assert_eq!(blocker.artifact().class, BlockerClass::Security);
+    blocker
+        .verify_source_candidate(&problem, &source, 7)
+        .unwrap();
+
+    let public = String::from_utf8(blocker.artifact().canonical_bytes().unwrap()).unwrap();
+    assert!(!public.contains("left-private"));
+    assert!(!public.contains("right-private"));
+    assert!(!public.contains("expensive"));
+
+    let mut changed_problem = problem.clone();
+    changed_problem.horizon += 1;
+    assert!(matches!(
+        blocker.validate_context(&changed_problem, 7),
+        Err(TypedBlockerError::StaleProblem)
+    ));
+    assert!(matches!(
+        blocker.validate_context(&problem, 8),
+        Err(TypedBlockerError::StaleEpoch { .. })
+    ));
+
+    let different_source = ReleaseMachine {
+        cells: vec![
+            MachineCell {
+                next_state: 0,
+                output: 1,
+            },
+            MachineCell {
+                next_state: 0,
+                output: 0,
+            },
+        ],
+        ..source.clone()
+    };
+    assert!(matches!(
+        blocker.verify_source_candidate(&problem, &different_source, 7),
+        Err(TypedBlockerError::SourceCandidateMismatch)
+    ));
+
+    let mut tampered = blocker.artifact().clone();
+    tampered.assignments[0].output ^= 1;
+    assert!(matches!(
+        TypedBlocker::from_artifact(tampered),
+        Err(TypedBlockerError::InvalidArtifact(_))
+    ));
+}
+
+#[test]
+fn typed_blocker_classes_are_disjoint() {
+    let problem = optimization_problem();
+    let source = ReleaseMachine {
+        state_count: 1,
+        symbol_count: 2,
+        cells: vec![
+            MachineCell {
+                next_state: 0,
+                output: 0,
+            },
+            MachineCell {
+                next_state: 0,
+                output: 1,
+            },
+        ],
+    };
+    let CheckOutcome::Counterexample(counterexample) = check(
+        &problem.lower_candidate(&source).unwrap(),
+        limits(1).checker_limits,
+    )
+    .unwrap() else {
+        panic!("expected a counterexample");
+    };
+    let mut utility = (*counterexample).clone();
+    utility.kind = quotient_forge_check::CounterexampleKind::UnauthorizedAction {
+        side: quotient_forge_check::Side::Left,
+        action: ActionId::from("notify"),
+        obligation: ObligationRef::Authorized(ObligationId::from("permit")),
+    };
+    let mut fault = (*counterexample).clone();
+    fault.kind = quotient_forge_check::CounterexampleKind::RecoverableFaultViolation {
+        side: quotient_forge_check::Side::Right,
+        action: ActionId::from("reconnect"),
+        obligation: ObligationRef::Recovery {
+            fault: quotient_forge_check::FaultInputId::from("link-loss"),
+            triggered_at: 0,
+        },
+    };
+    assert_eq!(
+        TypedBlocker::from_counterexample(&problem, &source, &utility, 0)
+            .unwrap()
+            .artifact()
+            .class,
+        BlockerClass::Utility
+    );
+    assert_eq!(
+        TypedBlocker::from_counterexample(&problem, &source, &fault, 0)
+            .unwrap()
+            .artifact()
+            .class,
+        BlockerClass::Fault
+    );
+}
+
+#[test]
+fn blocker_never_excludes_a_verified_candidate_in_the_small_domain() {
+    let problem = optimization_problem();
+    let source = ReleaseMachine {
+        state_count: 1,
+        symbol_count: 2,
+        cells: vec![
+            MachineCell {
+                next_state: 0,
+                output: 0,
+            },
+            MachineCell {
+                next_state: 0,
+                output: 1,
+            },
+        ],
+    };
+    let CheckOutcome::Counterexample(counterexample) = check(
+        &problem.lower_candidate(&source).unwrap(),
+        limits(1).checker_limits,
+    )
+    .unwrap() else {
+        panic!("expected a counterexample");
+    };
+    let blocker =
+        TypedBlocker::from_counterexample(&problem, &source, &counterexample, 11).unwrap();
+
+    for left_output in 0..2 {
+        for right_output in 0..2 {
+            let candidate = ReleaseMachine {
+                state_count: 1,
+                symbol_count: 2,
+                cells: vec![
+                    MachineCell {
+                        next_state: 0,
+                        output: left_output,
+                    },
+                    MachineCell {
+                        next_state: 0,
+                        output: right_output,
+                    },
+                ],
+            };
+            let outcome = check(
+                &problem.lower_candidate(&candidate).unwrap(),
+                limits(1).checker_limits,
+            )
+            .unwrap();
+            let audit = blocker
+                .audit_candidate(&problem, &candidate, 11, limits(1).checker_limits)
+                .unwrap();
+            if matches!(outcome, CheckOutcome::Verified(_)) {
+                assert_eq!(audit, BlockerAudit::NotExcluded);
+            }
+            assert_ne!(audit, BlockerAudit::OverExcludesVerifiedCandidate);
+        }
+    }
 }
