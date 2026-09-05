@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_unsat_core_audit_v1.schema.json",
+  "title": "QuotientForge Unsat Core Audit v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "problem_sha256",
+    "epoch",
+    "bounded_decision",
+    "assertion_registry_sha256",
+    "diagnostic_status",
+    "diagnostic_reason",
+    "resolved_assertion_names",
+    "recheck_performed",
+    "diagnostic_accepted",
+    "diagnostic_only",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "noticer.quotient_forge.unsat_core_audit.v1"
+    },
+    "problem_sha256": { "$ref": "#/$defs/sha256" },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "bounded_decision": { "enum": ["sat", "unsat", "inconclusive"] },
+    "assertion_registry_sha256": { "$ref": "#/$defs/sha256" },
+    "diagnostic_status": {
+      "enum": ["not_applicable", "unavailable", "rejected", "validated"]
+    },
+    "diagnostic_reason": {
+      "oneOf": [
+        {
+          "enum": [
+            "unsupported",
+            "missing",
+            "empty",
+            "malformed",
+            "unknown_name",
+            "duplicate_name",
+            "recheck_sat",
+            "recheck_inconclusive"
+          ]
+        },
+        { "type": "null" }
+      ]
+    },
+    "resolved_assertion_names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^qf\\.v1\\.(security|utility|fault|blocker)\\.[0-9]{8}\\.[0-9a-f]{64}$"
+      },
+      "uniqueItems": true
+    },
+    "recheck_performed": { "type": "boolean" },
+    "diagnostic_accepted": { "type": "boolean" },
+    "diagnostic_only": { "const": true },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

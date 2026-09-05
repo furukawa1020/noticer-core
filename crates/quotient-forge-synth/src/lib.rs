@@ -10,6 +10,7 @@ mod blocker;
 mod model;
 mod search;
 pub mod session;
+pub mod unsat_core;
 
 pub use blocker::{
     synthesis_problem_sha256, BlockerAssignmentRecord, BlockerAudit, BlockerClass, TypedBlocker,
