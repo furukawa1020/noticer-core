@@ -9,6 +9,7 @@
 mod blocker;
 mod model;
 mod search;
+pub mod session;
 
 pub use blocker::{
     synthesis_problem_sha256, BlockerAssignmentRecord, BlockerAudit, BlockerClass, TypedBlocker,

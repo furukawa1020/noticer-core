@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_incremental_cegis_session_v1.schema.json",
+  "title": "QuotientForge Incremental CEGIS Session v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "problem_sha256",
+    "epoch",
+    "seed",
+    "config",
+    "outcome",
+    "blockers",
+    "transcript",
+    "metrics",
+    "reuse_audit",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "noticer.quotient_forge.incremental_cegis_session.v1"
+    },
+    "problem_sha256": { "$ref": "#/$defs/sha256" },
+    "epoch": { "type": "integer", "minimum": 0 },
+    "seed": { "type": "integer", "minimum": 0 },
+    "config": { "$ref": "#/$defs/config" },
+    "outcome": { "$ref": "#/$defs/outcome" },
+    "blockers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/blocker" }
+    },
+    "transcript": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event" }
+    },
+    "metrics": { "$ref": "#/$defs/metrics" },
+    "reuse_audit": { "$ref": "#/$defs/reuseAudit" },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "class": {
+      "enum": ["security", "utility", "fault"]
+    },
+    "reason": {
+      "enum": [
+        "timeout",
+        "resource_exhausted",
+        "solver_unavailable",
+        "process_failure",
+        "checker_inconclusive",
+        "candidate_limit",
+        "invalid_blocker",
+        "no_progress"
+      ]
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_candidates", "restart_policy"],
+      "properties": {
+        "max_candidates": { "type": "integer", "minimum": 1 },
+        "restart_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accepted_blockers_per_generation"],
+          "properties": {
+            "accepted_blockers_per_generation": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "outcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision", "candidate_sha256"],
+          "properties": {
+            "decision": { "const": "sat" },
+            "candidate_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision"],
+          "properties": { "decision": { "const": "unsat" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision", "reason"],
+          "properties": {
+            "decision": { "const": "inconclusive" },
+            "reason": { "$ref": "#/$defs/reason" }
+          }
+        }
+      ]
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "blocker_sha256",
+        "class",
+        "typed_blocker_artifact_sha256",
+        "source_candidate_sha256",
+        "counterexample_signature_sha256",
+        "assertion_sha256",
+        "subsumes_blocker_sha256"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "noticer.quotient_forge.session_blocker.v1"
+        },
+        "blocker_sha256": { "$ref": "#/$defs/sha256" },
+        "class": { "$ref": "#/$defs/class" },
+        "typed_blocker_artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "source_candidate_sha256": { "$ref": "#/$defs/sha256" },
+        "counterexample_signature_sha256": { "$ref": "#/$defs/sha256" },
+        "assertion_sha256": { "$ref": "#/$defs/sha256" },
+        "subsumes_blocker_sha256": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sha256" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "generation",
+        "kind",
+        "blocker_sha256",
+        "candidate_sha256",
+        "replayed_blockers",
+        "reason"
+      ],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "kind": {
+          "enum": [
+            "session_started",
+            "blocker_accepted",
+            "blocker_duplicate",
+            "blocker_subsumed",
+            "backend_started",
+            "blocker_pushed",
+            "solve_called",
+            "candidate_checked",
+            "restarted",
+            "completed"
+          ]
+        },
+        "blocker_sha256": {
+          "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "candidate_sha256": {
+          "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+        },
+        "replayed_blockers": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "reason": {
+          "oneOf": [{ "$ref": "#/$defs/reason" }, { "type": "null" }]
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_starts",
+        "solver_calls",
+        "candidates",
+        "checker_calls",
+        "blocker_pushes",
+        "accepted_blockers",
+        "duplicate_blockers",
+        "subsumed_blockers",
+        "restarts"
+      ],
+      "properties": {
+        "backend_starts": { "type": "integer", "minimum": 0 },
+        "solver_calls": { "type": "integer", "minimum": 0 },
+        "candidates": { "type": "integer", "minimum": 0 },
+        "checker_calls": { "type": "integer", "minimum": 0 },
+        "blocker_pushes": { "type": "integer", "minimum": 0 },
+        "accepted_blockers": { "type": "integer", "minimum": 0 },
+        "duplicate_blockers": { "type": "integer", "minimum": 0 },
+        "subsumed_blockers": { "type": "integer", "minimum": 0 },
+        "restarts": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "reuseAudit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "backend_generations",
+        "replayed_pushes",
+        "incremental_pushes",
+        "reused_solve_calls"
+      ],
+      "properties": {
+        "backend_generations": { "type": "integer", "minimum": 0 },
+        "replayed_pushes": { "type": "integer", "minimum": 0 },
+        "incremental_pushes": { "type": "integer", "minimum": 0 },
+        "reused_solve_calls": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
