@@ -353,7 +353,7 @@ fn run_smt(
     }
 }
 
-fn run_qbf(
+pub(crate) fn run_qbf(
     problem: &SynthesisProblem,
     config: &BackendComparisonConfig,
     adapter: Option<&QbfSolverAdapter>,

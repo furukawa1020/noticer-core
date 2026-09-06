@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_reduction_ablation_v1.schema.json",
+  "title": "QuotientForge real-backend reduction ablation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "seed",
+    "state_bound",
+    "unreduced_problem_sha256",
+    "reduced_problem_sha256",
+    "evidence",
+    "structural_reduction",
+    "backends",
+    "semantic_gate",
+    "reduction_enabled",
+    "performance_signal",
+    "performance_claimed",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.reduction_ablation.v1" },
+    "case_id": { "type": "string", "minLength": 1 },
+    "seed": { "type": "integer", "minimum": 0 },
+    "state_bound": { "type": "integer", "minimum": 1 },
+    "unreduced_problem_sha256": { "$ref": "#/$defs/sha256" },
+    "reduced_problem_sha256": { "$ref": "#/$defs/sha256" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quotient_artifact_sha256", "preservation_artifact_sha256", "lift_artifact_sha256", "solution_set_artifact_sha256"],
+      "properties": {
+        "quotient_artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "preservation_artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "lift_artifact_sha256": { "$ref": "#/$defs/sha256" },
+        "solution_set_artifact_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "structural_reduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_state_to_class", "machine_symbol", "machine_state_bound"],
+      "properties": {
+        "source_state_to_class": { "$ref": "#/$defs/change" },
+        "machine_symbol": { "$ref": "#/$defs/change" },
+        "machine_state_bound": { "$ref": "#/$defs/change" }
+      }
+    },
+    "backends": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/pair" }
+    },
+    "semantic_gate": { "enum": ["pass", "disable", "inconclusive"] },
+    "reduction_enabled": { "type": "boolean" },
+    "performance_signal": { "enum": ["improved", "regressed", "mixed_or_equal", "not_verified"] },
+    "performance_claimed": { "const": false },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "value"],
+      "properties": {
+        "status": { "enum": ["observed", "not_verified", "unsupported"] },
+        "value": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "direction", "after_over_before_ppm"],
+      "properties": {
+        "before": { "$ref": "#/$defs/measurement" },
+        "after": { "$ref": "#/$defs/measurement" },
+        "direction": { "enum": ["decreased", "equal", "increased", "not_verified"] },
+        "after_over_before_ppm": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["solver_calls", "checker_calls", "candidates", "blockers", "variables", "clauses", "wall_time_ms", "peak_memory_bytes", "peak_memory_scope"],
+      "properties": {
+        "solver_calls": { "$ref": "#/$defs/measurement" },
+        "checker_calls": { "$ref": "#/$defs/measurement" },
+        "candidates": { "$ref": "#/$defs/measurement" },
+        "blockers": { "$ref": "#/$defs/measurement" },
+        "variables": { "$ref": "#/$defs/measurement" },
+        "clauses": { "$ref": "#/$defs/measurement" },
+        "wall_time_ms": { "$ref": "#/$defs/measurement" },
+        "peak_memory_bytes": { "$ref": "#/$defs/measurement" },
+        "peak_memory_scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "reduction", "engine", "status", "candidate_sha256", "candidate_independently_checked", "metrics", "diagnostic"],
+      "properties": {
+        "backend": { "enum": ["cegis", "smt", "qbf"] },
+        "reduction": { "enum": ["disabled", "enabled"] },
+        "engine": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["candidate_verified", "unrealizable_within_bounds", "timeout", "resource_exhausted", "solver_unavailable", "solver_unknown", "malformed_output", "not_run"] },
+        "candidate_sha256": { "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }] },
+        "candidate_independently_checked": { "type": "boolean" },
+        "metrics": { "$ref": "#/$defs/metrics" },
+        "diagnostic": { "type": ["string", "null"] }
+      }
+    },
+    "pair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "disabled", "enabled", "decision_consistency", "candidate_hash_equal", "candidate_checker_gate_passed", "solver_call_change", "checker_call_change", "candidate_change", "blocker_change", "wall_time_change", "peak_memory_change"],
+      "properties": {
+        "backend": { "enum": ["cegis", "smt", "qbf"] },
+        "disabled": { "$ref": "#/$defs/run" },
+        "enabled": { "$ref": "#/$defs/run" },
+        "decision_consistency": { "enum": ["agree", "disagree", "incomplete"] },
+        "candidate_hash_equal": { "type": ["boolean", "null"] },
+        "candidate_checker_gate_passed": { "type": "boolean" },
+        "solver_call_change": { "$ref": "#/$defs/change" },
+        "checker_call_change": { "$ref": "#/$defs/change" },
+        "candidate_change": { "$ref": "#/$defs/change" },
+        "blocker_change": { "$ref": "#/$defs/change" },
+        "wall_time_change": { "$ref": "#/$defs/change" },
+        "peak_memory_change": { "$ref": "#/$defs/change" }
+      }
+    }
+  }
+}
