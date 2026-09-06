@@ -14,6 +14,7 @@ pub mod preservation;
 pub mod quotient;
 mod search;
 pub mod session;
+pub mod solution_set;
 pub mod symmetry;
 pub mod unsat_core;
 
