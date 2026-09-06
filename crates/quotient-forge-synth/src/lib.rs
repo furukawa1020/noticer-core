@@ -13,6 +13,7 @@ pub mod preservation;
 pub mod quotient;
 mod search;
 pub mod session;
+pub mod symmetry;
 pub mod unsat_core;
 
 pub use blocker::{
