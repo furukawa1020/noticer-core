@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_quotient_preservation_v1.schema.json",
+  "title": "QuotientForge Quotient Preservation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "problem_sha256",
+    "quotient_artifact_sha256",
+    "checked_state_count",
+    "required_state_pairs",
+    "checked_state_pairs",
+    "obligation_results",
+    "overall_status",
+    "reduction_enabled",
+    "source_indices_included",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.quotient_preservation.v1" },
+    "problem_sha256": { "$ref": "#/$defs/sha256" },
+    "quotient_artifact_sha256": { "$ref": "#/$defs/sha256" },
+    "checked_state_count": { "type": "integer", "minimum": 1 },
+    "required_state_pairs": { "type": "integer", "minimum": 0 },
+    "checked_state_pairs": { "type": "integer", "minimum": 0 },
+    "obligation_results": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/result" }
+    },
+    "overall_status": { "$ref": "#/$defs/status" },
+    "reduction_enabled": { "type": "boolean" },
+    "source_indices_included": { "const": false },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "obligation": { "enum": ["observer_trace", "utility", "fault"] },
+    "status": { "enum": ["pass", "fail", "inconclusive"] },
+    "witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation",
+        "class_id",
+        "left_member_ordinal",
+        "right_member_ordinal",
+        "left_signature_sha256",
+        "right_signature_sha256"
+      ],
+      "properties": {
+        "obligation": { "$ref": "#/$defs/obligation" },
+        "class_id": { "type": "integer", "minimum": 0 },
+        "left_member_ordinal": { "type": "integer", "minimum": 0 },
+        "right_member_ordinal": { "type": "integer", "minimum": 1 },
+        "left_signature_sha256": { "$ref": "#/$defs/sha256" },
+        "right_signature_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation", "status", "witness", "inconclusive_reason"],
+      "properties": {
+        "obligation": { "$ref": "#/$defs/obligation" },
+        "status": { "$ref": "#/$defs/status" },
+        "witness": {
+          "oneOf": [{ "$ref": "#/$defs/witness" }, { "type": "null" }]
+        },
+        "inconclusive_reason": {
+          "oneOf": [{ "const": "pair_limit" }, { "type": "null" }]
+        }
+      }
+    }
+  }
+}
