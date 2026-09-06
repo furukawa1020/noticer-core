@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_quotient_partition_v1.schema.json",
+  "title": "QuotientForge Canonical Quotient Partition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "problem_sha256",
+    "source_state_count",
+    "relation_pair_count",
+    "classes",
+    "private_labels_included",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.quotient_partition.v1" },
+    "problem_sha256": { "$ref": "#/$defs/sha256" },
+    "source_state_count": { "type": "integer", "minimum": 1 },
+    "relation_pair_count": { "type": "integer", "minimum": 1 },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["class_id", "action_semantics_sha256", "member_count"],
+        "properties": {
+          "class_id": { "type": "integer", "minimum": 0 },
+          "action_semantics_sha256": { "$ref": "#/$defs/sha256" },
+          "member_count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "private_labels_included": { "const": false },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}
