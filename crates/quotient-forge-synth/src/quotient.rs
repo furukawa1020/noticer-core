@@ -214,6 +214,12 @@ impl QuotientPartition {
     pub fn mapped_state_count(&self) -> usize {
         self.state_to_class.len()
     }
+
+    pub fn source_class_pairs(&self) -> impl Iterator<Item = (u32, u32)> + '_ {
+        self.state_to_class
+            .iter()
+            .map(|(source_index, class_id)| (*source_index, *class_id))
+    }
 }
 
 #[derive(Debug, Error, Eq, PartialEq)]

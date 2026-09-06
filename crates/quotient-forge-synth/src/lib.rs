@@ -8,6 +8,7 @@
 
 mod blocker;
 pub mod comparison;
+pub mod lift;
 mod model;
 pub mod preservation;
 pub mod quotient;
