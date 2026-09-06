@@ -6,6 +6,7 @@
 //! checker remains the security oracle and every counterexample becomes a hard
 //! CEGIS blocking constraint.
 
+mod ablation;
 mod artifact;
 mod backend;
 mod comparison;
@@ -19,6 +20,13 @@ mod qbf_solver;
 mod qdimacs;
 mod smtlib;
 
+pub use ablation::{
+    run_reduction_ablation, write_reduction_ablation, AblationBackend, AblationError,
+    AblationManifestReceipt, AblationMetricDirection, AblationPair, AblationRun,
+    AblationRunMetrics, AblationRunStatus, DecisionConsistency, Measurement, MeasurementStatus,
+    MetricChange, PerformanceSignal, ReductionAblationArtifact, ReductionEvidenceBinding,
+    ReductionMode, SemanticGate, StructuralReduction, REDUCTION_ABLATION_SCHEMA_V1,
+};
 pub use artifact::{
     classify_runtime_output, IndependentCheckerResult, SolverArtifactError, SolverResultArtifact,
     SolverResultKind, SolverRunMetadata, SOLVER_RESULT_SCHEMA_V1,
