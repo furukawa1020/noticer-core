@@ -7,6 +7,7 @@
 //! independent K6-04 product checker.
 
 mod blocker;
+pub mod comparison;
 mod model;
 mod search;
 pub mod session;

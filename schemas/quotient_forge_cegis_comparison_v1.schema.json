@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_cegis_comparison_v1.schema.json",
+  "title": "QuotientForge CEGIS Comparison v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "frozen_case",
+    "backend_runs",
+    "backend_files",
+    "decision_consistency",
+    "candidate_hash_relation",
+    "comparison_accepted",
+    "performance_claimed",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.cegis_comparison.v1" },
+    "frozen_case": { "$ref": "#/$defs/frozenCase" },
+    "backend_runs": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/backendRun" }
+    },
+    "backend_files": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/backendFile" }
+    },
+    "decision_consistency": {
+      "enum": ["all_conclusive_agree", "conclusive_disagreement", "incomplete"]
+    },
+    "candidate_hash_relation": {
+      "enum": ["all_equal", "different_checked_candidates", "not_applicable"]
+    },
+    "comparison_accepted": { "type": "boolean" },
+    "performance_claimed": { "const": false },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "method": {
+      "enum": ["one_shot", "non_incremental_cegis", "incremental_cegis"]
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_states",
+        "trace_horizon",
+        "candidate_limit",
+        "wall_time_limit_ms",
+        "memory_limit_bytes"
+      ],
+      "properties": {
+        "machine_states": { "type": "integer", "minimum": 1 },
+        "trace_horizon": { "type": "integer", "minimum": 1 },
+        "candidate_limit": { "type": "integer", "minimum": 1 },
+        "wall_time_limit_ms": { "type": "integer", "minimum": 1 },
+        "memory_limit_bytes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "frozenCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "problem_sha256", "seed", "bounds", "checker_contract_sha256"],
+      "properties": {
+        "case_id": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$" },
+        "problem_sha256": { "$ref": "#/$defs/sha256" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "bounds": { "$ref": "#/$defs/bounds" },
+        "checker_contract_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "outcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision"],
+          "properties": { "decision": { "const": "sat" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision"],
+          "properties": { "decision": { "const": "bounded_unsat" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision", "reason"],
+          "properties": {
+            "decision": { "const": "inconclusive" },
+            "reason": {
+              "enum": [
+                "timeout",
+                "resource_exhausted",
+                "solver_unavailable",
+                "not_verified",
+                "process_failure",
+                "checker_inconclusive",
+                "candidate_limit"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullableSha": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["solver_calls", "checker_calls", "candidates", "blockers", "restarts", "core_rechecks"],
+      "properties": {
+        "solver_calls": { "type": "integer", "minimum": 0 },
+        "checker_calls": { "type": "integer", "minimum": 0 },
+        "candidates": { "type": "integer", "minimum": 0 },
+        "blockers": { "type": "integer", "minimum": 0 },
+        "restarts": { "type": "integer", "minimum": 0 },
+        "core_rechecks": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "value"],
+      "properties": {
+        "status": { "enum": ["observed", "not_verified", "unsupported"] },
+        "value": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wall_time_ms", "peak_memory_bytes"],
+      "properties": {
+        "wall_time_ms": { "$ref": "#/$defs/measurement" },
+        "peak_memory_bytes": { "$ref": "#/$defs/measurement" }
+      }
+    },
+    "core": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "named_assertions", "core_size", "audit_artifact_sha256"],
+      "properties": {
+        "status": { "enum": ["not_requested", "unsupported", "missing", "rejected", "validated"] },
+        "named_assertions": { "type": "integer", "minimum": 0 },
+        "core_size": { "type": ["integer", "null"], "minimum": 0 },
+        "audit_artifact_sha256": { "$ref": "#/$defs/nullableSha" }
+      }
+    },
+    "backendRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "method",
+        "case_id",
+        "problem_sha256",
+        "seed",
+        "bounds",
+        "checker_contract_sha256",
+        "verification_status",
+        "outcome",
+        "checked_candidate_sha256",
+        "candidate_independently_checked",
+        "checker_artifact_sha256",
+        "backend_artifact_sha256",
+        "session_artifact_sha256",
+        "metrics",
+        "resources",
+        "core",
+        "artifact_sha256"
+      ],
+      "properties": {
+        "schema_version": { "const": "noticer.quotient_forge.cegis_backend_run.v1" },
+        "method": { "$ref": "#/$defs/method" },
+        "case_id": { "type": "string" },
+        "problem_sha256": { "$ref": "#/$defs/sha256" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "bounds": { "$ref": "#/$defs/bounds" },
+        "checker_contract_sha256": { "$ref": "#/$defs/sha256" },
+        "verification_status": { "enum": ["verified", "not_verified", "solver_unavailable"] },
+        "outcome": { "$ref": "#/$defs/outcome" },
+        "checked_candidate_sha256": { "$ref": "#/$defs/nullableSha" },
+        "candidate_independently_checked": { "type": "boolean" },
+        "checker_artifact_sha256": { "$ref": "#/$defs/nullableSha" },
+        "backend_artifact_sha256": { "$ref": "#/$defs/nullableSha" },
+        "session_artifact_sha256": { "$ref": "#/$defs/nullableSha" },
+        "metrics": { "$ref": "#/$defs/metrics" },
+        "resources": { "$ref": "#/$defs/resources" },
+        "core": { "$ref": "#/$defs/core" },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "backendFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "relative_path", "artifact_sha256"],
+      "properties": {
+        "method": { "$ref": "#/$defs/method" },
+        "relative_path": {
+          "enum": [
+            "backends/one_shot/result.json",
+            "backends/non_incremental_cegis/result.json",
+            "backends/incremental_cegis/result.json"
+          ]
+        },
+        "artifact_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
