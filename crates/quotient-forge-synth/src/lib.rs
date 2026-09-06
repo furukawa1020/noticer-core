@@ -9,6 +9,7 @@
 mod blocker;
 pub mod comparison;
 mod model;
+pub mod preservation;
 pub mod quotient;
 mod search;
 pub mod session;
