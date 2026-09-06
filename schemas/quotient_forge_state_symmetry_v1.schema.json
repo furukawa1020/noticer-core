@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/quotient_forge_state_symmetry_v1.schema.json",
+  "title": "QuotientForge State Symmetry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "original_machine_sha256",
+    "canonical_machine_sha256",
+    "state_count",
+    "symbol_count",
+    "reachable_state_count",
+    "unreachable_state_count",
+    "unreachable_permutations_evaluated",
+    "checker_calls",
+    "original_decision",
+    "canonical_decision",
+    "witness_verified",
+    "decision_preserved",
+    "canonicalization_enabled",
+    "witness_persisted",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": "noticer.quotient_forge.state_symmetry.v1" },
+    "original_machine_sha256": { "$ref": "#/$defs/sha256" },
+    "canonical_machine_sha256": { "$ref": "#/$defs/sha256" },
+    "state_count": { "type": "integer", "minimum": 1 },
+    "symbol_count": { "type": "integer", "minimum": 1 },
+    "reachable_state_count": { "type": "integer", "minimum": 1 },
+    "unreachable_state_count": { "type": "integer", "minimum": 0 },
+    "unreachable_permutations_evaluated": { "type": "integer", "minimum": 1 },
+    "checker_calls": { "const": 2 },
+    "original_decision": { "$ref": "#/$defs/decision" },
+    "canonical_decision": { "$ref": "#/$defs/decision" },
+    "witness_verified": { "const": true },
+    "decision_preserved": { "type": "boolean" },
+    "canonicalization_enabled": { "type": "boolean" },
+    "witness_persisted": { "const": false },
+    "artifact_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "decision": { "enum": ["valid", "invalid", "inconclusive"] }
+  }
+}
