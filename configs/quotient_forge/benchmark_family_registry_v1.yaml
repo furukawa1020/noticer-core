@@ -1,0 +1,35 @@
+schema: noticer-k7-benchmark-family-registry-v1
+contract_version: 1
+state: FROZEN
+contract_path: configs/quotient_forge/k7_research.yaml
+split_unit: spec_family
+row_random_split_allowed: false
+variant_split_policy: inherits_spec_family_split
+seeds:
+  catalog: 42001
+  split: 42004
+families:
+  - {id: noticer_aets_fixed_cadence, category: noticer, split: train, split_ordinal: 0}
+  - {id: noticer_aplot_bounded_loss, category: noticer, split: train, split_ordinal: 1}
+  - {id: noticer_atv2_action_window, category: noticer, split: train, split_ordinal: 2}
+  - {id: generic_delayed_notification, category: generic, split: train, split_ordinal: 3}
+  - {id: generic_fixed_size_release, category: generic, split: train, split_ordinal: 4}
+  - {id: generic_public_retry, category: generic, split: train, split_ordinal: 5}
+  - {id: negative_missing_authorized_output, category: negative, split: train, split_ordinal: 6}
+  - {id: negative_secret_dependent_retry, category: negative, split: train, split_ordinal: 7}
+  - {id: noticer_aepa_public_context, category: noticer, split: development, split_ordinal: 0}
+  - {id: noticer_service_separation, category: noticer, split: development, split_ordinal: 1}
+  - {id: noticer_reconnect_normalization, category: noticer, split: development, split_ordinal: 2}
+  - {id: generic_private_scheduler, category: generic, split: development, split_ordinal: 3}
+  - {id: generic_medical_alert, category: generic, split: development, split_ordinal: 4}
+  - {id: negative_impossible_deadline, category: negative, split: development, split_ordinal: 5}
+  - {id: negative_failure_leak, category: negative, split: development, split_ordinal: 6}
+  - {id: negative_quotient_merge, category: negative, split: development, split_ordinal: 7}
+  - {id: noticer_multiservice_collusion, category: noticer, split: held_out, split_ordinal: 0}
+  - {id: noticer_longitudinal_handoff, category: noticer, split: held_out, split_ordinal: 1}
+  - {id: generic_smart_home_actuator, category: generic, split: held_out, split_ordinal: 2}
+  - {id: generic_activity_actuator, category: generic, split: held_out, split_ordinal: 3}
+  - {id: generic_fault_tolerant_alarm, category: generic, split: held_out, split_ordinal: 4}
+  - {id: negative_private_carryover, category: negative, split: held_out, split_ordinal: 5}
+  - {id: negative_observer_omission, category: negative, split: held_out, split_ordinal: 6}
+  - {id: negative_unauthorized_cover_action, category: negative, split: held_out, split_ordinal: 7}
