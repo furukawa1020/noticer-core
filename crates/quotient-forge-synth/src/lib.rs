@@ -10,6 +10,7 @@ mod blocker;
 pub mod comparison;
 pub mod lift;
 mod model;
+pub mod noticer_benchmark;
 pub mod preservation;
 pub mod quotient;
 mod search;

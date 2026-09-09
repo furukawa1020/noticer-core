@@ -1,0 +1,26 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: noticer_reconnect_normalization
+variant_id: canonical
+split: development
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 7558ca25416e20765e1e7bcc752219f1cd1b20426462c2aa74b2f04ecee644f3
+dimensions:
+  plant_states: 8
+  plant_transitions: 24
+  machine_state_bound: 4
+  machine_symbol_count: 3
+  horizon: 4
+  observer_count: 2
+  observer_dimensions: 4
+feature_tags:
+- failure
+- retry
+- timing
+obligations:
+- action_window
+- exactly_once
+- reconnect
+expected_outcome_class: REALIZABLE
+difficulty_tier: D3
+author_template_sha256: dc33b4d1891c50d9a729bd3959d9aa3ad89c2975804d392b14754ecf677fce09

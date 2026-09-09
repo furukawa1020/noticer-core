@@ -1,0 +1,64 @@
+module noticer_longitudinal_handoff version 1 {
+  horizon 5;
+  transducer_states <= 5;
+  private {
+    bool evidence_ready;
+    enum margin { nominal, elevated };
+  }
+
+  public {
+    bool network_available;
+    slot now;
+    bool handoff_to_beta;
+  }
+
+  action notify {
+    service alpha;
+    release_window 4..4;
+    exactly_once;
+  }
+
+  quotient {
+    by action notify;
+    erase evidence_ready;
+    erase margin;
+  }
+
+  observer network {
+    sees service_alias;
+    sees send_slot;
+  }
+
+  observer service(alpha) {
+    sees action_slot;
+  }
+
+  observer service(beta) {
+    sees action_slot;
+  }
+
+  observer longitudinal {
+    sees action_slot;
+    sees service_alias;
+    sees send_slot;
+    combines service(alpha);
+    combines service(beta);
+  }
+
+  utility {
+    obligation notify {
+      exactly_once;
+      release 4..4;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}

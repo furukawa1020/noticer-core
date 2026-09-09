@@ -1,0 +1,67 @@
+module noticer_multiservice_collusion version 1 {
+  horizon 4;
+  transducer_states <= 4;
+  private {
+    bool evidence_ready;
+    enum margin { nominal, elevated };
+  }
+
+  public {
+    bool network_available;
+    slot now;
+    bool service_beta;
+  }
+
+  action notify {
+    service alpha;
+    release_window 3..3;
+    exactly_once;
+  }
+
+  quotient {
+    by action notify;
+    erase evidence_ready;
+    erase margin;
+  }
+
+  observer network {
+    sees packet_size;
+    sees service_alias;
+    sees send_slot;
+  }
+
+  observer service(alpha) {
+    sees action_slot;
+  }
+
+  observer service(beta) {
+    sees action_slot;
+  }
+
+  observer coalition {
+    sees action_slot;
+    sees packet_size;
+    sees service_alias;
+    sees send_slot;
+    combines network;
+    combines service(alpha);
+    combines service(beta);
+  }
+
+  utility {
+    obligation notify {
+      exactly_once;
+      release 3..3;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}

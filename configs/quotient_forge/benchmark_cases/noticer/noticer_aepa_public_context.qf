@@ -1,0 +1,52 @@
+module noticer_aepa_public_context version 1 {
+  horizon 3;
+  transducer_states <= 3;
+  private {
+    bool evidence_ready;
+    enum margin { nominal, elevated };
+  }
+
+  public {
+    bool network_available;
+    slot now;
+    bool context_high;
+  }
+
+  action notify {
+    service menfugu;
+    release_window 2..2;
+    exactly_once;
+  }
+
+  quotient {
+    by action notify;
+    erase evidence_ready;
+    erase margin;
+  }
+
+  observer network {
+    sees frame_kind;
+    sees send_slot;
+  }
+
+  observer service(menfugu) {
+    sees action_slot;
+  }
+
+  utility {
+    obligation notify {
+      exactly_once;
+      release 2..2;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}
