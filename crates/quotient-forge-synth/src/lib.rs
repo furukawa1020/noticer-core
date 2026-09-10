@@ -11,6 +11,7 @@ pub mod comparison;
 pub mod generic_benchmark;
 pub mod lift;
 mod model;
+pub mod negative_benchmark;
 pub mod noticer_benchmark;
 pub mod preservation;
 pub mod quotient;

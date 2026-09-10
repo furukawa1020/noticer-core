@@ -1,0 +1,52 @@
+module negative_failure_leak version 1 {
+  horizon 3;
+  transducer_states <= 3;
+  private {
+    bool secret;
+    enum private_class { left, right };
+  }
+
+  public {
+    bool public_gate;
+    slot now;
+  }
+
+  action act {
+    service target;
+    release_window 2..2;
+    exactly_once;
+  }
+
+  quotient {
+    by action act;
+    erase secret;
+    erase private_class;
+  }
+
+  observer network {
+    sees public_error;
+    sees send_slot;
+  }
+
+  observer service(target) {
+    sees action_slot;
+  }
+
+  utility {
+    obligation act {
+      exactly_once;
+      release 2..2;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+    public_error = private.secret;
+  }
+}
