@@ -41,8 +41,8 @@ module noticer_longitudinal_handoff version 1 {
     sees action_slot;
     sees service_alias;
     sees send_slot;
-    combines service(alpha);
-    combines service(beta);
+    combines service (alpha);
+    combines service (beta);
   }
 
   utility {

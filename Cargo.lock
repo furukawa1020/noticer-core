@@ -2011,6 +2011,8 @@ name = "quotient-forge-synth"
 version = "0.1.0"
 dependencies = [
  "quotient-forge-check",
+ "quotient-forge-syntax",
+ "quotient-forge-types",
  "serde",
  "serde_json",
  "sha2",

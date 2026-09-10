@@ -44,8 +44,8 @@ module noticer_multiservice_collusion version 1 {
     sees service_alias;
     sees send_slot;
     combines network;
-    combines service(alpha);
-    combines service(beta);
+    combines service (alpha);
+    combines service (beta);
   }
 
   utility {
