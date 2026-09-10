@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_benchmark_calibration_v1.schema.json",
+  "title": "K7 benchmark calibration lock v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "state", "registry_path", "case_root", "status_policy", "resource_policy", "cases"],
+  "properties": {
+    "schema": {"const": "noticer.k7.benchmark-calibration.v1"},
+    "version": {"const": 1},
+    "state": {"const": "FROZEN"},
+    "registry_path": {"const": "configs/quotient_forge/benchmark_family_registry_v1.yaml"},
+    "case_root": {"const": "configs/quotient_forge/benchmark_cases"},
+    "status_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["author_label_can_be_overwritten", "disagreement_policy", "inconclusive_policy", "held_out_policy"],
+      "properties": {
+        "author_label_can_be_overwritten": {"const": false},
+        "disagreement_policy": {"const": "BLOCK"},
+        "inconclusive_policy": {"const": "PRESERVE"},
+        "held_out_policy": {"const": "SEALED_UNTIL_LEDGER"}
+      }
+    },
+    "resource_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_candidates", "checker_max_nodes", "checker_max_depth", "time_limit_ms", "time_limit_status", "candidate_limit_status", "checker_node_limit_status", "checker_depth_limit_status"],
+      "properties": {
+        "max_candidates": {"type": "integer", "minimum": 1},
+        "checker_max_nodes": {"type": "integer", "minimum": 1},
+        "checker_max_depth": {"type": "integer", "minimum": 1},
+        "time_limit_ms": {"type": "integer", "minimum": 1},
+        "time_limit_status": {"const": "INCONCLUSIVE_TIME_LIMIT"},
+        "candidate_limit_status": {"const": "INCONCLUSIVE_CANDIDATE_LIMIT"},
+        "checker_node_limit_status": {"const": "INCONCLUSIVE_NODE_LIMIT"},
+        "checker_depth_limit_status": {"const": "INCONCLUSIVE_DEPTH_LIMIT"}
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["family_id", "split", "case_sha256", "aqrs_sha256", "expected_status", "calibration_scope", "difficulty"],
+        "properties": {
+          "family_id": {"type": "string", "pattern": "^(noticer|generic|negative)_[a-z0-9_]+$"},
+          "split": {"enum": ["train", "development", "held_out"]},
+          "case_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "aqrs_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "expected_status": {"enum": ["REALIZABLE", "UNSAT_AT_BOUND", "INVALID_SPEC"]},
+          "calibration_scope": {"enum": ["CALIBRATION", "SEALED_HELD_OUT"]},
+          "difficulty": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state_lower_bound", "state_upper_bound", "horizon_lower_bound", "horizon_upper_bound", "observer_count", "observer_dimensions", "fault_axis_count", "tier"],
+            "properties": {
+              "state_lower_bound": {"type": "integer", "minimum": 1},
+              "state_upper_bound": {"type": "integer", "minimum": 1},
+              "horizon_lower_bound": {"type": "integer", "minimum": 1},
+              "horizon_upper_bound": {"type": "integer", "minimum": 1},
+              "observer_count": {"type": "integer", "minimum": 1},
+              "observer_dimensions": {"type": "integer", "minimum": 1},
+              "fault_axis_count": {"type": "integer", "minimum": 0},
+              "tier": {"enum": ["D1", "D2", "D3", "D4", "D5"]}
+            }
+          }
+        }
+      }
+    }
+  }
+}
