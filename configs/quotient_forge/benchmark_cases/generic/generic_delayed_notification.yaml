@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: generic_delayed_notification
+variant_id: canonical
+split: train
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 3571e1ecda49884b3cfe67f195c6f327a6e9231c90ec2ca9a87bf65bd61fa08d
+dimensions:
+  plant_states: 6
+  plant_transitions: 6
+  machine_state_bound: 3
+  machine_symbol_count: 1
+  horizon: 3
+  observer_count: 2
+  observer_dimensions: 2
+feature_tags:
+- silence
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D1
+author_template_sha256: fe2cf1eef985985e89f411b963cffdc94cc406c7cdba96cba981e917bcfd3139

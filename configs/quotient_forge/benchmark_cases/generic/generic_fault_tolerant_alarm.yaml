@@ -1,0 +1,27 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: generic_fault_tolerant_alarm
+variant_id: canonical
+split: held_out
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 0d1508af1ad4bf9588741e67d02bbcaea043aea31fcd0a50741349891e42a6d1
+dimensions:
+  plant_states: 10
+  plant_transitions: 30
+  machine_state_bound: 5
+  machine_symbol_count: 3
+  horizon: 5
+  observer_count: 2
+  observer_dimensions: 5
+feature_tags:
+- failure
+- retry
+- timing
+obligations:
+- action_window
+- bounded_loss
+- exactly_once
+- reconnect
+expected_outcome_class: REALIZABLE
+difficulty_tier: D5
+author_template_sha256: null

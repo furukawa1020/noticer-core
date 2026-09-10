@@ -1,0 +1,60 @@
+module generic_fault_tolerant_alarm version 1 {
+  horizon 5;
+  transducer_states <= 5;
+  private {
+    bool alarm_evidence;
+    enum alarm_class { advisory, urgent };
+  }
+
+  public {
+    bool public_gate;
+    slot now;
+    bool link_available;
+  }
+
+  action act {
+    service alarm;
+    release_window 4..4;
+    exactly_once;
+  }
+
+  quotient {
+    by action act;
+    erase alarm_evidence;
+    erase alarm_class;
+  }
+
+  observer network {
+    sees failure;
+    sees reconnect;
+    sees retry_count;
+    sees send_slot;
+  }
+
+  observer service(alarm) {
+    sees action_slot;
+  }
+
+  fault bounded_link {
+    max_drop 1 per window 3;
+    reconnect <= 2;
+  }
+
+  utility {
+    obligation act {
+      exactly_once;
+      release 4..4;
+      under fault bounded_link;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}

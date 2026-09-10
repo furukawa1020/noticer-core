@@ -1,0 +1,25 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: generic_fixed_size_release
+variant_id: canonical
+split: train
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 580c3bc2003866654ccd851bd74b8ab62dc5b36ae08b94e317e3f5726b891165
+dimensions:
+  plant_states: 4
+  plant_transitions: 4
+  machine_state_bound: 2
+  machine_symbol_count: 1
+  horizon: 2
+  observer_count: 2
+  observer_dimensions: 4
+feature_tags:
+- silence
+- size
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D1
+author_template_sha256: 9e46096bd9eb1862b0c947c51f7188ca099476de237b0aa0332fd5000f905a99

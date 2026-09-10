@@ -1,0 +1,52 @@
+module generic_medical_alert version 1 {
+  horizon 4;
+  transducer_states <= 4;
+  private {
+    bool evidence_ready;
+    enum private_severity { low, high };
+  }
+
+  public {
+    bool public_gate;
+    slot now;
+    bool alert_enabled;
+  }
+
+  action act {
+    service clinician;
+    release_window 3..3;
+    exactly_once;
+  }
+
+  quotient {
+    by action act;
+    erase evidence_ready;
+    erase private_severity;
+  }
+
+  observer network {
+    sees frame_kind;
+    sees send_slot;
+  }
+
+  observer service(clinician) {
+    sees action_slot;
+  }
+
+  utility {
+    obligation act {
+      exactly_once;
+      release 3..3;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}
