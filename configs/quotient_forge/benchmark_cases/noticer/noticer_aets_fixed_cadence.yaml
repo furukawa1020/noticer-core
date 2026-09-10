@@ -1,0 +1,25 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: noticer_aets_fixed_cadence
+variant_id: canonical
+split: train
+aqrs:
+  language_version: 1
+  canonical_source_sha256: c037c2c6a8b53d5d561cf9c3e0daeeeec17bb75c9cd517e0e5f64f047030fb90
+dimensions:
+  plant_states: 4
+  plant_transitions: 4
+  machine_state_bound: 2
+  machine_symbol_count: 1
+  horizon: 2
+  observer_count: 2
+  observer_dimensions: 4
+feature_tags:
+- silence
+- size
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D1
+author_template_sha256: 9e46096bd9eb1862b0c947c51f7188ca099476de237b0aa0332fd5000f905a99

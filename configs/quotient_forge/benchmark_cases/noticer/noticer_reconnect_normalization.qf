@@ -1,0 +1,58 @@
+module noticer_reconnect_normalization version 1 {
+  horizon 4;
+  transducer_states <= 4;
+  private {
+    bool evidence_ready;
+    enum margin { nominal, elevated };
+  }
+
+  public {
+    bool network_available;
+    slot now;
+  }
+
+  action notify {
+    service menfugu;
+    release_window 3..3;
+    exactly_once;
+  }
+
+  quotient {
+    by action notify;
+    erase evidence_ready;
+    erase margin;
+  }
+
+  observer network {
+    sees connection;
+    sees reconnect;
+    sees send_slot;
+  }
+
+  observer service(menfugu) {
+    sees action_slot;
+  }
+
+  fault reconnect_cycle {
+    disconnect <= 1;
+    reconnect <= 1;
+  }
+
+  utility {
+    obligation notify {
+      exactly_once;
+      release 3..3;
+      under fault reconnect_cycle;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}

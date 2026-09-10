@@ -1,0 +1,26 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: noticer_longitudinal_handoff
+variant_id: canonical
+split: held_out
+aqrs:
+  language_version: 1
+  canonical_source_sha256: c2806e3d1c1d6e862f033a9bc751384efef6b78fb87dad59357e808936ad4990
+dimensions:
+  plant_states: 10
+  plant_transitions: 20
+  machine_state_bound: 5
+  machine_symbol_count: 2
+  horizon: 5
+  observer_count: 4
+  observer_dimensions: 7
+feature_tags:
+- longitudinal
+- size
+- timing
+obligations:
+- action_window
+- exactly_once
+- reconnect
+expected_outcome_class: REALIZABLE
+difficulty_tier: D5
+author_template_sha256: null

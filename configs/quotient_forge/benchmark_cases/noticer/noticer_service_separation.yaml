@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: noticer_service_separation
+variant_id: canonical
+split: development
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 2c13668f8cf91ca64635b3e3e9ac2f08abc1b63135aced55c3f048f4c0eff408
+dimensions:
+  plant_states: 8
+  plant_transitions: 16
+  machine_state_bound: 4
+  machine_symbol_count: 2
+  horizon: 4
+  observer_count: 3
+  observer_dimensions: 4
+feature_tags:
+- size
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D3
+author_template_sha256: 740b3924b611fba9497bfe271f67f329a4fbeb1be1ae2cdd6aff9cbb98822449
