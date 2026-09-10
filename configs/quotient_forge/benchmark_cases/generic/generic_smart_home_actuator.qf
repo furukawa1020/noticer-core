@@ -1,0 +1,52 @@
+module generic_smart_home_actuator version 1 {
+  horizon 4;
+  transducer_states <= 4;
+  private {
+    bool local_state;
+    enum occupancy_hint { absent, present };
+  }
+
+  public {
+    bool public_gate;
+    slot now;
+    bool command_enabled;
+  }
+
+  action act {
+    service home;
+    release_window 3..3;
+    exactly_once;
+  }
+
+  quotient {
+    by action act;
+    erase local_state;
+    erase occupancy_hint;
+  }
+
+  observer network {
+    sees packet_size;
+    sees send_slot;
+  }
+
+  observer service(home) {
+    sees action_slot;
+  }
+
+  utility {
+    obligation act {
+      exactly_once;
+      release 3..3;
+    }
+    forbid unauthorized_action;
+  }
+
+  objective lexicographic {
+    minimize dummy_frames;
+    minimize worst_latency;
+  }
+
+  release {
+    send_slot = public.now;
+  }
+}

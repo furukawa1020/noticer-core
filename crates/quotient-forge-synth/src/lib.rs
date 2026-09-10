@@ -8,6 +8,7 @@
 
 mod blocker;
 pub mod comparison;
+pub mod generic_benchmark;
 pub mod lift;
 mod model;
 pub mod noticer_benchmark;

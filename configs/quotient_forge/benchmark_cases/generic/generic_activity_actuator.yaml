@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: generic_activity_actuator
+variant_id: canonical
+split: held_out
+aqrs:
+  language_version: 1
+  canonical_source_sha256: bc7853dcfe1f538755d616ac1af3d733c83b1929592a7cde2ff1466d4e6ec522
+dimensions:
+  plant_states: 10
+  plant_transitions: 20
+  machine_state_bound: 5
+  machine_symbol_count: 2
+  horizon: 5
+  observer_count: 2
+  observer_dimensions: 3
+feature_tags:
+- longitudinal
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D4
+author_template_sha256: null

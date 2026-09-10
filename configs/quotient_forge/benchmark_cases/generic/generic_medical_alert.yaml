@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: generic_medical_alert
+variant_id: canonical
+split: development
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 7ddc4d78a00eab59b12963f35178305ec9119d33782bc6df5de2c2e5a4f4de41
+dimensions:
+  plant_states: 8
+  plant_transitions: 16
+  machine_state_bound: 4
+  machine_symbol_count: 2
+  horizon: 4
+  observer_count: 2
+  observer_dimensions: 3
+feature_tags:
+- failure
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: REALIZABLE
+difficulty_tier: D3
+author_template_sha256: 740b3924b611fba9497bfe271f67f329a4fbeb1be1ae2cdd6aff9cbb98822449
