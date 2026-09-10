@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: negative_quotient_merge
+variant_id: canonical
+split: development
+aqrs:
+  language_version: 1
+  canonical_source_sha256: c4de2e2eec0cd100eae7865f18c3189ece4c2dd1b685f7cec61c42b127f2ff26
+dimensions:
+  plant_states: 6
+  plant_transitions: 6
+  machine_state_bound: 3
+  machine_symbol_count: 1
+  horizon: 3
+  observer_count: 2
+  observer_dimensions: 2
+feature_tags:
+- collusion
+- silence
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: INVALID
+difficulty_tier: D2
+author_template_sha256: null

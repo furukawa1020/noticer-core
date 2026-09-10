@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: negative_private_carryover
+variant_id: canonical
+split: held_out
+aqrs:
+  language_version: 1
+  canonical_source_sha256: 732bc9782f4b2bab46c5fb1a8a66b4dfbe8b18d6d3fe30723d37137efb84a5c0
+dimensions:
+  plant_states: 8
+  plant_transitions: 8
+  machine_state_bound: 3
+  machine_symbol_count: 1
+  horizon: 4
+  observer_count: 2
+  observer_dimensions: 3
+feature_tags:
+- longitudinal
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: INVALID
+difficulty_tier: D3
+author_template_sha256: null

@@ -1,0 +1,24 @@
+schema: noticer.k7.aqrs-benchmark-case.v1
+family_id: negative_unauthorized_cover_action
+variant_id: canonical
+split: held_out
+aqrs:
+  language_version: 1
+  canonical_source_sha256: a5308437793eef68c70842cb101be694b11d0d7de186d26db26061be6f433631
+dimensions:
+  plant_states: 6
+  plant_transitions: 6
+  machine_state_bound: 3
+  machine_symbol_count: 1
+  horizon: 3
+  observer_count: 2
+  observer_dimensions: 2
+feature_tags:
+- silence
+- timing
+obligations:
+- action_window
+- exactly_once
+expected_outcome_class: UNREALIZABLE
+difficulty_tier: D4
+author_template_sha256: null
