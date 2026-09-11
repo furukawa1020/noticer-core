@@ -1,0 +1,40 @@
+schema: noticer.k7.heldout-precommit.v1
+version: 1
+revision: 1
+state: PRECOMMITTED
+calibration_lock_path: configs/quotient_forge/benchmark_calibration_v1.yaml
+bindings:
+  calibration_lock_sha256: 82151da4a932dbbef5c259d0c28ff3774262456d8f1772c157f2664765f4a931
+  corpus_sha256: a415839ae1436e839a579a230a35fd35d65bea42cb1c2bc6216b0adad098a2e7
+  split_sha256: fc48a53ac227ba8786af1f56826c358f8d48a4c24b595f7ed0d53e94a9ece569
+  bounds_sha256: 33c2e6812ea1082f0991eea95464fe998330e9462a27c22742f98735a9427ee5
+  backend_sha256: b815b2c27da5dd587eacd6aef7e357e42065db823273d915a0607e45e7bd9ebd
+backend_components:
+- path: Cargo.lock
+  sha256: 317a2d61223f1cd1293b2feb5c620412059d48f67a95efa209882cd61654448c
+- path: pyproject.toml
+  sha256: e771e24e7f1a59ef484d09594e43c9679f070f16ce89e78f514466de0077e3be
+- path: crates/quotient-forge-synth/src/search.rs
+  sha256: 89850f86c7c1ac08ab5c7fddc90253389573f08818dba233ff25b8343db21381
+- path: crates/quotient-forge-check/src/lib.rs
+  sha256: cb9ffaf26ab551661bf1af58a0efc911b92e48b834081b5fd289069b775eb35d
+- path: src/noticer_core/evaluation/aqrs_oracle.py
+  sha256: dc2321137d00e004b0d88963d9b09d44dc572772558b1ee442c7dd41e999fccd
+held_out_families:
+- generic_activity_actuator
+- generic_fault_tolerant_alarm
+- generic_smart_home_actuator
+- negative_observer_omission
+- negative_private_carryover
+- negative_unauthorized_cover_action
+- noticer_longitudinal_handoff
+- noticer_multiservice_collusion
+artifact_namespaces:
+  development: artifacts/quotient_forge/development
+  held_out: artifacts/quotient_forge/held_out
+policies:
+  bounds_mutable_after_precommit: false
+  reseal_after_open: false
+  append_only: true
+  receipt_contains_host_identity: false
+  receipt_contains_private_data: false

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_heldout_precommit_v1.schema.json",
+  "title": "K7 held-out precommit v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "revision", "state", "calibration_lock_path", "bindings", "backend_components", "held_out_families", "artifact_namespaces", "policies"],
+  "properties": {
+    "schema": {"const": "noticer.k7.heldout-precommit.v1"},
+    "version": {"const": 1},
+    "revision": {"const": 1},
+    "state": {"const": "PRECOMMITTED"},
+    "calibration_lock_path": {"const": "configs/quotient_forge/benchmark_calibration_v1.yaml"},
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calibration_lock_sha256", "corpus_sha256", "split_sha256", "bounds_sha256", "backend_sha256"],
+      "properties": {
+        "calibration_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "corpus_sha256": {"$ref": "#/$defs/sha256"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "bounds_sha256": {"$ref": "#/$defs/sha256"},
+        "backend_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "backend_components": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string"},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "held_out_families": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^(noticer|generic|negative)_[a-z0-9_]+$"}
+    },
+    "artifact_namespaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["development", "held_out"],
+      "properties": {
+        "development": {"const": "artifacts/quotient_forge/development"},
+        "held_out": {"const": "artifacts/quotient_forge/held_out"}
+      }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bounds_mutable_after_precommit", "reseal_after_open", "append_only", "receipt_contains_host_identity", "receipt_contains_private_data"],
+      "properties": {
+        "bounds_mutable_after_precommit": {"const": false},
+        "reseal_after_open": {"const": false},
+        "append_only": {"const": true},
+        "receipt_contains_host_identity": {"const": false},
+        "receipt_contains_private_data": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
