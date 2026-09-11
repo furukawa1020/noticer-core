@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_heldout_receipt_v1.schema.json",
+  "title": "K7 held-out opening receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ledger_revision", "sequence", "previous_receipt_sha256", "from_state", "to_state", "bindings", "result", "private_field_count"],
+  "properties": {
+    "schema": {"const": "noticer.k7.heldout-opening-receipt.v1"},
+    "ledger_revision": {"const": 1},
+    "sequence": {"type": "integer", "minimum": 0, "maximum": 1},
+    "previous_receipt_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+    "from_state": {"enum": ["PRECOMMITTED", "SEALED"]},
+    "to_state": {"enum": ["SEALED", "OPENED"]},
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calibration_lock_sha256", "corpus_sha256", "split_sha256", "bounds_sha256", "backend_sha256"],
+      "properties": {
+        "calibration_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "corpus_sha256": {"$ref": "#/$defs/sha256"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "bounds_sha256": {"$ref": "#/$defs/sha256"},
+        "backend_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "result": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["format", "sha256", "byte_count"],
+          "properties": {
+            "format": {"type": "string", "pattern": "^[a-z][a-z0-9._-]{2,95}$"},
+            "sha256": {"$ref": "#/$defs/sha256"},
+            "byte_count": {"type": "integer", "minimum": 1}
+          }
+        }
+      ]
+    },
+    "private_field_count": {"const": 0}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
