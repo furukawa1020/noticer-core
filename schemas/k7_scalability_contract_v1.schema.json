@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_scalability_contract_v1.schema.json",
+  "title": "K7 scalability contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "state", "study_id", "design", "axes", "baseline", "target_gate", "backends", "resource_limits", "outcome_statuses", "artifact_policy"],
+  "properties": {
+    "schema": {"const": "noticer.k7.scalability-contract.v1"},
+    "version": {"const": 1},
+    "state": {"const": "FROZEN"},
+    "study_id": {"const": "k7-scalability-v1"},
+    "design": {"const": "BASELINE_PLUS_ONE_FACTOR_SWEEPS_AND_TARGET"},
+    "axes": {"$ref": "#/$defs/dimensionsArrays"},
+    "baseline": {"$ref": "#/$defs/dimensions"},
+    "target_gate": {"$ref": "#/$defs/dimensions"},
+    "backends": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["backend_id", "reduction_id"],
+        "properties": {"backend_id": {"enum": ["reference", "cegis", "smt", "qbf"]}, "reduction_id": {"type": "string"}}
+      }
+    },
+    "resource_limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["wall_time_ms", "memory_mib", "max_candidates", "max_checker_nodes", "max_solver_calls"],
+      "properties": {
+        "wall_time_ms": {"type": "integer", "minimum": 1}, "memory_mib": {"type": "integer", "minimum": 1},
+        "max_candidates": {"type": "integer", "minimum": 1}, "max_checker_nodes": {"type": "integer", "minimum": 1},
+        "max_solver_calls": {"type": "integer", "minimum": 1}
+      }
+    },
+    "outcome_statuses": {"type": "array", "uniqueItems": true, "items": {"enum": ["COMPLETED", "TIMEOUT", "MEMORY_LIMIT", "SOLVER_UNKNOWN", "PROCESS_FAILURE", "INVALID_CASE", "NOT_RUN"]}},
+    "artifact_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["root", "commit_generated_artifacts", "hardware_status"],
+      "properties": {"root": {"const": "artifacts/quotient_forge/scalability"}, "commit_generated_artifacts": {"const": false}, "hardware_status": {"const": "NOT_VERIFIED"}}
+    }
+  },
+  "$defs": {
+    "dimensions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["plant_states", "machine_states", "horizon", "observer_count", "fault_state_count", "output_alphabet", "quotient_class_count"],
+      "properties": {
+        "plant_states": {"type": "integer", "minimum": 1}, "machine_states": {"type": "integer", "minimum": 1},
+        "horizon": {"type": "integer", "minimum": 1}, "observer_count": {"type": "integer", "minimum": 1},
+        "fault_state_count": {"type": "integer", "minimum": 0}, "output_alphabet": {"type": "integer", "minimum": 1},
+        "quotient_class_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "dimensionsArrays": {
+      "type": "object", "additionalProperties": false,
+      "required": ["plant_states", "machine_states", "horizon", "observer_count", "fault_state_count", "output_alphabet", "quotient_class_count"],
+      "properties": {
+        "plant_states": {"const": [3, 6, 9, 12]}, "machine_states": {"const": [2, 4, 6, 8]},
+        "horizon": {"const": [8, 16, 32, 64]}, "observer_count": {"const": [1, 2, 3, 4]},
+        "fault_state_count": {"const": [0, 1, 2, 3]}, "output_alphabet": {"const": [2, 4, 6, 8]},
+        "quotient_class_count": {"const": [2, 4, 6, 8]}
+      }
+    }
+  }
+}
+
