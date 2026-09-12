@@ -1,0 +1,18 @@
+﻿schema: noticer.k7.adaptive-attack-protocol.v1
+seed: 1729
+query_budget: 256
+longitudinal_t: 16
+observers:
+  - claim_only
+  - full_trace
+  - timing_size_failure
+  - service_collusion
+  - longitudinal
+models:
+  - linear
+  - tree
+  - boosting
+  - sequence
+test_labels_available_during_fit: false
+random_window_split_allowed: false
+chance_result_is_security_proof: false
