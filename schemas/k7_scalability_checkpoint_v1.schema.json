@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_scalability_checkpoint_v1.schema.json",
+  "title": "K7 append-only scalability checkpoint v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ordinal", "run_id", "case_id", "backend_id", "phase", "repetition", "attempt", "seed", "protocol_sha256", "scalability_contract_sha256", "backend_binding_sha256", "backend_artifact_path", "backend_artifact_sha256", "status", "previous_checkpoint_sha256"],
+  "properties": {
+    "schema": {"const": "noticer.k7.scalability-checkpoint.v1"},
+    "ordinal": {"type": "integer", "minimum": 0, "maximum": 643},
+    "run_id": {"type": "string", "pattern": "^k7r-(warmup|measured)-[0-9]{2}-[0-9]{4}$"},
+    "case_id": {"type": "string"},
+    "backend_id": {"enum": ["reference", "cegis", "smt", "qbf"]},
+    "phase": {"enum": ["WARMUP", "MEASURED"]},
+    "repetition": {"type": "integer", "minimum": 0, "maximum": 4},
+    "attempt": {"const": 1},
+    "seed": {"type": "integer", "minimum": 0},
+    "protocol_sha256": {"$ref": "#/$defs/sha256"},
+    "scalability_contract_sha256": {"$ref": "#/$defs/sha256"},
+    "backend_binding_sha256": {"$ref": "#/$defs/sha256"},
+    "backend_artifact_path": {"type": "string", "pattern": "^runs/[^/]+/backend\\.json$"},
+    "backend_artifact_sha256": {"$ref": "#/$defs/sha256"},
+    "status": {"enum": ["COMPLETED", "TIMEOUT", "MEMORY_LIMIT", "SOLVER_UNKNOWN", "PROCESS_FAILURE", "INVALID_CASE", "NOT_RUN"]},
+    "previous_checkpoint_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
+
