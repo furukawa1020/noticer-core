@@ -1,0 +1,57 @@
+schema: noticer.k7.scalability-contract.v1
+version: 1
+state: FROZEN
+study_id: k7-scalability-v1
+design: BASELINE_PLUS_ONE_FACTOR_SWEEPS_AND_TARGET
+axes:
+  plant_states: [3, 6, 9, 12]
+  machine_states: [2, 4, 6, 8]
+  horizon: [8, 16, 32, 64]
+  observer_count: [1, 2, 3, 4]
+  fault_state_count: [0, 1, 2, 3]
+  output_alphabet: [2, 4, 6, 8]
+  quotient_class_count: [2, 4, 6, 8]
+baseline:
+  plant_states: 3
+  machine_states: 2
+  horizon: 8
+  observer_count: 1
+  fault_state_count: 0
+  output_alphabet: 2
+  quotient_class_count: 2
+target_gate:
+  plant_states: 12
+  machine_states: 8
+  horizon: 64
+  observer_count: 4
+  fault_state_count: 3
+  output_alphabet: 8
+  quotient_class_count: 8
+backends:
+  - backend_id: reference
+    reduction_id: none
+  - backend_id: cegis
+    reduction_id: symmetry-dominance-v1
+  - backend_id: smt
+    reduction_id: incremental-symmetry-v1
+  - backend_id: qbf
+    reduction_id: cone-quantifier-v1
+resource_limits:
+  wall_time_ms: 60000
+  memory_mib: 4096
+  max_candidates: 1000000
+  max_checker_nodes: 2000000
+  max_solver_calls: 1000000
+outcome_statuses:
+  - COMPLETED
+  - TIMEOUT
+  - MEMORY_LIMIT
+  - SOLVER_UNKNOWN
+  - PROCESS_FAILURE
+  - INVALID_CASE
+  - NOT_RUN
+artifact_policy:
+  root: artifacts/quotient_forge/scalability
+  commit_generated_artifacts: false
+  hardware_status: NOT_VERIFIED
+
