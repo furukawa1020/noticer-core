@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_resource_accounting_v1.schema.json",
+  "title": "K7 direct-child resource accounting v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "sampler_version", "case_id", "scope", "units", "measurement", "excluded"],
+  "properties": {
+    "schema": {"const": "noticer.k7.resource-accounting.v1"},
+    "sampler_version": {"const": "k7-direct-child-v1"},
+    "case_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,95}$"},
+    "scope": {"const": "DIRECT_CHILD_ONLY"},
+    "units": {
+      "const": {"wall_time": "nanoseconds", "cpu_time": "nanoseconds", "peak_rss": "bytes"}
+    },
+    "measurement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["wall_time_ns", "user_cpu_ns", "system_cpu_ns", "peak_rss_bytes", "exit_code", "timed_out", "sample_count"],
+      "properties": {
+        "wall_time_ns": {"type": "integer", "minimum": 1},
+        "user_cpu_ns": {"$ref": "#/$defs/optionalCounter"},
+        "system_cpu_ns": {"$ref": "#/$defs/optionalCounter"},
+        "peak_rss_bytes": {"$ref": "#/$defs/optionalCounter"},
+        "exit_code": {"type": "integer"},
+        "timed_out": {"type": "boolean"},
+        "sample_count": {"type": "integer", "minimum": 1}
+      }
+    },
+    "excluded": {"const": ["DESCENDANT_PROCESSES", "HOST_IDENTITY", "COMMAND_AND_PAYLOAD"]}
+  },
+  "$defs": {
+    "optionalCounter": {"oneOf": [{"type": "integer", "minimum": 0}, {"const": "NOT_AVAILABLE"}]}
+  }
+}
+
