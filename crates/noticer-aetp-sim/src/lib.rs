@@ -260,12 +260,136 @@ pub fn coupled_simulation_witness(
     })
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CaptureSide {
+    Left,
+    Right,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RuntimeFrameObservation {
+    pub sequence: u32,
+    pub service: ServiceBinding,
+    pub scheduled_time_ms: u64,
+    pub ciphertext: Box<[u8]>,
+    pub silence: bool,
+    pub retry_count: u16,
+    pub failure: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RuntimeTraceCapture {
+    pub pair_id: u64,
+    pub family: CounterfactualFamily,
+    pub side: CaptureSide,
+    pub sanitized_pair_hash: [u8; 32],
+    pub observations: Vec<RuntimeFrameObservation>,
+}
+
+impl RuntimeTraceCapture {
+    #[must_use]
+    pub fn service_view(&self, service: ServiceBinding) -> Vec<&RuntimeFrameObservation> {
+        self.observations
+            .iter()
+            .filter(|observation| observation.service == service)
+            .collect()
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MatchedActionRuntimeCapture {
+    pub left: RuntimeTraceCapture,
+    pub right: RuntimeTraceCapture,
+}
+
+impl MatchedActionRuntimeCapture {
+    #[must_use]
+    pub fn pointwise_equal_observations(&self) -> bool {
+        self.left
+            .observations
+            .iter()
+            .zip(&self.right.observations)
+            .all(|(left, right)| {
+                left.sequence == right.sequence
+                    && left.service == right.service
+                    && left.scheduled_time_ms == right.scheduled_time_ms
+                    && left.ciphertext == right.ciphertext
+                    && left.silence == right.silence
+                    && left.retry_count == right.retry_count
+                    && left.failure == right.failure
+            })
+            && self.left.observations.len() == self.right.observations.len()
+    }
+}
+
+/// Runs both private histories through the implementation admission boundary and
+/// captures only fields available to runtime observers. Private values never
+/// enter the returned capture.
+pub fn capture_matched_action_runtime(
+    pair: &ActionEquivalentPair,
+    simulation_secret: [u8; 32],
+) -> Result<MatchedActionRuntimeCapture, SimulationError> {
+    let left = capture_private_side(pair, &pair.left, CaptureSide::Left, simulation_secret)?;
+    let right = capture_private_side(pair, &pair.right, CaptureSide::Right, simulation_secret)?;
+    Ok(MatchedActionRuntimeCapture { left, right })
+}
+
+fn capture_private_side(
+    pair: &ActionEquivalentPair,
+    private: &PrivateHistory,
+    side: CaptureSide,
+    simulation_secret: [u8; 32],
+) -> Result<RuntimeTraceCapture, SimulationError> {
+    if pair
+        .shared_semantics
+        .obligations
+        .iter()
+        .any(|obligation| private.evidence_ready_slot > obligation.admission_cutoff)
+    {
+        return Err(SimulationError::PrivateAdmissionMissed);
+    }
+    let plan = pair.public_plan()?;
+    let issuer = SimulationFrameIssuer::new(
+        simulation_secret,
+        usize::from(pair.public_context.schedule.fixed_ciphertext_size),
+    );
+    let trace = ActionEquivalentTraceShaper::shape(
+        &plan,
+        &pair.public_context,
+        &pair.schedule_tape,
+        &issuer,
+    )?;
+    let interval = u64::from(pair.public_context.schedule.frame_interval_ms);
+    let observations = trace
+        .frames
+        .into_iter()
+        .map(|frame| RuntimeFrameObservation {
+            sequence: frame.identity.sequence,
+            service: frame.identity.service,
+            scheduled_time_ms: frame.identity.absolute_slot.0.saturating_mul(interval),
+            ciphertext: frame.bytes,
+            silence: false,
+            retry_count: 0,
+            failure: false,
+        })
+        .collect();
+    Ok(RuntimeTraceCapture {
+        pair_id: pair.pair_id,
+        family: pair.family,
+        side,
+        sanitized_pair_hash: pair.sanitized_pair_hash(),
+        observations,
+    })
+}
+
 #[derive(Debug, Error)]
 pub enum SimulationError {
     #[error("invalid public simulation context")]
     InvalidPublicContext,
     #[error("counterfactual pair is invalid")]
     InvalidPair,
+    #[error("private evidence missed the public admission cutoff")]
+    PrivateAdmissionMissed,
     #[error("trace shaping failed")]
     Trace(#[from] TraceShapeError),
 }
@@ -297,5 +421,33 @@ mod tests {
         let pairs = generate_action_equivalent_pairs(1, 42, &default_public_context()).unwrap();
         let witness = coupled_simulation_witness(&pairs[0], [8; 32]).unwrap();
         assert!(witness.equal);
+    }
+
+    #[test]
+    fn runtime_capture_contains_observer_fields_but_no_private_history() {
+        let pairs = generate_action_equivalent_pairs(1, 42, &default_public_context()).unwrap();
+        let pair = &pairs[0];
+        assert!(pair.private_histories_are_distinct());
+
+        let capture = capture_matched_action_runtime(pair, [8; 32]).unwrap();
+
+        assert!(capture.pointwise_equal_observations());
+        assert_eq!(capture.left.side, CaptureSide::Left);
+        assert_eq!(capture.right.side, CaptureSide::Right);
+        assert_eq!(capture.left.observations.len(), 1_024);
+        assert!(capture
+            .left
+            .observations
+            .iter()
+            .all(|item| item.ciphertext.len() == 236
+                && !item.silence
+                && item.retry_count == 0
+                && !item.failure));
+        let service = pair.public_context.network.services[0];
+        assert_eq!(capture.left.service_view(service).len(), 256);
+        let debug = format!("{pair:?}");
+        assert!(debug.contains("<redacted>"));
+        assert!(!debug.contains("subject_secret"));
+        assert!(!debug.contains("score_path_hash"));
     }
 }
