@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://noticer.example/schemas/k7_backend_result_v1.schema.json",
   "title": "K7 production backend result",
@@ -19,7 +19,7 @@
     "schema": { "const": "noticer.k7.backend-result.v1" },
     "case_id": { "type": "string", "minLength": 1 },
     "backend_id": { "enum": ["reference", "cegis", "smt", "qbf"] },
-    "status": { "enum": ["COMPLETED", "SOLVER_UNKNOWN", "INVALID_CASE"] },
+    "status": { "enum": ["COMPLETED", "BOUNDED_UNSAT", "SOLVER_UNKNOWN", "INVALID_CASE"] },
     "candidate_count": { "type": "integer", "minimum": 0 },
     "checker_node_count": { "type": "integer", "minimum": 0 },
     "solver_call_count": { "type": "integer", "minimum": 0 },
@@ -27,3 +27,4 @@
     "evidence_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
   }
 }
+
