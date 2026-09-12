@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_scalability_gate_v1.schema.json",
+  "title": "K7 scalability decision manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "policy_schema", "decision", "reasons", "target_gate", "target_outcomes", "target_summary", "bindings", "frontier_sha256", "minimum_completed_backends", "deployment_generalization", "hardware_status", "security_interpretation", "artifact_sha256"],
+  "properties": {
+    "schema": {"const": "noticer.k7.scalability-gate.v1"},
+    "policy_schema": {"const": "noticer.k7.scalability-gate-policy.v1"},
+    "decision": {"enum": ["GO_CANDIDATE", "PIVOT", "BLOCKED"]},
+    "reasons": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "target_gate": {"type": "object"},
+    "target_outcomes": {"type": "object", "required": ["reference", "cegis", "smt", "qbf"], "additionalProperties": {"type": "string"}},
+    "target_summary": {"type": "object"},
+    "bindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["corpus_sha256", "split_sha256", "bound_sha256", "backend_sha256", "result_sha256"],
+      "properties": {
+        "corpus_sha256": {"$ref": "#/$defs/sha256"}, "split_sha256": {"$ref": "#/$defs/sha256"},
+        "bound_sha256": {"$ref": "#/$defs/sha256"}, "backend_sha256": {"$ref": "#/$defs/sha256"},
+        "result_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "frontier_sha256": {"$ref": "#/$defs/sha256"},
+    "minimum_completed_backends": {"const": 1},
+    "deployment_generalization": {"const": "FORBIDDEN"},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "security_interpretation": {"const": "RESEARCH_CONTINUATION_GATE_ONLY"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
+
