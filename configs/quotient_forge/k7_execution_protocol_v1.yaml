@@ -1,0 +1,29 @@
+schema: noticer.k7.execution-protocol.v1
+version: 1
+state: FROZEN
+study_id: k7-scalability-execution-v1
+scalability_contract:
+  path: configs/quotient_forge/k7_scalability_contract_v1.yaml
+  sha256: ec8f9879f1ec07c8084d99335f2c62fde3d9cbf400269b6e15c625711848d523
+randomization:
+  master_seed: 260817
+  warmup_repetitions: 2
+  measured_repetitions: 5
+  profile_order: SEEDED_SHA256_ASCENDING
+  backend_order: BALANCED_LATIN_ROTATION
+  adaptive_reordering_allowed: false
+retention:
+  max_attempts_per_run: 1
+  retain_all_attempts: true
+  retry_replaces_attempt: false
+  failed_result_policy: PRESERVE
+  missing_result_status: NOT_RUN
+  warmup_in_primary_statistics: false
+held_out_policy:
+  required_initial_state: SEALED
+  protocol_changes_after_open: REJECT
+  opening_requires_protocol_digest: true
+artifact_policy:
+  root: artifacts/quotient_forge/scalability
+  commit_generated_artifacts: false
+

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_execution_protocol_v1.schema.json",
+  "title": "K7 frozen execution protocol v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "state", "study_id", "scalability_contract", "randomization", "retention", "held_out_policy", "artifact_policy"],
+  "properties": {
+    "schema": {"const": "noticer.k7.execution-protocol.v1"},
+    "version": {"const": 1},
+    "state": {"const": "FROZEN"},
+    "study_id": {"const": "k7-scalability-execution-v1"},
+    "scalability_contract": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"const": "configs/quotient_forge/k7_scalability_contract_v1.yaml"}, "sha256": {"const": "ec8f9879f1ec07c8084d99335f2c62fde3d9cbf400269b6e15c625711848d523"}}
+    },
+    "randomization": {
+      "type": "object", "additionalProperties": false,
+      "required": ["master_seed", "warmup_repetitions", "measured_repetitions", "profile_order", "backend_order", "adaptive_reordering_allowed"],
+      "properties": {
+        "master_seed": {"const": 260817}, "warmup_repetitions": {"const": 2}, "measured_repetitions": {"const": 5},
+        "profile_order": {"const": "SEEDED_SHA256_ASCENDING"}, "backend_order": {"const": "BALANCED_LATIN_ROTATION"},
+        "adaptive_reordering_allowed": {"const": false}
+      }
+    },
+    "retention": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_attempts_per_run", "retain_all_attempts", "retry_replaces_attempt", "failed_result_policy", "missing_result_status", "warmup_in_primary_statistics"],
+      "properties": {
+        "max_attempts_per_run": {"const": 1}, "retain_all_attempts": {"const": true}, "retry_replaces_attempt": {"const": false},
+        "failed_result_policy": {"const": "PRESERVE"}, "missing_result_status": {"const": "NOT_RUN"}, "warmup_in_primary_statistics": {"const": false}
+      }
+    },
+    "held_out_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_initial_state", "protocol_changes_after_open", "opening_requires_protocol_digest"],
+      "properties": {"required_initial_state": {"const": "SEALED"}, "protocol_changes_after_open": {"const": "REJECT"}, "opening_requires_protocol_digest": {"const": true}}
+    },
+    "artifact_policy": {
+      "type": "object", "additionalProperties": false, "required": ["root", "commit_generated_artifacts"],
+      "properties": {"root": {"const": "artifacts/quotient_forge/scalability"}, "commit_generated_artifacts": {"const": false}}
+    }
+  }
+}
+
