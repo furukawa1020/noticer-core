@@ -16,6 +16,7 @@ pub mod negative_benchmark;
 pub mod noticer_benchmark;
 pub mod preservation;
 pub mod quotient;
+pub mod scalability_reference;
 mod search;
 pub mod session;
 pub mod solution_set;
