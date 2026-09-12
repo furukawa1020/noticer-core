@@ -1,0 +1,14 @@
+﻿schema: noticer.k7.adaptive-leakage-evaluation.v1
+bootstrap_unit: matched_pair
+bootstrap_samples: 2000
+confidence_level: 0.95
+calibration_bins: 10
+metrics:
+  - roc_auc
+  - attacker_advantage
+  - brier_score
+  - expected_calibration_error
+excess_contrast: full_trace_minus_claim_only
+pointwise_failure_overrides_classifier: true
+chance_performance_is_security_proof: false
+seed: 1729
