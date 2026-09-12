@@ -1,0 +1,18 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_adaptive_leakage_v1.schema.json",
+  "title": "K7 adaptive leakage report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attacks", "full_trace_excess", "pointwise_trace_equal",
+    "implementation_claim_eligible", "security_proof"
+  ],
+  "properties": {
+    "attacks": { "type": "array", "minItems": 20, "maxItems": 20 },
+    "full_trace_excess": { "type": "array", "minItems": 4, "maxItems": 4 },
+    "pointwise_trace_equal": { "type": "boolean" },
+    "implementation_claim_eligible": { "type": "boolean" },
+    "security_proof": { "const": false }
+  }
+}
