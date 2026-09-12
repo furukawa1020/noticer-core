@@ -1,0 +1,19 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_leaky_control_report_v1.schema.json",
+  "title": "K7 leaky control report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["detected", "minimum_auc", "auc_by_attacker", "failed_attackers"],
+  "properties": {
+    "detected": { "type": "boolean" },
+    "minimum_auc": { "type": "number", "exclusiveMinimum": 0.5, "maximum": 1.0 },
+    "auc_by_attacker": {
+      "type": "object",
+      "minProperties": 20,
+      "maxProperties": 20,
+      "additionalProperties": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+    },
+    "failed_attackers": { "type": "array", "items": { "type": "string" } }
+  }
+}
