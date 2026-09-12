@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_scalability_frontier_v1.schema.json",
+  "title": "K7 scalability frontier report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scalability_contract_sha256", "execution_protocol_sha256", "grid_status", "expected_measured_runs", "observed_measured_runs", "missing_measured_runs", "backends", "non_monotonic_warnings", "interpolation_used", "hardware_status", "security_interpretation", "artifact_sha256"],
+  "properties": {
+    "schema": {"const": "noticer.k7.scalability-frontier.v1"},
+    "scalability_contract_sha256": {"$ref": "#/$defs/sha256"},
+    "execution_protocol_sha256": {"$ref": "#/$defs/sha256"},
+    "grid_status": {"enum": ["COMPLETE", "INCOMPLETE"]},
+    "expected_measured_runs": {"const": 460},
+    "observed_measured_runs": {"type": "integer", "minimum": 0, "maximum": 460},
+    "missing_measured_runs": {"type": "integer", "minimum": 0, "maximum": 460},
+    "backends": {"type": "object", "required": ["reference", "cegis", "smt", "qbf"], "additionalProperties": {"$ref": "#/$defs/backend"}},
+    "non_monotonic_warnings": {"type": "array", "items": {"type": "object"}},
+    "interpolation_used": {"const": false},
+    "hardware_status": {"const": "NOT_VERIFIED"},
+    "security_interpretation": {"const": "NOT_A_PERFORMANCE_OR_SECURITY_VERDICT"},
+    "artifact_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "backend": {
+      "type": "object", "additionalProperties": false,
+      "required": ["completed_frontier", "first_failure", "incomplete_case_ids", "mixed_status_case_ids", "non_monotonic_warning_count"],
+      "properties": {
+        "completed_frontier": {"type": "array"}, "first_failure": {"type": "object"},
+        "incomplete_case_ids": {"type": "array", "items": {"type": "string"}},
+        "mixed_status_case_ids": {"type": "array", "items": {"type": "string"}},
+        "non_monotonic_warning_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
+
