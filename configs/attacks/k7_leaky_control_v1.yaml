@@ -1,0 +1,9 @@
+﻿schema: noticer.k7.leaky-control.v1
+control_id: explicit-private-side-channel-v1
+artifact_namespace: controls/k7_adaptive
+amplitude: 20.0
+minimum_auc: 0.90
+required_attackers: 20
+protected_and_control_split_must_match: true
+control_artifact_is_runtime_evidence: false
+failure_policy: EVALUATION_INVALID
