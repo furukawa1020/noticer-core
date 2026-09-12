@@ -12,3 +12,20 @@ security_oracle: quotient-forge-check
 fixture_results_allowed: false
 unavailable_status: NOT_RUN
 hardware_status: NOT_VERIFIED
+arguments:
+  - "{case_id}"
+  - "{solver}"
+  - "{solver_root}"
+  - "{solver_matrix}"
+  - "{expected_binary_sha256}"
+  - "{plant_states}"
+  - "{machine_states}"
+  - "{horizon}"
+  - "{observers}"
+  - "{fault_states}"
+  - "{output_alphabet}"
+  - "{quotient_classes}"
+  - "{seed}"
+  - "{time_limit_ms}"
+  - "{output_path}"
+  - "{platform}"

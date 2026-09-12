@@ -1,0 +1,8 @@
+﻿schema: noticer.k7.production-binding-registry.v1
+bindings:
+  reference: configs/quotient_forge/k7_reference_backend_v1.yaml
+  cegis: configs/quotient_forge/k7_cegis_backend_v1.yaml
+  smt: configs/quotient_forge/k7_smt_backend_v1.yaml
+  qbf: configs/quotient_forge/k7_qbf_backend_v1.yaml
+generated_artifacts_committed: false
+hardware_status: NOT_VERIFIED
