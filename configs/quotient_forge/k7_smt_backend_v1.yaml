@@ -1,0 +1,14 @@
+﻿schema: noticer.k7.smt-backend-binding.v1
+backend_id: smt
+executable: quotient-forge-smt
+allowed_solvers:
+  - cvc5
+  - z3
+solver_matrix: configs/quotient_forge/solver_matrix_v1.json
+expected_binary_sha256_source: run_lock
+result_schema: schemas/k7_backend_result_v1.schema.json
+candidate_engine: quotient-forge-solver
+security_oracle: quotient-forge-check
+fixture_results_allowed: false
+unavailable_status: NOT_RUN
+hardware_status: NOT_VERIFIED
