@@ -1,0 +1,21 @@
+﻿schema: noticer.k7.cegis-backend-binding.v1
+backend_id: cegis
+executable: quotient-forge-cegis
+arguments:
+  - "{case_id}"
+  - "{plant_states}"
+  - "{machine_states}"
+  - "{horizon}"
+  - "{observers}"
+  - "{fault_states}"
+  - "{output_alphabet}"
+  - "{quotient_classes}"
+  - "{seed}"
+  - "{candidate_limit}"
+  - "{time_limit_ms}"
+  - "{output_path}"
+result_schema: schemas/k7_backend_result_v1.schema.json
+candidate_engine: quotient-forge-synth::find_feasible
+security_oracle: quotient-forge-check
+fixture_results_allowed: false
+hardware_status: NOT_VERIFIED
