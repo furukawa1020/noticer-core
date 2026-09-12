@@ -1,0 +1,20 @@
+schema: noticer.k7.scalability-gate-policy.v1
+version: 1
+state: FROZEN
+policy:
+  required_grid_status: COMPLETE
+  minimum_completed_backends: 1
+  pivot_only_statuses: [TIMEOUT, MEMORY_LIMIT]
+  blocked_statuses: [SOLVER_UNKNOWN, PROCESS_FAILURE, INVALID_CASE, NOT_RUN]
+  non_monotonic_policy: BLOCK
+  missing_backend_policy: BLOCK
+  target_gate:
+    plant_states: 12
+    machine_states: 8
+    horizon: 64
+    observer_count: 4
+    fault_state_count: 3
+    output_alphabet: 8
+    quotient_class_count: 8
+  deployment_generalization: FORBIDDEN
+
