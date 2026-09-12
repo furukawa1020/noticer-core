@@ -1,0 +1,18 @@
+schema: noticer.k7.reference-backend-binding.v1
+backend_id: reference
+executable: quotient-forge-reference
+arguments:
+  - "{case_id}"
+  - "{plant_states}"
+  - "{machine_states}"
+  - "{horizon}"
+  - "{observers}"
+  - "{fault_states}"
+  - "{output_alphabet}"
+  - "{quotient_classes}"
+  - "{seed}"
+  - "{output_path}"
+result_schema: schemas/k7_backend_result_v1.schema.json
+security_oracle: quotient-forge-check
+fixture_results_allowed: false
+hardware_status: NOT_VERIFIED
