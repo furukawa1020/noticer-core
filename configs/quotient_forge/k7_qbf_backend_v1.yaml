@@ -1,0 +1,13 @@
+﻿schema: noticer.k7.qbf-backend-binding.v1
+backend_id: qbf
+executable: quotient-forge-qbf
+solver: caqe
+solver_manifest: configs/quotient_forge/qbf_solver_manifest_v1.json
+install_receipt_source: replication_environment
+result_schema: schemas/k7_backend_result_v1.schema.json
+candidate_engine: quotient-forge-solver::compile_bounded_safety_game
+candidate_decoder: quotient-forge-solver::check_qbf_candidate
+security_oracle: quotient-forge-check
+fixture_results_allowed: false
+unavailable_status: NOT_RUN
+hardware_status: NOT_VERIFIED
