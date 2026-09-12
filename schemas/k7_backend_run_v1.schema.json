@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_backend_run_v1.schema.json",
+  "title": "K7 normalized backend run v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "case_id", "backend_id", "reduction_id", "backend_version", "binary_sha256", "status", "diagnostic", "counts", "checker_verdict", "backend_evidence_sha256", "stdout_sha256", "stderr_sha256", "resources", "command_recorded", "mock_result_allowed"],
+  "properties": {
+    "schema": {"const": "noticer.k7.backend-run.v1"},
+    "case_id": {"type": "string"},
+    "backend_id": {"enum": ["reference", "cegis", "smt", "qbf"]},
+    "reduction_id": {"type": "string"},
+    "backend_version": {"type": "string", "minLength": 1},
+    "binary_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["COMPLETED", "TIMEOUT", "MEMORY_LIMIT", "SOLVER_UNKNOWN", "PROCESS_FAILURE", "INVALID_CASE", "NOT_RUN"]},
+    "diagnostic": {"type": ["string", "null"]},
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidates", "checker_nodes", "solver_calls"],
+      "properties": {
+        "candidates": {"$ref": "#/$defs/optionalCount"},
+        "checker_nodes": {"$ref": "#/$defs/optionalCount"},
+        "solver_calls": {"$ref": "#/$defs/optionalCount"}
+      }
+    },
+    "checker_verdict": {"enum": ["VERIFIED", "REJECTED", "NOT_APPLICABLE"]},
+    "backend_evidence_sha256": {"$ref": "#/$defs/optionalDigest"},
+    "stdout_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "stderr_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "resources": {"type": "object"},
+    "command_recorded": {"const": false},
+    "mock_result_allowed": {"const": false}
+  },
+  "$defs": {
+    "optionalCount": {"oneOf": [{"type": "integer", "minimum": 0}, {"const": "NOT_AVAILABLE"}]},
+    "optionalDigest": {"oneOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"const": "NOT_AVAILABLE"}]}
+  }
+}
+
