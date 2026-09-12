@@ -1,0 +1,10 @@
+﻿schema: noticer.k7.claim-stop-gate-policy.v1
+stable_excess_ci95_lower_bound: 0.02
+decision_order:
+  - incomplete_is_invalid
+  - failed_control_is_invalid
+  - pointwise_failure_blocks
+  - stable_full_trace_excess_blocks
+  - otherwise_go_candidate
+go_is_security_proof: false
+generated_artifact_committed: false

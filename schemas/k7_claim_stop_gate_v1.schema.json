@@ -1,0 +1,29 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_claim_stop_gate_v1.schema.json",
+  "title": "K7 adaptive attack claim-stop gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "decision", "reasons", "maximum_excess_ci95_lower",
+    "implementation_claim_allowed", "security_proof", "input_sha256",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema": { "const": "noticer.k7.claim-stop-gate.v1" },
+    "decision": { "enum": ["GO_CANDIDATE", "BLOCKED", "INVALID_EVALUATION"] },
+    "reasons": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "maximum_excess_ci95_lower": { "type": "number" },
+    "implementation_claim_allowed": { "type": "boolean" },
+    "security_proof": { "const": false },
+    "input_sha256": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_capture", "corpus", "attack_protocol",
+        "leakage_report", "control_report"
+      ]
+    },
+    "artifact_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}
