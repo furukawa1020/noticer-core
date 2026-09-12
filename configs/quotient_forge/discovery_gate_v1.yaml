@@ -1,0 +1,13 @@
+schema: noticer.k7.discovery-gate.v1
+version: 1
+state: FROZEN
+precommit_path: configs/quotient_forge/heldout_precommit_v1.yaml
+equivalence_checker_path: crates/quotient-forge-synth/src/machine_equivalence.rs
+equivalence_checker_sha256: d3ac5a039a56b7f97176f0af6d2352854db91c38d219a995c1c3ba99a6437385
+minimum_held_out_valid_non_equivalent: 1
+policies:
+  checker_verification_required: true
+  absent_template_is_automatic_novel: false
+  equivalent_template_counts_as_novel: false
+  inconclusive_counts_as_negative: false
+  deployment_generalization_allowed: false

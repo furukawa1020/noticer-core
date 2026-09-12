@@ -10,6 +10,7 @@ mod blocker;
 pub mod comparison;
 pub mod generic_benchmark;
 pub mod lift;
+pub mod machine_equivalence;
 mod model;
 pub mod negative_benchmark;
 pub mod noticer_benchmark;

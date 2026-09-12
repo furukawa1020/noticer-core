@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_discovery_manifest_v1.schema.json",
+  "title": "K7 discovery result manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "gate_status", "bindings", "checker_sha256", "equivalence_checker_sha256", "seal_receipt_sha256", "minimum_held_out_valid_non_equivalent", "summary", "cases", "private_field_count"],
+  "properties": {
+    "schema": {"const": "noticer.k7.discovery-result.v1"},
+    "gate_status": {"enum": ["PASS", "FAIL", "BLOCKED"]},
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calibration_lock_sha256", "corpus_sha256", "split_sha256", "bounds_sha256", "backend_sha256"],
+      "properties": {
+        "calibration_lock_sha256": {"$ref": "#/$defs/sha256"},
+        "corpus_sha256": {"$ref": "#/$defs/sha256"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "bounds_sha256": {"$ref": "#/$defs/sha256"},
+        "backend_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "checker_sha256": {"$ref": "#/$defs/sha256"},
+    "equivalence_checker_sha256": {"$ref": "#/$defs/sha256"},
+    "seal_receipt_sha256": {"$ref": "#/$defs/sha256"},
+    "minimum_held_out_valid_non_equivalent": {"type": "integer", "minimum": 1},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["held_out_case_count", "valid_non_equivalent_count", "valid_equivalent_count", "expected_nonrealizable_count", "invalid_discovery_count", "status_disagreement_count", "inconclusive_count"],
+      "properties": {
+        "held_out_case_count": {"const": 8},
+        "valid_non_equivalent_count": {"type": "integer", "minimum": 0},
+        "valid_equivalent_count": {"type": "integer", "minimum": 0},
+        "expected_nonrealizable_count": {"type": "integer", "minimum": 0},
+        "invalid_discovery_count": {"type": "integer", "minimum": 0},
+        "status_disagreement_count": {"type": "integer", "minimum": 0},
+        "inconclusive_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "cases": {"type": "array", "minItems": 8, "maxItems": 8},
+    "private_field_count": {"const": 0}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
