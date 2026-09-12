@@ -1,0 +1,16 @@
+﻿schema: noticer.k7.matched-action-split-policy.v1
+family_split:
+  early_vs_late_evidence: train
+  smooth_vs_spiky_signal: train
+  different_baseline: train
+  different_noise_path: development
+  different_subject: test
+  different_session: test
+heldout_schedule_variants:
+  - schedule_unseen_cadence
+heldout_fault_variants:
+  - fault_unseen_burst
+random_window_split_allowed: false
+required_source: rust_runtime_capture_v1
+raw_private_history_allowed: false
+seed: 1729

@@ -1,0 +1,26 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer.example/schemas/k7_matched_action_corpus_v1.schema.json",
+  "title": "K7 matched-action corpus row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pair_id", "family_id", "session_id", "side",
+    "action_semantics_sha256", "runtime_capture_sha256",
+    "schedule_variant", "fault_variant", "source"
+  ],
+  "properties": {
+    "pair_id": { "type": "string", "minLength": 1 },
+    "family_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "side": { "enum": ["left", "right"] },
+    "action_semantics_sha256": { "$ref": "#/$defs/digest" },
+    "runtime_capture_sha256": { "$ref": "#/$defs/digest" },
+    "schedule_variant": { "type": "string", "minLength": 1 },
+    "fault_variant": { "type": "string", "minLength": 1 },
+    "source": { "const": "rust_runtime_capture_v1" }
+  },
+  "$defs": {
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+  }
+}
