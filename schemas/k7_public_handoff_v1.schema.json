@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.example/schemas/k7_public_handoff_v1.schema.json",
+  "title": "K7 public-only longitudinal handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "contract_id", "action_semantics_sha256",
+    "observer_contract_sha256", "source_certificate_sha256", "state", "bounds"],
+  "properties": {
+    "format_version": {"const": "noticer.k7.public-handoff.v1"},
+    "contract_id": {"$ref": "#/$defs/id"},
+    "action_semantics_sha256": {"$ref": "#/$defs/sha"},
+    "observer_contract_sha256": {"$ref": "#/$defs/sha"},
+    "source_certificate_sha256": {"$ref": "#/$defs/sha"},
+    "state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["observer_state_sha256", "colluding_services", "epoch_id",
+        "key_epoch_id", "epoch_event_slot"],
+      "properties": {
+        "observer_state_sha256": {"$ref": "#/$defs/sha"},
+        "colluding_services": {"type": "array", "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}},
+        "epoch_id": {"$ref": "#/$defs/id"},
+        "key_epoch_id": {"$ref": "#/$defs/id"},
+        "epoch_event_slot": {"type": "integer", "minimum": 0}
+      }
+    },
+    "bounds": {
+      "type": "object", "additionalProperties": false,
+      "required": ["horizon_slots", "max_queries", "max_retries", "max_failures"],
+      "properties": {
+        "horizon_slots": {"type": "integer", "minimum": 1},
+        "max_queries": {"type": "integer", "minimum": 0},
+        "max_retries": {"type": "integer", "minimum": 0},
+        "max_failures": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}
