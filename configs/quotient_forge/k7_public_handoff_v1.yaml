@@ -1,0 +1,16 @@
+format_version: noticer.k7.public-handoff.v1
+contract_id: noticer-longitudinal-alpha-to-beta
+action_semantics_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+observer_contract_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+source_certificate_sha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+state:
+  observer_state_sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+  colluding_services: [alpha, beta]
+  epoch_id: epoch-7
+  key_epoch_id: key-epoch-7
+  epoch_event_slot: 5
+bounds:
+  horizon_slots: 5
+  max_queries: 64
+  max_retries: 2
+  max_failures: 1
