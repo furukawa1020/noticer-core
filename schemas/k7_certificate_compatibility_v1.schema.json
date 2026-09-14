@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.example/schemas/k7_certificate_compatibility_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format_version", "decision", "left_contract_sha256",
+    "right_contract_sha256", "matched_dimensions", "mismatch_reasons",
+    "security_proof"],
+  "properties": {
+    "format_version": {"const": "noticer.k7.certificate-compatibility.v1"},
+    "decision": {"enum": ["COMPATIBLE", "INCOMPATIBLE"]},
+    "left_contract_sha256": {"$ref": "#/$defs/sha"},
+    "right_contract_sha256": {"$ref": "#/$defs/sha"},
+    "matched_dimensions": {"type": "array", "uniqueItems": true,
+      "items": {"type": "string"}},
+    "mismatch_reasons": {"type": "array", "uniqueItems": true,
+      "items": {"type": "string"}},
+    "security_proof": {"const": false}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
