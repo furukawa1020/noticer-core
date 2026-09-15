@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["format_version", "bucket_ids", "source_certificate_sha256",
+    "boundary_witness_sha256", "composed_bounds", "induction_steps",
+    "proof_status", "security_proof"],
+  "properties": {
+    "format_version": {"const": "noticer.k7.n-bucket-composition.v1"},
+    "bucket_ids": {"type": "array", "minItems": 1, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}},
+    "source_certificate_sha256": {"type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/sha"}},
+    "boundary_witness_sha256": {"type": "array",
+      "items": {"$ref": "#/$defs/sha"}},
+    "composed_bounds": {"type": "object"},
+    "induction_steps": {"type": "integer", "minimum": 0},
+    "proof_status": {"const": "INDEPENDENT_ORACLE_ACCEPTED"},
+    "security_proof": {"const": false}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
