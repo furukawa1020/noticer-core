@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["format_version", "left_contract_sha256",
+    "right_contract_sha256", "compatibility_witness_sha256", "composed_bounds",
+    "derivation", "proof_status", "security_proof"],
+  "properties": {
+    "format_version": {"const": "noticer.k7.two-component-composition.v1"},
+    "left_contract_sha256": {"$ref": "#/$defs/sha"},
+    "right_contract_sha256": {"$ref": "#/$defs/sha"},
+    "compatibility_witness_sha256": {"$ref": "#/$defs/sha"},
+    "composed_bounds": {
+      "type": "object", "additionalProperties": false,
+      "required": ["horizon_slots", "max_queries", "max_retries", "max_failures"],
+      "properties": {
+        "horizon_slots": {"type": "integer", "minimum": 2},
+        "max_queries": {"type": "integer", "minimum": 0},
+        "max_retries": {"type": "integer", "minimum": 0},
+        "max_failures": {"type": "integer", "minimum": 0}
+      }
+    },
+    "derivation": {"const": "bounded-sequential-public-handoff-v1"},
+    "proof_status": {"const": "DERIVED_CANDIDATE"},
+    "security_proof": {"const": false}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
