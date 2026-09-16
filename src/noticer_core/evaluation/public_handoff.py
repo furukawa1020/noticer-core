@@ -1,4 +1,4 @@
-"""Closed public-only handoff contract for bounded longitudinal AQNI."""
+﻿"""Closed public-only handoff contract for bounded longitudinal AQNI."""
 from __future__ import annotations
 
 import hashlib
@@ -10,7 +10,8 @@ from dataclasses import asdict, dataclass
 FORMAT_VERSION = "noticer.k7.public-handoff.v1"
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 _FORBIDDEN = frozenset(
-    {"identity", "private_cache", "private_history", "raw_biosignal",
+    {"identity", "private_cache", "private_epoch", "private_history",
+     "raw_biosignal", "secret_epoch",
      "secret_retry", "secret_retry_state"}
 )
 
@@ -161,3 +162,5 @@ def _keys(value: Mapping[str, object], expected: set[str], location: str) -> Non
     if set(value) != expected:
         raise HandoffValidationError("undeclared_field",
                                      f"{location} violates closed handoff schema")
+
+

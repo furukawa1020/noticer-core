@@ -1,0 +1,7 @@
+format_version: noticer.k7.longitudinal-counterexamples.v1
+cases:
+  - {id: handoff-mismatch, expected_category: "boundary_0_incompatible:observer_state"}
+  - {id: private-cache-carryover, expected_category: forbidden_private_carryover}
+  - {id: secret-retry-carryover, expected_category: forbidden_private_carryover}
+  - {id: service-collusion-mismatch, expected_category: "boundary_0_incompatible:service_collusion"}
+  - {id: private-epoch-change, expected_category: forbidden_private_carryover}
