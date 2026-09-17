@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["format_version", "decision", "bucket_ids",
+    "allowed_claim_bits_total", "observed_full_trace_bits_total",
+    "excess_leakage_bits", "paired_excess_ci_low", "paired_excess_ci_high",
+    "excess_threshold", "reasons", "input_sha256",
+    "implementation_claim_allowed", "security_proof"],
+  "properties": {
+    "format_version": {"const": "noticer.k7.longitudinal-leakage-gate.v1"},
+    "decision": {"enum": ["GO_CANDIDATE", "BLOCKED", "INVALID_EVALUATION"]},
+    "bucket_ids": {"type": "array", "minItems": 1, "uniqueItems": true},
+    "allowed_claim_bits_total": {"type": "number", "minimum": 0},
+    "observed_full_trace_bits_total": {"type": "number", "minimum": 0},
+    "excess_leakage_bits": {"type": "number"},
+    "paired_excess_ci_low": {"type": "number"},
+    "paired_excess_ci_high": {"type": "number"},
+    "excess_threshold": {"type": "number", "minimum": 0},
+    "reasons": {"type": "array", "uniqueItems": true},
+    "input_sha256": {"type": "array", "minItems": 5, "maxItems": 5},
+    "implementation_claim_allowed": {"type": "boolean"},
+    "security_proof": {"const": false}
+  }
+}
