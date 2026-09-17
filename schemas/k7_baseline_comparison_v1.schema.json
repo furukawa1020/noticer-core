@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.example/schemas/k7_baseline_comparison_v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version", "shared", "mechanisms", "report_axes",
+    "privacy_notions_are_separate", "security_proof"
+  ],
+  "properties": {
+    "format_version": {"const": "noticer.k7.baseline-comparison.v1"},
+    "shared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_sha256", "observer_sha256", "utility_sha256",
+        "fault_trace_sha256", "cost_sha256", "corpus_sha256",
+        "evaluation_split", "selection_split"
+      ],
+      "properties": {
+        "case_sha256": {"$ref": "#/$defs/sha"},
+        "observer_sha256": {"$ref": "#/$defs/sha"},
+        "utility_sha256": {"$ref": "#/$defs/sha"},
+        "fault_trace_sha256": {"$ref": "#/$defs/sha"},
+        "cost_sha256": {"$ref": "#/$defs/sha"},
+        "corpus_sha256": {"$ref": "#/$defs/sha"},
+        "evaluation_split": {"const": "held_out"},
+        "selection_split": {"const": "development"}
+      }
+    },
+    "mechanisms": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mechanism_id", "implementation_kind", "privacy_notion",
+          "source_ref", "source_version", "candidate_config_sha256",
+          "selected_config_sha256"
+        ],
+        "properties": {
+          "mechanism_id": {"enum": [
+            "aqrs", "automata", "handwritten_aets", "immediate_control",
+            "leaky_control", "netshaper_like", "pacer_like"
+          ]},
+          "implementation_kind": {"enum": ["original", "approximation", "local"]},
+          "privacy_notion": {"type": "string", "minLength": 1},
+          "source_ref": {"type": "string", "minLength": 1},
+          "source_version": {"type": "string", "minLength": 1},
+          "candidate_config_sha256": {
+            "type": "array", "minItems": 1, "uniqueItems": true,
+            "items": {"$ref": "#/$defs/sha"}
+          },
+          "selected_config_sha256": {"$ref": "#/$defs/sha"}
+        }
+      }
+    },
+    "report_axes": {
+      "const": ["attack", "bandwidth", "failure", "latency", "state"]
+    },
+    "privacy_notions_are_separate": {"const": true},
+    "security_proof": {"const": false}
+  },
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}
