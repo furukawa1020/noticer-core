@@ -1,0 +1,14 @@
+format_version: noticer.k7.longitudinal-leakage-gate.v1
+excess_threshold: 0.0
+confidence_level: 0.95
+required_inputs:
+  - composition
+  - counterexamples
+  - attack
+  - control
+  - corpus
+decisions:
+  incomplete_or_blind_control: INVALID_EVALUATION
+  failed_composition_or_counterexample_or_stable_excess: BLOCKED
+  otherwise: GO_CANDIDATE
+security_proof: false
