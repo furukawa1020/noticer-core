@@ -17,6 +17,7 @@ pub const PARITY_FRAGMENT_COUNT: usize = 4;
 pub const TOTAL_FRAGMENT_COUNT: usize = DATA_FRAGMENT_COUNT + PARITY_FRAGMENT_COUNT;
 pub const FRAGMENT_MARKER: u8 = 0x41;
 pub const PADDING_SIZE: usize = TRANSPORT_PAYLOAD_SIZE - ENVELOPE_SIZE;
+const COMPLETED_FRAME_CAPACITY: usize = 16;
 
 const _: () = assert!(ENVELOPE_SIZE == 236);
 const _: () = assert!(TRANSPORT_PAYLOAD_SIZE == DATA_FRAGMENT_COUNT * FRAGMENT_PAYLOAD_SIZE);
@@ -185,8 +186,25 @@ impl FrameSlot {
     }
 }
 
+#[derive(Clone, Copy)]
+struct CompletedFrame {
+    occupied: bool,
+    frame_id: FrameId,
+    completed_tick: u64,
+}
+
+impl CompletedFrame {
+    const EMPTY: Self = Self {
+        occupied: false,
+        frame_id: FrameId([0; 3]),
+        completed_tick: 0,
+    };
+}
+
 pub struct Reassembler<const ACTIVE_FRAMES: usize> {
     slots: [FrameSlot; ACTIVE_FRAMES],
+    completed: [CompletedFrame; COMPLETED_FRAME_CAPACITY],
+    completed_cursor: usize,
     ttl_ticks: u64,
 }
 
@@ -194,6 +212,8 @@ impl<const ACTIVE_FRAMES: usize> Reassembler<ACTIVE_FRAMES> {
     pub const fn new(ttl_ticks: u64) -> Self {
         Self {
             slots: [FrameSlot::EMPTY; ACTIVE_FRAMES],
+            completed: [CompletedFrame::EMPTY; COMPLETED_FRAME_CAPACITY],
+            completed_cursor: 0,
             ttl_ticks,
         }
     }
@@ -207,6 +227,11 @@ impl<const ACTIVE_FRAMES: usize> Reassembler<ACTIVE_FRAMES> {
                 expired += 1;
             }
         }
+        for entry in &mut self.completed {
+            if entry.occupied && now_tick.saturating_sub(entry.completed_tick) > self.ttl_ticks {
+                *entry = CompletedFrame::EMPTY;
+            }
+        }
         expired
     }
 
@@ -217,6 +242,13 @@ impl<const ACTIVE_FRAMES: usize> Reassembler<ACTIVE_FRAMES> {
     ) -> Result<IngestOutcome, ReassemblyError> {
         self.expire(now_tick);
         let fragment = Fragment::parse(bytes).map_err(ReassemblyError::Fragment)?;
+        if self
+            .completed
+            .iter()
+            .any(|entry| entry.occupied && entry.frame_id == fragment.frame_id)
+        {
+            return Ok(IngestOutcome::Duplicate);
+        }
         let slot_index = self
             .find_slot(fragment.frame_id)
             .ok_or(ReassemblyError::Capacity)?;
@@ -240,6 +272,12 @@ impl<const ACTIVE_FRAMES: usize> Reassembler<ACTIVE_FRAMES> {
         match try_complete(slot) {
             Ok(Some(envelope)) => {
                 self.slots[slot_index] = FrameSlot::EMPTY;
+                self.completed[self.completed_cursor] = CompletedFrame {
+                    occupied: true,
+                    frame_id: fragment.frame_id,
+                    completed_tick: now_tick,
+                };
+                self.completed_cursor = (self.completed_cursor + 1) % COMPLETED_FRAME_CAPACITY;
                 Ok(IngestOutcome::Complete(envelope))
             }
             Ok(None) => Ok(IngestOutcome::Pending),
@@ -444,5 +482,30 @@ mod tests {
                 result.unwrap();
             }
         }
+    }
+    #[test]
+    fn parity_tail_cannot_reopen_completed_frame_or_starve_next_frame() {
+        let mut reassembler = Reassembler::<1>::new(100);
+        for number in 1..=3_u8 {
+            let fragments = fragment_envelope(&envelope(), FrameId([number; 3]));
+            let mut completed = 0;
+            let mut duplicates = 0;
+            for fragment in fragments {
+                match reassembler.ingest(&fragment.encode(), u64::from(number)) {
+                    Ok(IngestOutcome::Complete(bytes)) => {
+                        assert_eq!(bytes, envelope());
+                        completed += 1;
+                    }
+                    Ok(IngestOutcome::Duplicate) => duplicates += 1,
+                    Ok(IngestOutcome::Pending) => {}
+                    Err(error) => panic!("unexpected reassembly error: {error:?}"),
+                }
+            }
+            assert_eq!(completed, 1);
+            assert_eq!(duplicates, PARITY_FRAGMENT_COUNT);
+        }
+        reassembler.expire(200);
+        let first = fragment_envelope(&envelope(), FrameId([1; 3]))[0].encode();
+        assert_eq!(reassembler.ingest(&first, 200), Ok(IngestOutcome::Pending));
     }
 }
