@@ -12,6 +12,9 @@ use noticer_verifier_core::{
 };
 pub use noticer_verifier_core::{AuthorizedAction, VerificationResult, VerifierContext};
 use serde::{Deserialize, Serialize};
+use std::fs::{self, File, OpenOptions};
+use std::io::{Read, Seek, SeekFrom, Write};
+use std::path::{Path, PathBuf};
 use std::{
     collections::{BTreeMap, BTreeSet},
     sync::{Arc, Mutex},
@@ -163,6 +166,172 @@ impl CoreReplayGuard for ReplayAdapter<'_> {
     }
 }
 
+const REPLAY_FILE_MAGIC: [u8; 16] = *b"NOTICER_REPLAY01";
+const REPLAY_HEADER_BYTES: u64 = 20;
+const REPLAY_RECORD_BYTES: u64 = 32;
+const MAX_REPLAY_RECORDS: usize = 100_000;
+
+#[derive(Debug, Error)]
+pub enum FileReplayError {
+    #[error("durable replay storage is unavailable")]
+    Io(#[from] std::io::Error),
+    #[error("durable replay file is incomplete or corrupted")]
+    Corrupt,
+    #[error("durable replay epoch does not match")]
+    EpochMismatch,
+    #[error("durable replay capacity is exhausted")]
+    Capacity,
+}
+
+struct ReplayFileLock {
+    file: Option<File>,
+    path: PathBuf,
+}
+
+impl ReplayFileLock {
+    fn acquire(path: &Path) -> std::io::Result<Self> {
+        let mut name = path.as_os_str().to_os_string();
+        name.push(".lock");
+        let path = PathBuf::from(name);
+        let file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)?;
+        Ok(Self {
+            file: Some(file),
+            path,
+        })
+    }
+}
+
+impl Drop for ReplayFileLock {
+    fn drop(&mut self) {
+        drop(self.file.take());
+        let _ = fs::remove_file(&self.path);
+    }
+}
+
+struct FileReplayState {
+    file: File,
+    ids: BTreeSet<TokenId>,
+    expected_len: u64,
+    poisoned: bool,
+}
+
+/// Single-writer, epoch-bound replay ledger. A stale lock blocks restart until
+/// an operator verifies the previous process has stopped; no automatic repair.
+pub struct FileReplayStore {
+    epoch: u32,
+    state: Mutex<FileReplayState>,
+    _lock: ReplayFileLock,
+}
+
+impl FileReplayStore {
+    // Preserve the workspace Rust 1.85 MSRV; is_multiple_of is newer.
+    #[allow(clippy::manual_is_multiple_of)]
+    pub fn open(path: impl AsRef<Path>, epoch: u32) -> Result<Self, FileReplayError> {
+        let path = path.as_ref();
+        let lock = ReplayFileLock::acquire(path)?;
+        let (mut file, fresh) = match OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create_new(true)
+            .open(path)
+        {
+            Ok(file) => (file, true),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => (
+                OpenOptions::new().read(true).append(true).open(path)?,
+                false,
+            ),
+            Err(error) => return Err(error.into()),
+        };
+        let mut ids = BTreeSet::new();
+        let expected_len = if fresh {
+            file.write_all(&REPLAY_FILE_MAGIC)?;
+            file.write_all(&epoch.to_le_bytes())?;
+            file.sync_all()?;
+            REPLAY_HEADER_BYTES
+        } else {
+            let length = file.metadata()?.len();
+            let maximum = REPLAY_HEADER_BYTES + REPLAY_RECORD_BYTES * MAX_REPLAY_RECORDS as u64;
+            if length > maximum {
+                return Err(FileReplayError::Capacity);
+            }
+            if length < REPLAY_HEADER_BYTES
+                || (length - REPLAY_HEADER_BYTES) % REPLAY_RECORD_BYTES != 0
+            {
+                return Err(FileReplayError::Corrupt);
+            }
+            file.seek(SeekFrom::Start(0))?;
+            let mut header = [0_u8; REPLAY_HEADER_BYTES as usize];
+            file.read_exact(&mut header)?;
+            if header[..16] != REPLAY_FILE_MAGIC {
+                return Err(FileReplayError::Corrupt);
+            }
+            if header[16..20] != epoch.to_le_bytes() {
+                return Err(FileReplayError::EpochMismatch);
+            }
+            for _ in 0..((length - REPLAY_HEADER_BYTES) / REPLAY_RECORD_BYTES) {
+                let mut record = [0_u8; REPLAY_RECORD_BYTES as usize];
+                file.read_exact(&mut record)?;
+                if record[16..]
+                    .iter()
+                    .zip(&record[..16])
+                    .any(|(check, id)| *check != !*id)
+                {
+                    return Err(FileReplayError::Corrupt);
+                }
+                let mut bytes = [0_u8; 16];
+                bytes.copy_from_slice(&record[..16]);
+                if !ids.insert(TokenId(bytes)) {
+                    return Err(FileReplayError::Corrupt);
+                }
+            }
+            file.seek(SeekFrom::End(0))?;
+            length
+        };
+        Ok(Self {
+            epoch,
+            state: Mutex::new(FileReplayState {
+                file,
+                ids,
+                expected_len,
+                poisoned: false,
+            }),
+            _lock: lock,
+        })
+    }
+}
+
+impl ReplayStore for FileReplayStore {
+    fn accept_once(&self, epoch: u32, token_id: TokenId) -> bool {
+        if epoch != self.epoch {
+            return false;
+        }
+        let Ok(mut state) = self.state.lock() else {
+            return false;
+        };
+        if state.poisoned || state.ids.contains(&token_id) || state.ids.len() >= MAX_REPLAY_RECORDS
+        {
+            return false;
+        }
+        if !matches!(state.file.metadata(), Ok(metadata) if metadata.len() == state.expected_len) {
+            state.poisoned = true;
+            return false;
+        }
+        let mut record = [0_u8; REPLAY_RECORD_BYTES as usize];
+        record[..16].copy_from_slice(&token_id.0);
+        for (check, id) in record[16..].iter_mut().zip(token_id.0) {
+            *check = !id;
+        }
+        if state.file.write_all(&record).is_err() || state.file.sync_data().is_err() {
+            state.poisoned = true;
+            return false;
+        }
+        state.expected_len += REPLAY_RECORD_BYTES;
+        state.ids.insert(token_id)
+    }
+}
 #[derive(Default)]
 pub struct InMemoryReplayStore {
     entries: Mutex<BTreeSet<(u32, TokenId)>>,
