@@ -1,6 +1,6 @@
 # Software core runtime
 
-The proposed software-only integration API in noticer-software-core connects
+The proposed software-only integration API in noticer-k4-demo library connects
 an already shaped ATv2 public frame to APLOT fragmentation/reassembly,
 cryptographic verification, sealed authorization, and a virtual Menfugu pump.
 It reuses existing components; it does not add a privacy definition or token verifier.

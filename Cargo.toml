@@ -17,7 +17,6 @@ members = [
   "crates/noticer-verifier-core",
   "crates/noticer-verifier",
   "crates/noticer-token-demo",
-  "crates/noticer-software-core",
   "crates/noticer-transport-core",
   "crates/noticer-transport-sim",
   "crates/noticer-menfugu-core",
