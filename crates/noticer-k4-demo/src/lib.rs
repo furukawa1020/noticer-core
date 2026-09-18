@@ -45,6 +45,7 @@ pub enum CoreError {
     PublicBinding,
     ClockRegression,
     ClockOverflow,
+    InvalidFaultMask,
 }
 
 pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize> {
@@ -89,6 +90,18 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
 
     /// Ingests one already-shaped public frame without real BLE or hardware.
     pub fn ingest_frame(&mut self, frame: &NetworkFrame) -> Result<FrameReport, CoreError> {
+        self.ingest_frame_with_public_loss(frame, 0)
+    }
+
+    /// The loss mask is public simulation input; all twenty time slots still elapse.
+    pub fn ingest_frame_with_public_loss(
+        &mut self,
+        frame: &NetworkFrame,
+        loss_mask: u32,
+    ) -> Result<FrameReport, CoreError> {
+        if loss_mask >> TOTAL_FRAGMENT_COUNT != 0 {
+            return Err(CoreError::InvalidFaultMask);
+        }
         let identity = frame.identity;
         let slot = u32::try_from(identity.absolute_slot.0).map_err(|_| CoreError::ClockOverflow)?;
         if self.last_slot.is_some_and(|last| slot < last) {
@@ -128,9 +141,11 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             if timer_event != RuntimeEvent::Pending {
                 events.push(timer_event);
             }
-            let event = self.runtime.on_gatt_write(&fragment.encode(), tick, slot);
-            if event != RuntimeEvent::Pending {
-                events.push(event);
+            if loss_mask & (1_u32 << index) == 0 {
+                let event = self.runtime.on_gatt_write(&fragment.encode(), tick, slot);
+                if event != RuntimeEvent::Pending {
+                    events.push(event);
+                }
             }
         }
         self.last_slot = Some(slot);
@@ -298,5 +313,43 @@ mod tests {
         assert!(!core.pump_enabled());
         core.ingest_frame(&action).unwrap();
         assert_eq!(core.ingest_frame(&cover), Err(CoreError::ClockRegression));
+    }
+    #[test]
+    fn one_loss_per_parity_group_recovers_authorized_action() {
+        let (mut core, _, action) = fixture();
+        let report = core.ingest_frame_with_public_loss(&action, 0b1111).unwrap();
+        assert!(report
+            .events
+            .contains(&RuntimeEvent::PumpStarted { duration_ticks: 5 }));
+        assert!(report.pump_enabled);
+    }
+
+    #[test]
+    fn two_losses_in_one_group_and_ciphertext_mutation_never_act() {
+        let (mut core, _, action) = fixture();
+        let report = core
+            .ingest_frame_with_public_loss(&action, (1 << 0) | (1 << 4))
+            .unwrap();
+        assert!(!report
+            .events
+            .iter()
+            .any(|event| matches!(event, RuntimeEvent::PumpStarted { .. })));
+        assert!(!report.pump_enabled);
+
+        let (mut core, _, mut action) = fixture();
+        action.bytes[ENVELOPE_SIZE - 1] ^= 1;
+        let report = core.ingest_frame(&action).unwrap();
+        assert!(report.events.contains(&RuntimeEvent::Rejected));
+        assert!(!report.pump_enabled);
+    }
+
+    #[test]
+    fn invalid_public_loss_mask_is_rejected_before_sending() {
+        let (mut core, _, action) = fixture();
+        assert_eq!(
+            core.ingest_frame_with_public_loss(&action, 1_u32 << TOTAL_FRAGMENT_COUNT),
+            Err(CoreError::InvalidFaultMask)
+        );
+        assert!(!core.pump_enabled());
     }
 }

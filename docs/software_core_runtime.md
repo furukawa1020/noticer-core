@@ -14,3 +14,6 @@ FrameReport and VirtualPump are local diagnostics only. Their event sequence
 must not be transmitted or treated as an AETP-approved release trace.
 Real BLE, hardware-backed attestation, physical pump control, durable replay
 storage, and field safety evidence remain NOT_VERIFIED.
+
+The public-loss simulation API preserves all twenty logical send slots without
+private-dependent retries. Its loss mask and local outcome are not release data.
