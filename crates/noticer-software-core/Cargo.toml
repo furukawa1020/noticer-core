@@ -1,0 +1,21 @@
+[package]
+name = "noticer-software-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+noticer-aetp.workspace = true
+noticer-ble-host = { path = "../noticer-ble-host" }
+noticer-menfugu-core = { path = "../noticer-menfugu-core" }
+noticer-menfugu-firmware = { path = "../noticer-menfugu-firmware" }
+noticer-protocol.workspace = true
+noticer-trace-shaper.workspace = true
+noticer-transport-core = { path = "../noticer-transport-core" }
+noticer-verifier.workspace = true
+
+[dev-dependencies]
+noticer-crypto.workspace = true
+noticer-token = { workspace = true, features = ["lab-unattested"] }
+noticer-types.workspace = true

@@ -1538,6 +1538,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "noticer-software-core"
+version = "0.1.0"
+dependencies = [
+ "noticer-aetp",
+ "noticer-ble-host",
+ "noticer-crypto",
+ "noticer-menfugu-core",
+ "noticer-menfugu-firmware",
+ "noticer-protocol",
+ "noticer-token",
+ "noticer-trace-shaper",
+ "noticer-transport-core",
+ "noticer-types",
+ "noticer-verifier",
+]
+
+[[package]]
 name = "noticer-token"
 version = "0.1.0"
 dependencies = [
