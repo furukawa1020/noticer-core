@@ -1,0 +1,302 @@
+#![forbid(unsafe_code)]
+
+//! Software-only ATv2 to APLOT to virtual Menfugu integration boundary.
+//! Local events are diagnostics, not an AETP-approved release surface.
+
+use noticer_aetp::ServiceBinding;
+use noticer_ble_host::HostVerifierAdapter;
+use noticer_menfugu_core::{ExecutionError, ExecutionPolicy};
+use noticer_menfugu_firmware::{MenfuguRuntime, PumpOutput, RuntimeEvent};
+use noticer_protocol::AtypicalityTokenEnvelope;
+use noticer_trace_shaper::{NetworkFrame, NetworkTrace};
+use noticer_transport_core::{
+    derive_frame_id, fragment_envelope, TransportFrameIdentity, TransportIdKey,
+    TOTAL_FRAGMENT_COUNT,
+};
+use noticer_verifier::TokenVerifier;
+
+#[derive(Default)]
+pub struct VirtualPump {
+    enabled: bool,
+}
+
+impl VirtualPump {
+    pub const fn enabled(&self) -> bool {
+        self.enabled
+    }
+}
+
+impl PumpOutput for VirtualPump {
+    fn set_pump(&mut self, enabled: bool) {
+        self.enabled = enabled;
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FrameReport {
+    /// Local-only diagnostics; never publish as an AETP trace.
+    pub events: Vec<RuntimeEvent>,
+    pub pump_enabled: bool,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CoreError {
+    InvalidEnvelope,
+    PublicBinding,
+    ClockRegression,
+    ClockOverflow,
+}
+
+pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize> {
+    runtime: MenfuguRuntime<HostVerifierAdapter, VirtualPump, ACTIVE_FRAMES, CONSUMED_TOKENS>,
+    transport_key: TransportIdKey,
+    expected_service: ServiceBinding,
+    expected_epoch: u32,
+    last_slot: Option<u32>,
+    next_tick: u64,
+}
+
+impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
+    SoftwareCore<ACTIVE_FRAMES, CONSUMED_TOKENS>
+{
+    pub fn new(
+        verifier: TokenVerifier,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, ExecutionError> {
+        let runtime = MenfuguRuntime::new(
+            HostVerifierAdapter::new(verifier, service, epoch),
+            VirtualPump::default(),
+            reassembly_ttl_ticks,
+            execution_policy,
+        )?;
+        Ok(Self {
+            runtime,
+            transport_key,
+            expected_service: service,
+            expected_epoch: epoch,
+            last_slot: None,
+            next_tick: 0,
+        })
+    }
+
+    pub fn pump_enabled(&self) -> bool {
+        self.runtime.pump().enabled()
+    }
+
+    /// Ingests one already-shaped public frame without real BLE or hardware.
+    pub fn ingest_frame(&mut self, frame: &NetworkFrame) -> Result<FrameReport, CoreError> {
+        let identity = frame.identity;
+        let slot = u32::try_from(identity.absolute_slot.0).map_err(|_| CoreError::ClockOverflow)?;
+        if self.last_slot.is_some_and(|last| slot < last) {
+            return Err(CoreError::ClockRegression);
+        }
+        if identity.service != self.expected_service || identity.public_epoch != self.expected_epoch
+        {
+            return Err(CoreError::PublicBinding);
+        }
+        let envelope = AtypicalityTokenEnvelope::from_slice(&frame.bytes)
+            .map_err(|_| CoreError::InvalidEnvelope)?;
+        let outer = envelope.outer().map_err(|_| CoreError::InvalidEnvelope)?;
+        if outer.public_epoch != identity.public_epoch
+            || outer.public_bucket != identity.public_bucket
+            || outer.sequence != identity.sequence
+        {
+            return Err(CoreError::PublicBinding);
+        }
+        let end_tick = self
+            .next_tick
+            .checked_add(TOTAL_FRAGMENT_COUNT as u64)
+            .ok_or(CoreError::ClockOverflow)?;
+        let frame_id = derive_frame_id(
+            &self.transport_key,
+            TransportFrameIdentity {
+                service_alias: outer.service_alias.0,
+                public_epoch: outer.public_epoch,
+                public_bucket: outer.public_bucket,
+                sequence: outer.sequence,
+            },
+        );
+        let fragments = fragment_envelope(envelope.as_bytes(), frame_id);
+        let mut events = Vec::new();
+        for (index, fragment) in fragments.iter().enumerate() {
+            let tick = self.next_tick + index as u64;
+            let timer_event = self.runtime.on_public_timer(tick, slot);
+            if timer_event != RuntimeEvent::Pending {
+                events.push(timer_event);
+            }
+            let event = self.runtime.on_gatt_write(&fragment.encode(), tick, slot);
+            if event != RuntimeEvent::Pending {
+                events.push(event);
+            }
+        }
+        self.last_slot = Some(slot);
+        self.next_tick = end_tick;
+        Ok(FrameReport {
+            events,
+            pump_enabled: self.pump_enabled(),
+        })
+    }
+
+    /// Streaming operation: a later bad frame does not roll back prior actions.
+    pub fn ingest_trace(&mut self, trace: &NetworkTrace) -> Result<Vec<FrameReport>, CoreError> {
+        trace
+            .frames
+            .iter()
+            .map(|frame| self.ingest_frame(frame))
+            .collect()
+    }
+
+    /// The public timer must advance independently of incoming frames.
+    pub fn advance_public_time(&mut self, slot: u32, tick: u64) -> Result<RuntimeEvent, CoreError> {
+        if self.last_slot.is_some_and(|last| slot < last) || tick < self.next_tick {
+            return Err(CoreError::ClockRegression);
+        }
+        let event = self.runtime.on_public_timer(tick, slot);
+        self.last_slot = Some(slot);
+        self.next_tick = tick;
+        Ok(event)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use noticer_aetp::{required_claim, ActionObligation, BucketId};
+    use noticer_crypto::CryptographicRootSecret;
+    use noticer_protocol::ENVELOPE_SIZE;
+    use noticer_token::{semantics_tag, TokenIssuer};
+    use noticer_trace_shaper::PublicFrameIdentity;
+    use noticer_types::{ActionCode, LogicalSlot, PolicyHash};
+    use noticer_verifier::{InMemoryReplayStore, KeyRegistry, PolicyAllowlist, RevocationSnapshot};
+    use std::sync::Arc;
+
+    fn fixture() -> (SoftwareCore<1, 4>, NetworkFrame, NetworkFrame) {
+        let service = ServiceBinding([3; 16]);
+        let epoch = 5;
+        let issuer =
+            TokenIssuer::new(CryptographicRootSecret::new([9; 32]), epoch, &[service]).unwrap();
+        let obligation = ActionObligation {
+            service,
+            action: ActionCode::MenfuguInflateSoft,
+            public_bucket: BucketId(1),
+            admission_cutoff: LogicalSlot(8),
+            release_window_start: LogicalSlot(9),
+            release_deadline: LogicalSlot(12),
+            max_uses: 1,
+            policy_hash: PolicyHash([4; 32]),
+        };
+        let claim = required_claim(obligation.action);
+        let cover_identity = PublicFrameIdentity {
+            service,
+            public_epoch: epoch,
+            public_bucket: 1,
+            slot_in_bucket: 0,
+            sequence: 6,
+            absolute_slot: LogicalSlot(9),
+        };
+        let action_identity = PublicFrameIdentity {
+            sequence: 7,
+            slot_in_bucket: 1,
+            absolute_slot: LogicalSlot(10),
+            ..cover_identity
+        };
+        let cover = issuer.issue_cover_frame(cover_identity).unwrap();
+        let action = issuer
+            .issue_action_frame(action_identity, &obligation, claim)
+            .unwrap();
+        let mut keys = KeyRegistry::default();
+        keys.insert(issuer.verifier_material(service).unwrap())
+            .unwrap();
+        let mut policies = PolicyAllowlist::default();
+        policies
+            .allow(
+                obligation.policy_hash,
+                obligation.action,
+                claim,
+                semantics_tag(&obligation, claim),
+            )
+            .unwrap();
+        let verifier = TokenVerifier::new(
+            keys,
+            policies,
+            RevocationSnapshot::default(),
+            Arc::new(InMemoryReplayStore::default()),
+        );
+        let core = SoftwareCore::new(
+            verifier,
+            service,
+            epoch,
+            TransportIdKey::new([7; 32]),
+            100,
+            ExecutionPolicy {
+                pump_ticks: 5,
+                maximum_pump_ticks: 5,
+                cooldown_slots: 1,
+                execution_period_slots: 1,
+                execution_offset_slots: 0,
+            },
+        )
+        .unwrap();
+        (
+            core,
+            NetworkFrame {
+                identity: cover_identity,
+                bytes: cover.0.to_vec().into_boxed_slice(),
+            },
+            NetworkFrame {
+                identity: action_identity,
+                bytes: action.0.to_vec().into_boxed_slice(),
+            },
+        )
+    }
+
+    #[test]
+    fn cover_action_replay_and_timer_respect_virtual_pump() {
+        let (mut core, cover, action) = fixture();
+        let reports = core
+            .ingest_trace(&NetworkTrace {
+                frames: vec![cover, action.clone()],
+            })
+            .unwrap();
+        assert!(reports[0].events.contains(&RuntimeEvent::Cover));
+        assert!(!reports[0].pump_enabled);
+        assert!(reports[1]
+            .events
+            .contains(&RuntimeEvent::PumpStarted { duration_ticks: 5 }));
+        assert!(core.pump_enabled());
+        assert_eq!(
+            core.advance_public_time(10, 100).unwrap(),
+            RuntimeEvent::PumpStopped
+        );
+        assert!(!core.pump_enabled());
+        let replay = core.ingest_frame(&action).unwrap();
+        assert!(!replay
+            .events
+            .iter()
+            .any(|event| matches!(event, RuntimeEvent::PumpStarted { .. })));
+    }
+
+    #[test]
+    fn binding_mutation_and_slot_rollback_never_start_pump() {
+        let (mut core, cover, action) = fixture();
+        let mut wrong_identity = action.clone();
+        wrong_identity.identity.sequence += 1;
+        assert_eq!(
+            core.ingest_frame(&wrong_identity),
+            Err(CoreError::PublicBinding)
+        );
+        let mut malformed = action.clone();
+        malformed.bytes = vec![0; ENVELOPE_SIZE - 1].into_boxed_slice();
+        assert_eq!(
+            core.ingest_frame(&malformed),
+            Err(CoreError::InvalidEnvelope)
+        );
+        assert!(!core.pump_enabled());
+        core.ingest_frame(&action).unwrap();
+        assert_eq!(core.ingest_frame(&cover), Err(CoreError::ClockRegression));
+    }
+}
