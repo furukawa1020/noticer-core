@@ -94,6 +94,8 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
     }
 
     /// Fail-closed startup: no in-memory fallback if durable replay is unavailable.
+    // Keep service, epoch, policy and ledger bindings explicit at this trust boundary.
+    #[allow(clippy::too_many_arguments)]
     pub fn new_with_durable_replay(
         keys: KeyRegistry,
         policies: PolicyAllowlist,
