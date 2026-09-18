@@ -227,6 +227,8 @@ pub struct FileReplayStore {
 }
 
 impl FileReplayStore {
+    // Preserve the workspace Rust 1.85 MSRV; is_multiple_of is newer.
+    #[allow(clippy::manual_is_multiple_of)]
     pub fn open(path: impl AsRef<Path>, epoch: u32) -> Result<Self, FileReplayError> {
         let path = path.as_ref();
         let lock = ReplayFileLock::acquire(path)?;
