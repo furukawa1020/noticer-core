@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://noticer-core.local/schemas/k7_shared_comparison_fixture_v1.schema.json",
+  "title": "K7 shared synthetic comparison fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "case_id",
+    "observer_signals",
+    "public_actions",
+    "network_available",
+    "scenarios",
+    "bandwidth_unit",
+    "latency_unit",
+    "state_unit",
+    "failure_unit",
+    "evidence_tier"
+  ],
+  "properties": {
+    "format_version": {
+      "const": "noticer.k7.shared-comparison-fixture.v1"
+    },
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observer_signals": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "public_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action_id", "service_id", "deadline_slot"],
+        "properties": {
+          "action_id": {"type": "string", "minLength": 1},
+          "service_id": {"type": "string", "minLength": 1},
+          "deadline_slot": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "network_available": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "boolean"}
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scenario_id",
+          "secret",
+          "private_ready_slots",
+          "signal_observations"
+        ],
+        "properties": {
+          "scenario_id": {"type": "string", "minLength": 1},
+          "secret": {"type": "boolean"},
+          "private_ready_slots": {
+            "type": "array",
+            "items": {"type": "integer", "minimum": 0}
+          },
+          "signal_observations": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "bandwidth_unit": {"const": "bytes"},
+    "latency_unit": {"const": "slots"},
+    "state_unit": {"const": "states"},
+    "failure_unit": {"const": "count"},
+    "evidence_tier": {"const": "SYNTHETIC_SMOKE"}
+  }
+}
