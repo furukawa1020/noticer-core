@@ -8,9 +8,6 @@ rust-version.workspace = true
 [dependencies]
 clap.workspace = true
 csv.workspace = true
-hmac.workspace = true
-sha2.workspace = true
-zeroize.workspace = true
 noticer-aetp = { path = "../noticer-aetp" }
 noticer-ble-host = { path = "../noticer-ble-host" }
 noticer-crypto = { path = "../noticer-crypto" }
@@ -26,4 +23,5 @@ noticer-verifier = { path = "../noticer-verifier" }
 serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
+
 

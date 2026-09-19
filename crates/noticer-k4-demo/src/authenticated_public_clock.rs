@@ -1,11 +1,8 @@
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
 use std::{
     fs::{self, File, OpenOptions},
     io::{self, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
-use zeroize::Zeroize;
 type H = Hmac<Sha256>;
 const MAGIC: &[u8; 16] = b"NOTICER_ACLOCK01";
 const N: usize = 68;
@@ -153,7 +150,7 @@ fn write(
     r[16..20].copy_from_slice(&e.to_le_bytes());
     r[20..28].copy_from_slice(&g.to_le_bytes());
     r[28..36].copy_from_slice(&s.to_le_bytes());
-    let t = tag(&r[..36], k);
+    let t = noticer_crypto::authenticate_state(k, &r[..36]);
     r[36..].copy_from_slice(&t);
     f.seek(SeekFrom::Start(0))?;
     f.write_all(&r)?;

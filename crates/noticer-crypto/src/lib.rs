@@ -314,6 +314,37 @@ fn derive_token_id(
     TokenId(output[..16].try_into().expect("fixed HMAC prefix"))
 }
 
+pub struct StateAuthenticationKey([u8; 32]);
+
+impl StateAuthenticationKey {
+    pub const fn new(bytes: [u8; 32]) -> Self {
+        Self(bytes)
+    }
+}
+
+impl Drop for StateAuthenticationKey {
+    fn drop(&mut self) {
+        self.0.zeroize();
+    }
+}
+
+pub fn authenticate_state(key: &StateAuthenticationKey, message: &[u8]) -> [u8; 32] {
+    let mut mac = <HmacSha256 as Mac>::new_from_slice(&key.0).expect("HMAC accepts 32-byte keys");
+    mac.update(b"NOTICER_STATE_AUTH_V1");
+    mac.update(message);
+    mac.finalize().into_bytes().into()
+}
+
+pub fn verify_state_authentication(
+    key: &StateAuthenticationKey,
+    message: &[u8],
+    tag: &[u8],
+) -> bool {
+    let mut mac = <HmacSha256 as Mac>::new_from_slice(&key.0).expect("HMAC accepts 32-byte keys");
+    mac.update(b"NOTICER_STATE_AUTH_V1");
+    mac.update(message);
+    mac.verify_slice(tag).is_ok()
+}
 #[derive(Clone, Copy, Debug, Error, Eq, PartialEq)]
 pub enum CryptoError {
     #[error("key derivation failed")]
