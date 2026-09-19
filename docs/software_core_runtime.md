@@ -17,3 +17,8 @@ storage, and field safety evidence remain NOT_VERIFIED.
 
 The public-loss simulation API preserves all twenty logical send slots without
 private-dependent retries. Its loss mask and local outcome are not release data.
+
+For restart-safe software operation, use new_with_durable_replay with a
+trusted per-epoch ledger path. Ledger open failure aborts startup; the
+constructor never falls back to InMemoryReplayStore. The original new
+constructor remains an explicit caller-supplied verifier path for tests.

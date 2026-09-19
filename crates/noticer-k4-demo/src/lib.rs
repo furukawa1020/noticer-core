@@ -13,7 +13,11 @@ use noticer_transport_core::{
     derive_frame_id, fragment_envelope, TransportFrameIdentity, TransportIdKey,
     TOTAL_FRAGMENT_COUNT,
 };
-use noticer_verifier::TokenVerifier;
+use noticer_verifier::{
+    FileReplayError, FileReplayStore, KeyRegistry, PolicyAllowlist, RevocationSnapshot,
+    TokenVerifier,
+};
+use std::{path::Path, sync::Arc};
 
 #[derive(Default)]
 pub struct VirtualPump {
@@ -48,6 +52,11 @@ pub enum CoreError {
     InvalidFaultMask,
 }
 
+#[derive(Debug)]
+pub enum CoreInitError {
+    Replay(FileReplayError),
+    Execution(ExecutionError),
+}
 pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize> {
     runtime: MenfuguRuntime<HostVerifierAdapter, VirtualPump, ACTIVE_FRAMES, CONSUMED_TOKENS>,
     transport_key: TransportIdKey,
@@ -84,6 +93,36 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
         })
     }
 
+    /// Fail-closed startup: no in-memory fallback if durable replay is unavailable.
+    // Keep service, epoch, policy and ledger bindings explicit at this trust boundary.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_durable_replay(
+        keys: KeyRegistry,
+        policies: PolicyAllowlist,
+        revocations: RevocationSnapshot,
+        replay_path: impl AsRef<Path>,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, CoreInitError> {
+        execution_policy
+            .validate()
+            .map_err(CoreInitError::Execution)?;
+        let store =
+            Arc::new(FileReplayStore::open(replay_path, epoch).map_err(CoreInitError::Replay)?);
+        let verifier = TokenVerifier::new(keys, policies, revocations, store);
+        Self::new(
+            verifier,
+            service,
+            epoch,
+            transport_key,
+            reassembly_ttl_ticks,
+            execution_policy,
+        )
+        .map_err(CoreInitError::Execution)
+    }
     pub fn pump_enabled(&self) -> bool {
         self.runtime.pump().enabled()
     }
