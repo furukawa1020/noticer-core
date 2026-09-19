@@ -3,7 +3,6 @@ use std::{
     io::{self, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
-type H = Hmac<Sha256>;
 const MAGIC: &[u8; 16] = b"NOTICER_ACLOCK01";
 const N: usize = 68;
 pub struct PublicClockAuthKey([u8; 32]);
