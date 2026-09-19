@@ -3,6 +3,7 @@
 //! Software-only ATv2 to APLOT to virtual Menfugu integration boundary.
 //! Local events are diagnostics, not an AETP-approved release surface.
 
+pub mod authenticated_public_clock;
 pub mod public_clock;
 
 use public_clock::{DurablePublicClock, PublicClockError};
