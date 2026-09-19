@@ -92,7 +92,7 @@ impl DurablePublicClock {
     ) -> Result<Self, PublicClockError> {
         let path = path.as_ref();
         let lock = ClockFileLock::acquire(path)?;
-        let (mut file, slot) = match OpenOptions::new()
+        let (file, slot) = match OpenOptions::new()
             .read(true)
             .write(true)
             .create_new(true)
