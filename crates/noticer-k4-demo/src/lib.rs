@@ -5,6 +5,8 @@
 
 pub mod public_clock;
 
+use public_clock::{DurablePublicClock, PublicClockError};
+
 use noticer_aetp::ServiceBinding;
 use noticer_ble_host::HostVerifierAdapter;
 use noticer_menfugu_core::{ExecutionError, ExecutionPolicy};
@@ -52,11 +54,13 @@ pub enum CoreError {
     ClockRegression,
     ClockOverflow,
     InvalidFaultMask,
+    DurableClock,
 }
 
 #[derive(Debug)]
 pub enum CoreInitError {
     Replay(FileReplayError),
+    PublicClock(PublicClockError),
     Execution(ExecutionError),
 }
 pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize> {
@@ -64,6 +68,7 @@ pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize
     transport_key: TransportIdKey,
     expected_service: ServiceBinding,
     expected_epoch: u32,
+    public_clock: Option<DurablePublicClock>,
     last_slot: Option<u32>,
     next_tick: u64,
 }
@@ -90,6 +95,7 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             transport_key,
             expected_service: service,
             expected_epoch: epoch,
+            public_clock: None,
             last_slot: None,
             next_tick: 0,
         })
@@ -125,6 +131,46 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
         )
         .map_err(CoreInitError::Execution)
     }
+
+    /// Restart-safe startup for both token replay and public-slot rollback.
+    // The initial slot must come from a trusted public scheduler, not packet contents.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_durable_state(
+        keys: KeyRegistry,
+        policies: PolicyAllowlist,
+        revocations: RevocationSnapshot,
+        replay_path: impl AsRef<Path>,
+        public_clock_path: impl AsRef<Path>,
+        trusted_initial_slot: u32,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, CoreInitError> {
+        execution_policy
+            .validate()
+            .map_err(CoreInitError::Execution)?;
+        let public_clock =
+            DurablePublicClock::open(public_clock_path, epoch, u64::from(trusted_initial_slot))
+                .map_err(CoreInitError::PublicClock)?;
+        let store =
+            Arc::new(FileReplayStore::open(replay_path, epoch).map_err(CoreInitError::Replay)?);
+        let verifier = TokenVerifier::new(keys, policies, revocations, store);
+        let mut core = Self::new(
+            verifier,
+            service,
+            epoch,
+            transport_key,
+            reassembly_ttl_ticks,
+            execution_policy,
+        )
+        .map_err(CoreInitError::Execution)?;
+        core.public_clock = Some(public_clock);
+        core.last_slot = Some(trusted_initial_slot);
+        Ok(core)
+    }
+
     pub fn pump_enabled(&self) -> bool {
         self.runtime.pump().enabled()
     }
@@ -160,6 +206,11 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             || outer.sequence != identity.sequence
         {
             return Err(CoreError::PublicBinding);
+        }
+        if let Some(clock) = &mut self.public_clock {
+            clock
+                .advance(u64::from(slot))
+                .map_err(|_| CoreError::DurableClock)?;
         }
         let end_tick = self
             .next_tick
@@ -210,6 +261,11 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
     pub fn advance_public_time(&mut self, slot: u32, tick: u64) -> Result<RuntimeEvent, CoreError> {
         if self.last_slot.is_some_and(|last| slot < last) || tick < self.next_tick {
             return Err(CoreError::ClockRegression);
+        }
+        if let Some(clock) = &mut self.public_clock {
+            clock
+                .advance(u64::from(slot))
+                .map_err(|_| CoreError::DurableClock)?;
         }
         let event = self.runtime.on_public_timer(tick, slot);
         self.last_slot = Some(slot);
