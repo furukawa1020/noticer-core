@@ -131,11 +131,6 @@ impl AuthenticatedDurablePublicClock {
         Ok(())
     }
 }
-fn tag(h: &[u8], k: &PublicClockAuthKey) -> [u8; 32] {
-    let mut m = H::new_from_slice(&k.0).expect("32-byte key");
-    m.update(h);
-    m.finalize().into_bytes().into()
-}
 fn write(
     f: &mut File,
     e: u32,
