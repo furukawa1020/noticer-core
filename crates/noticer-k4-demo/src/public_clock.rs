@@ -6,8 +6,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-
-
 const MAGIC: [u8; 16] = *b"NOTICER_CLOCK001";
 const FILE_BYTES: u64 = 36;
 
