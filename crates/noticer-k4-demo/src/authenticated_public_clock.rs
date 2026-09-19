@@ -5,17 +5,7 @@ use std::{
 };
 const MAGIC: &[u8; 16] = b"NOTICER_ACLOCK01";
 const N: usize = 68;
-pub struct PublicClockAuthKey([u8; 32]);
-impl PublicClockAuthKey {
-    pub const fn new(v: [u8; 32]) -> Self {
-        Self(v)
-    }
-}
-impl Drop for PublicClockAuthKey {
-    fn drop(&mut self) {
-        self.0.zeroize()
-    }
-}
+pub use noticer_crypto::StateAuthenticationKey as PublicClockAuthKey;
 #[derive(Debug)]
 pub enum AuthenticatedClockError {
     Io(io::Error),
@@ -171,10 +161,9 @@ fn read(
     if &r[..16] != MAGIC {
         return Err(AuthenticatedClockError::UnknownVersion);
     }
-    let mut m = H::new_from_slice(&k.0).expect("32-byte key");
-    m.update(&r[..36]);
-    m.verify_slice(&r[36..])
-        .map_err(|_| AuthenticatedClockError::Authentication)?;
+    if !noticer_crypto::verify_state_authentication(k, &r[..36], &r[36..]) {
+        return Err(AuthenticatedClockError::Authentication);
+    }
     let ep = u32::from_le_bytes(r[16..20].try_into().unwrap());
     let gen = u64::from_le_bytes(r[20..28].try_into().unwrap());
     if ep != e {
