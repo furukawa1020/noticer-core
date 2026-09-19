@@ -1,29 +1,51 @@
 use std::{
     ffi::OsString,
+    fmt,
     fs::{self, File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
 
-use thiserror::Error;
+
 
 const MAGIC: [u8; 16] = *b"NOTICER_CLOCK001";
 const FILE_BYTES: u64 = 36;
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum PublicClockError {
-    #[error("durable public clock storage is unavailable")]
-    Io(#[from] std::io::Error),
-    #[error("durable public clock file is corrupted")]
+    Io(std::io::Error),
     Corrupt,
-    #[error("durable public clock epoch does not match")]
     EpochMismatch,
-    #[error("public clock rollback was rejected")]
     Rollback,
-    #[error("durable public clock is poisoned")]
     Poisoned,
 }
 
+impl fmt::Display for PublicClockError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Io(_) => "durable public clock storage is unavailable",
+            Self::Corrupt => "durable public clock file is corrupted",
+            Self::EpochMismatch => "durable public clock epoch does not match",
+            Self::Rollback => "public clock rollback was rejected",
+            Self::Poisoned => "durable public clock is poisoned",
+        })
+    }
+}
+
+impl std::error::Error for PublicClockError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for PublicClockError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
+}
 struct ClockFileLock {
     file: Option<File>,
     path: PathBuf,
