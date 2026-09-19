@@ -3,6 +3,8 @@
 //! Software-only ATv2 to APLOT to virtual Menfugu integration boundary.
 //! Local events are diagnostics, not an AETP-approved release surface.
 
+pub mod public_clock;
+
 use noticer_aetp::ServiceBinding;
 use noticer_ble_host::HostVerifierAdapter;
 use noticer_menfugu_core::{ExecutionError, ExecutionPolicy};
