@@ -14,6 +14,7 @@ pub enum AuthenticatedClockError {
     Authentication,
     EpochMismatch,
     GenerationMismatch,
+    TrustedSlotMismatch,
     Rollback,
     Poisoned,
 }
@@ -77,11 +78,9 @@ impl AuthenticatedDurablePublicClock {
                 return Err(AuthenticatedClockError::Rollback);
             }
             if initial > old {
-                write(&mut file, epoch, generation, initial, &key, true)?;
-                initial
-            } else {
-                old
+                return Err(AuthenticatedClockError::TrustedSlotMismatch);
             }
+            old
         };
         Ok(Self {
             file,
