@@ -4,6 +4,7 @@
 //! Local events are diagnostics, not an AETP-approved release surface.
 
 pub mod authenticated_public_clock;
+pub mod monotonic_anchor;
 pub mod public_clock;
 
 use authenticated_public_clock::{
