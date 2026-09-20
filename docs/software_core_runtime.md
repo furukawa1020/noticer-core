@@ -33,3 +33,12 @@ or ingestion without a wall-clock or in-memory fallback. The caller must not
 derive trusted_initial_slot or NetworkFrame identity from unauthenticated
 packet bytes. new_with_durable_replay remains a replay-only integration path;
 it does not provide restart-safe public-clock rollback protection.
+
+For authenticated restart state, use new_with_authenticated_durable_state.
+It requires an authentication key and explicit state generation, verifies the
+clock record before constructing the runtime, and persists the watermark
+before token verification or action execution. Authentication, epoch,
+generation, rollback, lock, or I/O failure never falls back to the plaintext
+or in-memory clock. The key and generation must come from trusted provisioning.
+The older new_with_durable_state path remains an explicit plaintext legacy
+boundary and does not authenticate filesystem state.
