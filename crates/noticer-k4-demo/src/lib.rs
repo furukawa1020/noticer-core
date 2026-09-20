@@ -6,6 +6,9 @@
 pub mod authenticated_public_clock;
 pub mod public_clock;
 
+use authenticated_public_clock::{
+    AuthenticatedClockError, AuthenticatedDurablePublicClock, PublicClockAuthKey,
+};
 use public_clock::{DurablePublicClock, PublicClockError};
 
 use noticer_aetp::ServiceBinding;
@@ -62,14 +65,28 @@ pub enum CoreError {
 pub enum CoreInitError {
     Replay(FileReplayError),
     PublicClock(PublicClockError),
+    AuthenticatedPublicClock(AuthenticatedClockError),
     Execution(ExecutionError),
+}
+enum PublicClockState {
+    Plaintext(DurablePublicClock),
+    Authenticated(AuthenticatedDurablePublicClock),
+}
+
+impl PublicClockState {
+    fn advance(&mut self, slot: u64) -> Result<(), ()> {
+        match self {
+            Self::Plaintext(clock) => clock.advance(slot).map_err(|_| ()),
+            Self::Authenticated(clock) => clock.advance(slot).map_err(|_| ()),
+        }
+    }
 }
 pub struct SoftwareCore<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize> {
     runtime: MenfuguRuntime<HostVerifierAdapter, VirtualPump, ACTIVE_FRAMES, CONSUMED_TOKENS>,
     transport_key: TransportIdKey,
     expected_service: ServiceBinding,
     expected_epoch: u32,
-    public_clock: Option<DurablePublicClock>,
+    public_clock: Option<PublicClockState>,
     last_slot: Option<u32>,
     next_tick: u64,
 }
@@ -167,11 +184,55 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             execution_policy,
         )
         .map_err(CoreInitError::Execution)?;
-        core.public_clock = Some(public_clock);
+        core.public_clock = Some(PublicClockState::Plaintext(public_clock));
         core.last_slot = Some(trusted_initial_slot);
         Ok(core)
     }
 
+    /// Restart-safe startup with an authenticated public-clock record.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_authenticated_durable_state(
+        keys: KeyRegistry,
+        policies: PolicyAllowlist,
+        revocations: RevocationSnapshot,
+        replay_path: impl AsRef<Path>,
+        public_clock_path: impl AsRef<Path>,
+        public_clock_key: PublicClockAuthKey,
+        state_generation: u64,
+        trusted_initial_slot: u32,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, CoreInitError> {
+        execution_policy
+            .validate()
+            .map_err(CoreInitError::Execution)?;
+        let public_clock = AuthenticatedDurablePublicClock::open(
+            public_clock_path,
+            epoch,
+            state_generation,
+            u64::from(trusted_initial_slot),
+            public_clock_key,
+        )
+        .map_err(CoreInitError::AuthenticatedPublicClock)?;
+        let store =
+            Arc::new(FileReplayStore::open(replay_path, epoch).map_err(CoreInitError::Replay)?);
+        let verifier = TokenVerifier::new(keys, policies, revocations, store);
+        let mut core = Self::new(
+            verifier,
+            service,
+            epoch,
+            transport_key,
+            reassembly_ttl_ticks,
+            execution_policy,
+        )
+        .map_err(CoreInitError::Execution)?;
+        core.public_clock = Some(PublicClockState::Authenticated(public_clock));
+        core.last_slot = Some(trusted_initial_slot);
+        Ok(core)
+    }
     pub fn pump_enabled(&self) -> bool {
         self.runtime.pump().enabled()
     }
