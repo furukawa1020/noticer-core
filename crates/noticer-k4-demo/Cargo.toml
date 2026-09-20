@@ -1,4 +1,4 @@
-[package]
+﻿[package]
 name = "noticer-k4-demo"
 version.workspace = true
 edition.workspace = true
@@ -23,3 +23,5 @@ noticer-verifier = { path = "../noticer-verifier" }
 serde.workspace = true
 serde_json.workspace = true
 toml.workspace = true
+
+
