@@ -6,6 +6,7 @@
 pub mod authenticated_public_clock;
 pub mod monotonic_anchor;
 pub mod public_clock;
+pub mod recovery;
 
 use authenticated_public_clock::{
     AuthenticatedClockError, AuthenticatedDurablePublicClock, PublicClockAuthKey,
