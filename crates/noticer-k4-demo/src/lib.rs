@@ -6,6 +6,7 @@
 pub mod authenticated_public_clock;
 pub mod durable_recovery;
 pub mod durable_recovery_ledger;
+pub mod generation_guard;
 pub mod monotonic_anchor;
 pub mod public_clock;
 pub mod recovery;
@@ -14,10 +15,12 @@ pub mod state_generation;
 use authenticated_public_clock::{
     AuthenticatedClockError, AuthenticatedDurablePublicClock, PublicClockAuthKey,
 };
+use generation_guard::{GenerationGuardError, GenerationGuardedClock};
 use monotonic_anchor::{
     AnchorBinding, AnchoredAuthenticatedClock, AnchoredClockError, MonotonicAnchor,
 };
 use public_clock::{DurablePublicClock, PublicClockError};
+use state_generation::GenerationAnchor;
 
 use noticer_aetp::ServiceBinding;
 use noticer_ble_host::HostVerifierAdapter;
@@ -75,12 +78,14 @@ pub enum CoreInitError {
     PublicClock(PublicClockError),
     AuthenticatedPublicClock(AuthenticatedClockError),
     AnchoredPublicClock(AnchoredClockError),
+    GenerationGuard(GenerationGuardError),
     Execution(ExecutionError),
 }
 enum PublicClockState {
     Plaintext(DurablePublicClock),
     Authenticated(AuthenticatedDurablePublicClock),
     Anchored(AnchoredAuthenticatedClock<Box<dyn MonotonicAnchor>>),
+    GenerationGuarded(Box<GenerationGuardedClock>),
 }
 
 impl PublicClockState {
@@ -89,6 +94,7 @@ impl PublicClockState {
             Self::Plaintext(clock) => clock.advance(slot).map_err(|_| ()),
             Self::Authenticated(clock) => clock.advance(slot).map_err(|_| ()),
             Self::Anchored(clock) => clock.advance(slot).map_err(|_| ()),
+            Self::GenerationGuarded(clock) => clock.advance(slot).map_err(|_| ()),
         }
     }
 }
@@ -293,6 +299,65 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
         .map_err(CoreInitError::Execution)?;
         core.public_clock = Some(PublicClockState::Anchored(public_clock));
         core.last_slot = Some(trusted_initial_slot);
+        Ok(core)
+    }
+    /// Strongest software-only startup: local durable state plus two external anchors.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_generation_guarded_state<
+        M: MonotonicAnchor + 'static,
+        G: GenerationAnchor + 'static,
+    >(
+        keys: KeyRegistry,
+        policies: PolicyAllowlist,
+        revocations: RevocationSnapshot,
+        replay_path: impl AsRef<Path>,
+        public_clock_path: impl AsRef<Path>,
+        public_clock_key: PublicClockAuthKey,
+        recovery_ledger_path: impl AsRef<Path>,
+        recovery_ledger_key: noticer_crypto::StateAuthenticationKey,
+        generation_key: noticer_crypto::StateAuthenticationKey,
+        state_generation: u64,
+        monotonic_anchor: M,
+        generation_anchor: G,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, CoreInitError> {
+        execution_policy
+            .validate()
+            .map_err(CoreInitError::Execution)?;
+        let guarded = GenerationGuardedClock::open(
+            public_clock_path,
+            public_clock_key,
+            recovery_ledger_path,
+            recovery_ledger_key,
+            generation_key,
+            AnchorBinding {
+                epoch,
+                generation: state_generation,
+            },
+            Box::new(monotonic_anchor),
+            Box::new(generation_anchor),
+        )
+        .map_err(CoreInitError::GenerationGuard)?;
+        let initial_slot = u32::try_from(guarded.slot())
+            .map_err(|_| CoreInitError::GenerationGuard(GenerationGuardError::SlotOverflow))?;
+        let store =
+            Arc::new(FileReplayStore::open(replay_path, epoch).map_err(CoreInitError::Replay)?);
+        let verifier = TokenVerifier::new(keys, policies, revocations, store);
+        let mut core = Self::new(
+            verifier,
+            service,
+            epoch,
+            transport_key,
+            reassembly_ttl_ticks,
+            execution_policy,
+        )
+        .map_err(CoreInitError::Execution)?;
+        core.public_clock = Some(PublicClockState::GenerationGuarded(Box::new(guarded)));
+        core.last_slot = Some(initial_slot);
         Ok(core)
     }
     pub fn pump_enabled(&self) -> bool {

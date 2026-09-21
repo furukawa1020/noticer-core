@@ -31,6 +31,23 @@ pub trait GenerationAnchor {
         next: GenerationAnchorState,
     ) -> Result<(), GenerationAnchorError>;
 }
+impl<T: GenerationAnchor + ?Sized> GenerationAnchor for Box<T> {
+    fn current(
+        &mut self,
+        binding: AnchorBinding,
+    ) -> Result<GenerationAnchorState, GenerationAnchorError> {
+        (**self).current(binding)
+    }
+
+    fn advance(
+        &mut self,
+        binding: AnchorBinding,
+        expected_revision: u64,
+        next: GenerationAnchorState,
+    ) -> Result<(), GenerationAnchorError> {
+        (**self).advance(binding, expected_revision, next)
+    }
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StateGenerationError {
     Anchor(GenerationAnchorError),
