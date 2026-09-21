@@ -9,6 +9,7 @@ pub mod durable_recovery_ledger;
 pub mod monotonic_anchor;
 pub mod public_clock;
 pub mod recovery;
+pub mod state_generation;
 
 use authenticated_public_clock::{
     AuthenticatedClockError, AuthenticatedDurablePublicClock, PublicClockAuthKey,

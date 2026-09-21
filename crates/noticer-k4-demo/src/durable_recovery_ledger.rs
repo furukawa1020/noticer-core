@@ -32,6 +32,11 @@ impl Drop for Lock {
         let _ = fs::remove_file(&self.path);
     }
 }
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RecoveryLedgerHead {
+    pub sequence: u64,
+    pub tag: [u8; 32],
+}
 pub struct FileRecoveryLedger {
     file: File,
     _lock: Lock,
@@ -122,6 +127,12 @@ impl FileRecoveryLedger {
             last_tag: previous,
             poisoned: false,
         })
+    }
+    pub fn head(&self) -> RecoveryLedgerHead {
+        RecoveryLedgerHead {
+            sequence: self.ids.len() as u64,
+            tag: self.last_tag,
+        }
     }
     fn consume_inner(&mut self, id: [u8; 16]) -> Result<bool, FileRecoveryLedgerError> {
         if self.poisoned {
