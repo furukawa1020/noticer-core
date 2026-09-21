@@ -92,6 +92,37 @@ impl AuthenticatedDurablePublicClock {
             poisoned: false,
         })
     }
+    /// Opens an authenticated existing record without reconciling it.
+    /// This is restricted to explicit recovery ceremonies.
+    pub fn open_observed(
+        path: impl AsRef<Path>,
+        epoch: u32,
+        generation: u64,
+        key: PublicClockAuthKey,
+    ) -> Result<Self, AuthenticatedClockError> {
+        let path = path.as_ref();
+        let mut lock_path = path.as_os_str().to_os_string();
+        lock_path.push(".lock");
+        let lock_path = PathBuf::from(lock_path);
+        let lock = Lock {
+            path: lock_path.clone(),
+            _file: OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(lock_path)?,
+        };
+        let mut file = OpenOptions::new().read(true).write(true).open(path)?;
+        let slot = read(&mut file, epoch, generation, &key)?;
+        Ok(Self {
+            file,
+            _lock: lock,
+            key,
+            epoch,
+            generation,
+            slot,
+            poisoned: false,
+        })
+    }
     pub const fn slot(&self) -> u64 {
         self.slot
     }
