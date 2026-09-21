@@ -85,7 +85,7 @@ enum PublicClockState {
     Plaintext(DurablePublicClock),
     Authenticated(AuthenticatedDurablePublicClock),
     Anchored(AnchoredAuthenticatedClock<Box<dyn MonotonicAnchor>>),
-    GenerationGuarded(GenerationGuardedClock),
+    GenerationGuarded(Box<GenerationGuardedClock>),
 }
 
 impl PublicClockState {
@@ -356,7 +356,7 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             execution_policy,
         )
         .map_err(CoreInitError::Execution)?;
-        core.public_clock = Some(PublicClockState::GenerationGuarded(guarded));
+        core.public_clock = Some(PublicClockState::GenerationGuarded(Box::new(guarded)));
         core.last_slot = Some(initial_slot);
         Ok(core)
     }
