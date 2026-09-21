@@ -4,6 +4,7 @@
 //! Local events are diagnostics, not an AETP-approved release surface.
 
 pub mod authenticated_public_clock;
+pub mod durable_recovery_ledger;
 pub mod monotonic_anchor;
 pub mod public_clock;
 pub mod recovery;
