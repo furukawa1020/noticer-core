@@ -10,6 +10,9 @@ pub mod public_clock;
 use authenticated_public_clock::{
     AuthenticatedClockError, AuthenticatedDurablePublicClock, PublicClockAuthKey,
 };
+use monotonic_anchor::{
+    AnchorBinding, AnchoredAuthenticatedClock, AnchoredClockError, MonotonicAnchor,
+};
 use public_clock::{DurablePublicClock, PublicClockError};
 
 use noticer_aetp::ServiceBinding;
@@ -67,11 +70,13 @@ pub enum CoreInitError {
     Replay(FileReplayError),
     PublicClock(PublicClockError),
     AuthenticatedPublicClock(AuthenticatedClockError),
+    AnchoredPublicClock(AnchoredClockError),
     Execution(ExecutionError),
 }
 enum PublicClockState {
     Plaintext(DurablePublicClock),
     Authenticated(AuthenticatedDurablePublicClock),
+    Anchored(AnchoredAuthenticatedClock<Box<dyn MonotonicAnchor>>),
 }
 
 impl PublicClockState {
@@ -79,6 +84,7 @@ impl PublicClockState {
         match self {
             Self::Plaintext(clock) => clock.advance(slot).map_err(|_| ()),
             Self::Authenticated(clock) => clock.advance(slot).map_err(|_| ()),
+            Self::Anchored(clock) => clock.advance(slot).map_err(|_| ()),
         }
     }
 }
@@ -231,6 +237,57 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
         )
         .map_err(CoreInitError::Execution)?;
         core.public_clock = Some(PublicClockState::Authenticated(public_clock));
+        core.last_slot = Some(trusted_initial_slot);
+        Ok(core)
+    }
+    /// Restart-safe startup with authenticated state and an external freshness anchor.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new_with_anchored_durable_state<A: MonotonicAnchor + 'static>(
+        keys: KeyRegistry,
+        policies: PolicyAllowlist,
+        revocations: RevocationSnapshot,
+        replay_path: impl AsRef<Path>,
+        public_clock_path: impl AsRef<Path>,
+        public_clock_key: PublicClockAuthKey,
+        state_generation: u64,
+        anchor: A,
+        service: ServiceBinding,
+        epoch: u32,
+        transport_key: TransportIdKey,
+        reassembly_ttl_ticks: u64,
+        execution_policy: ExecutionPolicy,
+    ) -> Result<Self, CoreInitError> {
+        execution_policy
+            .validate()
+            .map_err(CoreInitError::Execution)?;
+        let public_clock = AnchoredAuthenticatedClock::open(
+            public_clock_path,
+            AnchorBinding {
+                epoch,
+                generation: state_generation,
+            },
+            public_clock_key,
+            Box::new(anchor) as Box<dyn MonotonicAnchor>,
+        )
+        .map_err(CoreInitError::AnchoredPublicClock)?;
+        let trusted_initial_slot = u32::try_from(public_clock.slot()).map_err(|_| {
+            CoreInitError::AnchoredPublicClock(AnchoredClockError::Clock(
+                AuthenticatedClockError::TrustedSlotMismatch,
+            ))
+        })?;
+        let store =
+            Arc::new(FileReplayStore::open(replay_path, epoch).map_err(CoreInitError::Replay)?);
+        let verifier = TokenVerifier::new(keys, policies, revocations, store);
+        let mut core = Self::new(
+            verifier,
+            service,
+            epoch,
+            transport_key,
+            reassembly_ttl_ticks,
+            execution_policy,
+        )
+        .map_err(CoreInitError::Execution)?;
+        core.public_clock = Some(PublicClockState::Anchored(public_clock));
         core.last_slot = Some(trusted_initial_slot);
         Ok(core)
     }

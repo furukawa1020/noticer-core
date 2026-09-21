@@ -42,3 +42,11 @@ generation, rollback, lock, or I/O failure never falls back to the plaintext
 or in-memory clock. The key and generation must come from trusted provisioning.
 The older new_with_durable_state path remains an explicit plaintext legacy
 boundary and does not authenticate filesystem state.
+
+The strongest software integration path is new_with_anchored_durable_state.
+It requires an external MonotonicAnchor and refuses startup unless its slot
+exactly matches the authenticated record. Frame processing persists the record
+and advances the anchor before token verification or action execution. Any
+anchor failure is normalized to DurableClock and never falls back to a weaker
+backend. The repository test anchor is not a production trust anchor.
+Hardware provisioning and recovery remain NOT_VERIFIED.
