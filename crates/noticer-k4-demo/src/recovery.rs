@@ -23,8 +23,13 @@ pub struct RecoveryPermit {
     pub signature: [u8; 64],
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RecoveryLedgerError {
+    Storage,
+}
+
 pub trait RecoveryLedger {
-    fn consume(&mut self, permit_id: [u8; 16]) -> Result<bool, ()>;
+    fn consume(&mut self, permit_id: [u8; 16]) -> Result<bool, RecoveryLedgerError>;
 }
 
 #[derive(Debug)]
@@ -39,6 +44,7 @@ pub enum RecoveryError {
     Ledger,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn issue_recovery_permit(
     issuer: &IssuerKeyMaterial,
     operator_domain: ServiceBinding,

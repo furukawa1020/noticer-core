@@ -35,7 +35,7 @@ impl MonotonicAnchor for Anchor {
 #[derive(Default)]
 struct Ledger(HashSet<[u8; 16]>);
 impl RecoveryLedger for Ledger {
-    fn consume(&mut self, id: [u8; 16]) -> Result<bool, ()> {
+    fn consume(&mut self, id: [u8; 16]) -> Result<bool, RecoveryLedgerError> {
         Ok(self.0.insert(id))
     }
 }
