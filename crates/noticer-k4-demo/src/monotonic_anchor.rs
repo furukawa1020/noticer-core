@@ -17,6 +17,15 @@ pub trait MonotonicAnchor {
     fn current(&mut self, binding: AnchorBinding) -> Result<u64, MonotonicAnchorError>;
     fn advance(&mut self, binding: AnchorBinding, slot: u64) -> Result<(), MonotonicAnchorError>;
 }
+impl<T: MonotonicAnchor + ?Sized> MonotonicAnchor for Box<T> {
+    fn current(&mut self, binding: AnchorBinding) -> Result<u64, MonotonicAnchorError> {
+        (**self).current(binding)
+    }
+
+    fn advance(&mut self, binding: AnchorBinding, slot: u64) -> Result<(), MonotonicAnchorError> {
+        (**self).advance(binding, slot)
+    }
+}
 #[derive(Debug)]
 pub enum AnchoredClockError {
     Clock(AuthenticatedClockError),
