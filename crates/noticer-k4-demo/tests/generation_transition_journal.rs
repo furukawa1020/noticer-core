@@ -10,7 +10,7 @@ use noticer_k4_demo::generation_transition_journal::{
     GenerationTransitionJournal, GenerationTransitionJournalError, GenerationTransitionState,
 };
 
-fn path(label: &str) -> PathBuf {
+fn temporary_path(label: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
         "noticer-generation-journal-{label}-{}-{}",
         std::process::id(),
@@ -27,7 +27,7 @@ fn key() -> StateAuthenticationKey {
 
 #[test]
 fn transition_survives_each_restart_boundary() {
-    let path = path("restart");
+    let path = temporary_path("restart");
     let mut journal = GenerationTransitionJournal::open(&path, 5, 7, key()).unwrap();
     assert_eq!(journal.state(), GenerationTransitionState::Clean);
     journal.prepare(9, 10).unwrap();
@@ -62,7 +62,7 @@ fn transition_survives_each_restart_boundary() {
 
 #[test]
 fn invalid_order_and_second_writer_fail_closed() {
-    let path = path("order");
+    let path = temporary_path("order");
     let mut journal = GenerationTransitionJournal::open(&path, 5, 7, key()).unwrap();
     assert!(matches!(
         journal.commit(),
@@ -76,7 +76,7 @@ fn invalid_order_and_second_writer_fail_closed() {
 
 #[test]
 fn partial_write_tamper_and_binding_mismatch_are_rejected() {
-    let path = path("faults");
+    let path = temporary_path("faults");
     let mut journal = GenerationTransitionJournal::open(&path, 5, 7, key()).unwrap();
     journal.prepare(9, 10).unwrap();
     drop(journal);
@@ -98,7 +98,7 @@ fn partial_write_tamper_and_binding_mismatch_are_rejected() {
     ));
     fs::remove_file(&path).unwrap();
 
-    let path = path("tamper");
+    let path = temporary_path("tamper");
     let mut journal = GenerationTransitionJournal::open(&path, 5, 7, key()).unwrap();
     journal.prepare(9, 10).unwrap();
     drop(journal);
