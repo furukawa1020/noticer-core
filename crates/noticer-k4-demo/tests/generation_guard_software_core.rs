@@ -293,3 +293,23 @@ fn mismatched_generation_commitment_rejects_startup() {
     ));
     assert!(!paths.replay.exists());
 }
+
+#[test]
+fn same_slot_timer_is_generation_idempotent() {
+    let paths = Paths::new("idempotent");
+    let initial = bootstrap(&paths);
+    let (monotonic, generation) = anchors(initial, false);
+    let generation_view = generation.0.clone();
+    let mut core = make_core(&paths, monotonic, generation).unwrap();
+
+    core.advance_public_time(INITIAL_SLOT as u32, 1).unwrap();
+    assert_eq!(generation_view.lock().unwrap().value.revision, 0);
+
+    core.advance_public_time(INITIAL_SLOT as u32 + 1, 2)
+        .unwrap();
+    assert_eq!(generation_view.lock().unwrap().value.revision, 1);
+
+    core.advance_public_time(INITIAL_SLOT as u32 + 1, 3)
+        .unwrap();
+    assert_eq!(generation_view.lock().unwrap().value.revision, 1);
+}
