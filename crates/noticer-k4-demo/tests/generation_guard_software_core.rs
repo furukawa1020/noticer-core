@@ -1,6 +1,6 @@
 use std::{
     fs,
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -283,7 +283,7 @@ fn generation_update_failure_prevents_action_execution() {
     let mut core = make_core(&paths, monotonic, generation).unwrap();
 
     assert_eq!(core.ingest_frame(&frame), Err(CoreError::DurableClock));
-    assert!(!core.virtual_menfugu().pump_enabled());
+    assert!(!core.pump_enabled());
 }
 
 #[test]
