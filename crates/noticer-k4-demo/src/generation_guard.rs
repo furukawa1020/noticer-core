@@ -69,6 +69,9 @@ impl GenerationGuardedClock {
         if self.poisoned {
             return Err(GenerationGuardError::Poisoned);
         }
+        if slot == self.snapshot.clock_slot {
+            return Ok(());
+        }
         if let Err(e) = self.clock.advance(slot) {
             self.poisoned = true;
             return Err(GenerationGuardError::Clock(e));
