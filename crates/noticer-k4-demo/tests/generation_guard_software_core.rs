@@ -11,7 +11,6 @@ use noticer_k4_demo::{
     authenticated_public_clock::{AuthenticatedDurablePublicClock, PublicClockAuthKey},
     durable_recovery_ledger::FileRecoveryLedger,
     monotonic_anchor::{AnchorBinding, MonotonicAnchor, MonotonicAnchorError},
-    recovery::RecoveryLedger,
     state_generation::{
         initial_generation_state, GenerationAnchor, GenerationAnchorError, GenerationAnchorState,
         StateSnapshot,
@@ -38,15 +37,10 @@ impl MonotonicAnchor for SharedMonotonicAnchor {
         Ok(*self.0.lock().unwrap())
     }
 
-    fn advance(
-        &mut self,
-        _binding: AnchorBinding,
-        expected: u64,
-        next: u64,
-    ) -> Result<(), MonotonicAnchorError> {
+    fn advance(&mut self, _binding: AnchorBinding, next: u64) -> Result<(), MonotonicAnchorError> {
         let mut slot = self.0.lock().unwrap();
-        if *slot != expected {
-            return Err(MonotonicAnchorError::Stale);
+        if next < *slot {
+            return Err(MonotonicAnchorError::UpdateFailed);
         }
         *slot = next;
         Ok(())
