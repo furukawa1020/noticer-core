@@ -141,3 +141,88 @@ fn mixed_state_expired_and_replayed_permits_fail_closed() {
     drop(journal);
     fs::remove_file(path).unwrap();
 }
+
+#[test]
+fn every_generation_crash_point_has_a_deterministic_disposition() {
+    #[derive(Clone, Copy)]
+    enum Expected {
+        NoTransition,
+        Recoverable,
+        Ambiguous,
+    }
+    let cases = [
+        ("before-prepare", 0, 9, 9, false, Expected::NoTransition),
+        ("prepared-old", 1, 9, 9, false, Expected::Recoverable),
+        ("clock-only", 1, 10, 10, false, Expected::Ambiguous),
+        (
+            "generation-complete",
+            1,
+            10,
+            10,
+            true,
+            Expected::Recoverable,
+        ),
+        ("committed", 2, 10, 10, true, Expected::Recoverable),
+        ("committed-mixed", 2, 10, 9, true, Expected::Ambiguous),
+        ("clean", 3, 10, 10, true, Expected::NoTransition),
+    ];
+    let domain = ServiceBinding([8; 16]);
+    let issuer = derive_issuer_keys(&CryptographicRootSecret::new([9; 32]), domain, 5).unwrap();
+    let verifier = issuer.verifier_material();
+
+    for (index, (label, phase, record_slot, anchor_slot, generation_at_target, expected)) in
+        cases.into_iter().enumerate()
+    {
+        let path = path(label);
+        let mut journal = GenerationTransitionJournal::open(&path, 5, 7, key()).unwrap();
+        if phase >= 1 {
+            journal.prepare(9, 10).unwrap();
+        }
+        if phase >= 2 {
+            journal.commit().unwrap();
+        }
+        if phase >= 3 {
+            journal.clear().unwrap();
+        }
+        let permit = issue_recovery_permit(
+            &issuer,
+            domain,
+            7,
+            record_slot,
+            anchor_slot,
+            10,
+            100,
+            [index as u8; 16],
+        );
+        let result = reconcile_generation_transition(
+            &mut journal,
+            &verifier,
+            domain,
+            binding(),
+            50,
+            &permit,
+            GenerationRecoveryObservation {
+                record_slot,
+                anchor_slot,
+                generation_at_target,
+            },
+            &mut Ledger::default(),
+        );
+        match expected {
+            Expected::NoTransition => assert!(matches!(
+                result,
+                Err(GenerationReconciliationError::NoTransition)
+            )),
+            Expected::Recoverable => {
+                result.unwrap();
+                assert_eq!(journal.state(), GenerationTransitionState::Clean);
+            }
+            Expected::Ambiguous => assert!(matches!(
+                result,
+                Err(GenerationReconciliationError::Ambiguous)
+            )),
+        }
+        drop(journal);
+        fs::remove_file(path).unwrap();
+    }
+}
