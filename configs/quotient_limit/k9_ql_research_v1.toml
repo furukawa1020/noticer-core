@@ -1,0 +1,113 @@
+schema = "noticer.quotient-limit.research-contract.v1"
+contract_id = "K9-QL-00"
+status = "FROZEN_BEFORE_RESULTS"
+artifact_root = "artifacts/k9_quotient_limit"
+family_split_unit = "benchmark_family"
+rational_certificate_required = true
+hardware_claim = "NOT_VERIFIED"
+
+[minimums]
+benchmark_families = 24
+held_out_families = 8
+private_histories_per_model = 2
+explicit_trace_horizon = 16
+sequence_form_horizon = 64
+collusion_services = 4
+fault_families = 4
+solver_backends_when_installed = 2
+
+[seeds]
+family_registry = 91001
+family_split = 91002
+solver_candidate = 91003
+mechanism_sampler = 91004
+attack_evaluation = 91005
+
+[privacy]
+modes = ["exact", "total_variation", "rho_delta"]
+rho_representation = "exact_rational"
+epsilon_usage = "report_only"
+require_reverse_direction = true
+
+[formulations]
+reference = "explicit_trace_lp"
+scalable = "sequence_form_lp"
+cross_check = "exact_feasibility_and_objective"
+
+[results]
+classes = [
+  "CERTIFIED_OPTIMAL",
+  "CERTIFIED_INFEASIBLE",
+  "FEASIBLE_UNCERTIFIED",
+  "INCONCLUSIVE_NUMERIC",
+  "TIMEOUT",
+  "RESOURCE_LIMIT",
+  "INVALID_MODEL",
+]
+
+[scalability]
+private_histories = [2, 4, 8, 16, 32, 64]
+quotient_classes = [1, 2, 4, 8]
+horizons = [4, 8, 16, 32, 64, 128]
+services = [1, 2, 4, 8]
+observer_projections = [1, 2, 4, 8]
+fault_scenarios = [1, 4, 8, 16]
+
+[limits]
+max_histories = 256
+max_quotient_classes = 64
+max_horizon = 256
+max_services = 16
+max_observers = 16
+max_fault_scenarios = 64
+max_variables = 10000000
+max_constraints = 20000000
+max_nonzeros = 200000000
+max_certificate_bytes = 268435456
+max_rational_bits = 8192
+max_solver_seconds = 1800
+max_checker_seconds = 1800
+max_memory_mb = 16384
+
+[canonical_domains]
+model = "QUOTIENT_LIMIT_MODEL_V1"
+quotient = "QUOTIENT_LIMIT_QUOTIENT_V1"
+observer = "QUOTIENT_LIMIT_OBSERVER_V1"
+privacy = "QUOTIENT_LIMIT_PRIVACY_V1"
+utility = "QUOTIENT_LIMIT_UTILITY_V1"
+fault = "QUOTIENT_LIMIT_FAULT_V1"
+cost = "QUOTIENT_LIMIT_COST_V1"
+matrix = "QUOTIENT_LIMIT_MATRIX_V1"
+primal = "QUOTIENT_LIMIT_PRIMAL_V1"
+dual = "QUOTIENT_LIMIT_DUAL_V1"
+farkas = "QUOTIENT_LIMIT_FARKAS_V1"
+certificate = "QUOTIENT_LIMIT_CERTIFICATE_V1"
+mechanism = "QUOTIENT_LIMIT_MECHANISM_V1"
+
+[forbidden_inferences]
+solver_infeasible_is_certified = false
+solver_optimal_is_certified = false
+timeout_is_infeasible = false
+small_float_residual_is_exact = false
+weak_attack_is_privacy = false
+
+[dependencies]
+required = [
+  "K7-00 frozen research contract",
+  "K7-01 independent semantics oracle",
+  "K7-03 inductive CAQT certificate",
+  "K7-12 longitudinal composition contract",
+]
+k8_required = false
+
+[non_goals]
+values = [
+  "general privacy mechanism optimization",
+  "arbitrary continuous state",
+  "infinite horizon general solution",
+  "microarchitectural timing",
+  "physical RF channel",
+  "real sensor authenticity",
+  "hardware energy proof",
+  "medical claim",
+]
