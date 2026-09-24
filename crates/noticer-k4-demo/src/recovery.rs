@@ -66,7 +66,7 @@ pub fn issue_recovery_permit(
         nonce,
         signature: [0; 64],
     };
-    permit.signature = issuer.sign(&message(&permit));
+    permit.signature = issuer.sign(&permit_message(&permit));
     permit
 }
 
@@ -105,7 +105,7 @@ pub fn recover_clock<A: MonotonicAnchor, L: RecoveryLedger>(
         return Err(RecoveryError::TargetRollback);
     }
     verifier
-        .verify(&message(permit), &permit.signature)
+        .verify(&permit_message(permit), &permit.signature)
         .map_err(RecoveryError::Signature)?;
     let permit_id = permit.signature[..16].try_into().expect("fixed permit id");
     if !ledger
@@ -123,7 +123,7 @@ pub fn recover_clock<A: MonotonicAnchor, L: RecoveryLedger>(
     Ok(permit.target_slot)
 }
 
-fn message(permit: &RecoveryPermit) -> Vec<u8> {
+pub(crate) fn permit_message(permit: &RecoveryPermit) -> Vec<u8> {
     let mut output = Vec::with_capacity(92);
     output.extend_from_slice(DOMAIN);
     output.extend_from_slice(&permit.operator_domain.0);

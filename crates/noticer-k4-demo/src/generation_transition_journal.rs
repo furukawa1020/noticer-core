@@ -161,6 +161,12 @@ impl GenerationTransitionJournal {
         self.append(1, from_slot, to_slot)
     }
 
+    pub fn abort(&mut self) -> Result<(), GenerationTransitionJournalError> {
+        let GenerationTransitionState::Prepared { from_slot, to_slot } = self.state else {
+            return Err(GenerationTransitionJournalError::InvalidTransition);
+        };
+        self.append(4, from_slot, to_slot)
+    }
     pub fn commit(&mut self) -> Result<(), GenerationTransitionJournalError> {
         let GenerationTransitionState::Prepared { from_slot, to_slot } = self.state else {
             return Err(GenerationTransitionJournalError::InvalidTransition);
@@ -240,6 +246,13 @@ fn next_state(
                 to_slot: old_to,
             },
             3,
+        ) if (old_from, old_to) == (from_slot, to_slot) => Ok(GenerationTransitionState::Clean),
+        (
+            GenerationTransitionState::Prepared {
+                from_slot: old_from,
+                to_slot: old_to,
+            },
+            4,
         ) if (old_from, old_to) == (from_slot, to_slot) => Ok(GenerationTransitionState::Clean),
         _ => Err(GenerationTransitionJournalError::InvalidTransition),
     }
