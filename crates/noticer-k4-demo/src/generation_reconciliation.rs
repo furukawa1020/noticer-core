@@ -1,12 +1,13 @@
 use crate::{
-    generation_transition_journal::{
-        GenerationTransitionJournal, GenerationTransitionJournalError, GenerationTransitionState,
-    },
+    durable_recovery_ledger::FileRecoveryLedger,
+    generation_transition_journal::{GenerationTransitionJournal, GenerationTransitionState},
+    journal_head_anchor::{AnchoredGenerationTransitionJournal, JournalHeadAnchor},
     monotonic_anchor::AnchorBinding,
     recovery::{permit_message, RecoveryLedger, RecoveryPermit},
 };
 use noticer_aetp::ServiceBinding;
-use noticer_crypto::{CryptoError, VerifierKeyMaterial};
+use noticer_crypto::{CryptoError, StateAuthenticationKey, VerifierKeyMaterial};
+use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct GenerationRecoveryObservation {
@@ -24,12 +25,57 @@ pub enum GenerationReconciliationError {
     Ambiguous,
     Replay,
     Ledger,
-    Journal(GenerationTransitionJournalError),
+    Journal,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReconciliationJournalOperationError;
+
+pub trait ReconciliationJournal {
+    fn reconciliation_state(&self) -> GenerationTransitionState;
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError>;
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError>;
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError>;
+}
+
+impl ReconciliationJournal for GenerationTransitionJournal {
+    fn reconciliation_state(&self) -> GenerationTransitionState {
+        self.state()
+    }
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.abort()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.commit()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.clear()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+}
+
+impl<A: JournalHeadAnchor> ReconciliationJournal for AnchoredGenerationTransitionJournal<A> {
+    fn reconciliation_state(&self) -> GenerationTransitionState {
+        self.state()
+    }
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.abort()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.commit()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.clear()
+            .map_err(|_| ReconciliationJournalOperationError)
+    }
+}
 #[allow(clippy::too_many_arguments)]
-pub fn reconcile_generation_transition<L: RecoveryLedger>(
-    journal: &mut GenerationTransitionJournal,
+pub fn reconcile_generation_transition<J: ReconciliationJournal, L: RecoveryLedger>(
+    journal: &mut J,
     verifier: &VerifierKeyMaterial,
     expected_operator_domain: ServiceBinding,
     binding: AnchorBinding,
@@ -38,7 +84,7 @@ pub fn reconcile_generation_transition<L: RecoveryLedger>(
     observation: GenerationRecoveryObservation,
     ledger: &mut L,
 ) -> Result<(), GenerationReconciliationError> {
-    let (from_slot, to_slot, committed) = match journal.state() {
+    let (from_slot, to_slot, committed) = match journal.reconciliation_state() {
         GenerationTransitionState::Clean => {
             return Err(GenerationReconciliationError::NoTransition)
         }
@@ -83,16 +129,54 @@ pub fn reconcile_generation_transition<L: RecoveryLedger>(
     }
     if all_old {
         journal
-            .abort()
-            .map_err(GenerationReconciliationError::Journal)
+            .reconciliation_abort()
+            .map_err(|_| GenerationReconciliationError::Journal)
     } else {
         if !committed {
             journal
-                .commit()
-                .map_err(GenerationReconciliationError::Journal)?;
+                .reconciliation_commit()
+                .map_err(|_| GenerationReconciliationError::Journal)?;
         }
         journal
-            .clear()
-            .map_err(GenerationReconciliationError::Journal)
+            .reconciliation_clear()
+            .map_err(|_| GenerationReconciliationError::Journal)
     }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn reconcile_generation_transition_with_durable_ledger<A: JournalHeadAnchor>(
+    journal_path: impl AsRef<Path>,
+    journal_key: StateAuthenticationKey,
+    journal_anchor: A,
+    ledger_path: impl AsRef<Path>,
+    ledger_key: StateAuthenticationKey,
+    verifier: &VerifierKeyMaterial,
+    expected_operator_domain: ServiceBinding,
+    binding: AnchorBinding,
+    now: u64,
+    permit: &RecoveryPermit,
+    observation: GenerationRecoveryObservation,
+) -> Result<(), GenerationReconciliationError> {
+    let journal = GenerationTransitionJournal::open(
+        journal_path,
+        binding.epoch,
+        binding.generation,
+        journal_key,
+    )
+    .map_err(|_| GenerationReconciliationError::Journal)?;
+    let mut journal = AnchoredGenerationTransitionJournal::open(journal, journal_anchor, binding)
+        .map_err(|_| GenerationReconciliationError::Journal)?;
+    let mut ledger =
+        FileRecoveryLedger::open(ledger_path, binding.epoch, binding.generation, ledger_key)
+            .map_err(|_| GenerationReconciliationError::Ledger)?;
+    reconcile_generation_transition(
+        &mut journal,
+        verifier,
+        expected_operator_domain,
+        binding,
+        now,
+        permit,
+        observation,
+        &mut ledger,
+    )
 }
