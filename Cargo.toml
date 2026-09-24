@@ -59,11 +59,6 @@ members = [
     "crates/quotient-seal-target-ir",
     "crates/quotient-seal-small-step",
     "crates/quotient-seal-relation",
-    "crates/quotient-limit-model",
-    "crates/quotient-limit-trace-lp",
-    "crates/quotient-limit-sequence-lp",
-    "crates/quotient-limit-rational",
-    "crates/quotient-limit-check",
 ]
 
 [workspace.package]
