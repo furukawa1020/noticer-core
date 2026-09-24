@@ -1,8 +1,6 @@
 use crate::{
     durable_recovery_ledger::FileRecoveryLedger,
-    generation_transition_journal::{
-        GenerationTransitionJournal, GenerationTransitionJournalError, GenerationTransitionState,
-    },
+    generation_transition_journal::{GenerationTransitionJournal, GenerationTransitionState},
     journal_head_anchor::{AnchoredGenerationTransitionJournal, JournalHeadAnchor},
     monotonic_anchor::AnchorBinding,
     recovery::{permit_message, RecoveryLedger, RecoveryPermit},
@@ -30,8 +28,44 @@ pub enum GenerationReconciliationError {
     Journal,
 }
 
+pub trait ReconciliationJournal {
+    fn reconciliation_state(&self) -> GenerationTransitionState;
+    fn reconciliation_abort(&mut self) -> Result<(), ()>;
+    fn reconciliation_commit(&mut self) -> Result<(), ()>;
+    fn reconciliation_clear(&mut self) -> Result<(), ()>;
+}
+
+impl ReconciliationJournal for GenerationTransitionJournal {
+    fn reconciliation_state(&self) -> GenerationTransitionState {
+        self.state()
+    }
+    fn reconciliation_abort(&mut self) -> Result<(), ()> {
+        self.abort().map_err(|_| ())
+    }
+    fn reconciliation_commit(&mut self) -> Result<(), ()> {
+        self.commit().map_err(|_| ())
+    }
+    fn reconciliation_clear(&mut self) -> Result<(), ()> {
+        self.clear().map_err(|_| ())
+    }
+}
+
+impl<A: JournalHeadAnchor> ReconciliationJournal for AnchoredGenerationTransitionJournal<A> {
+    fn reconciliation_state(&self) -> GenerationTransitionState {
+        self.state()
+    }
+    fn reconciliation_abort(&mut self) -> Result<(), ()> {
+        self.abort().map_err(|_| ())
+    }
+    fn reconciliation_commit(&mut self) -> Result<(), ()> {
+        self.commit().map_err(|_| ())
+    }
+    fn reconciliation_clear(&mut self) -> Result<(), ()> {
+        self.clear().map_err(|_| ())
+    }
+}
 #[allow(clippy::too_many_arguments)]
-pub fn reconcile_generation_transition<L: RecoveryLedger>(
+pub fn reconcile_generation_transition<J: ReconciliationJournal, L: RecoveryLedger>(
     journal: &mut J,
     verifier: &VerifierKeyMaterial,
     expected_operator_domain: ServiceBinding,
