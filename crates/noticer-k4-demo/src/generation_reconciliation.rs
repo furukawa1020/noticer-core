@@ -28,25 +28,31 @@ pub enum GenerationReconciliationError {
     Journal,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReconciliationJournalOperationError;
+
 pub trait ReconciliationJournal {
     fn reconciliation_state(&self) -> GenerationTransitionState;
-    fn reconciliation_abort(&mut self) -> Result<(), ()>;
-    fn reconciliation_commit(&mut self) -> Result<(), ()>;
-    fn reconciliation_clear(&mut self) -> Result<(), ()>;
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError>;
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError>;
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError>;
 }
 
 impl ReconciliationJournal for GenerationTransitionJournal {
     fn reconciliation_state(&self) -> GenerationTransitionState {
         self.state()
     }
-    fn reconciliation_abort(&mut self) -> Result<(), ()> {
-        self.abort().map_err(|_| ())
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.abort()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
-    fn reconciliation_commit(&mut self) -> Result<(), ()> {
-        self.commit().map_err(|_| ())
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.commit()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
-    fn reconciliation_clear(&mut self) -> Result<(), ()> {
-        self.clear().map_err(|_| ())
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.clear()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
 }
 
@@ -54,14 +60,17 @@ impl<A: JournalHeadAnchor> ReconciliationJournal for AnchoredGenerationTransitio
     fn reconciliation_state(&self) -> GenerationTransitionState {
         self.state()
     }
-    fn reconciliation_abort(&mut self) -> Result<(), ()> {
-        self.abort().map_err(|_| ())
+    fn reconciliation_abort(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.abort()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
-    fn reconciliation_commit(&mut self) -> Result<(), ()> {
-        self.commit().map_err(|_| ())
+    fn reconciliation_commit(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.commit()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
-    fn reconciliation_clear(&mut self) -> Result<(), ()> {
-        self.clear().map_err(|_| ())
+    fn reconciliation_clear(&mut self) -> Result<(), ReconciliationJournalOperationError> {
+        self.clear()
+            .map_err(|_| ReconciliationJournalOperationError)
     }
 }
 #[allow(clippy::too_many_arguments)]
