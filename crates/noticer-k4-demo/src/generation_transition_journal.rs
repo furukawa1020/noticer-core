@@ -10,6 +10,11 @@ const HEADER: usize = 60;
 const RECORD: usize = 57;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GenerationJournalHead {
+    pub sequence: u64,
+    pub tag: [u8; 32],
+}
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum GenerationTransitionState {
     Clean,
     Prepared { from_slot: u64, to_slot: u64 },
@@ -140,6 +145,13 @@ impl GenerationTransitionJournal {
             last_tag: previous,
             poisoned: false,
         })
+    }
+
+    pub const fn head(&self) -> GenerationJournalHead {
+        GenerationJournalHead {
+            sequence: self.sequence,
+            tag: self.last_tag,
+        }
     }
 
     pub const fn state(&self) -> GenerationTransitionState {
