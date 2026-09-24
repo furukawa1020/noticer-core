@@ -1,6 +1,9 @@
 use crate::{
     authenticated_public_clock::PublicClockAuthKey,
     durable_recovery_ledger::FileRecoveryLedger,
+    generation_transition_journal::{
+        GenerationTransitionJournal, GenerationTransitionJournalError, GenerationTransitionState,
+    },
     monotonic_anchor::{
         AnchorBinding, AnchoredAuthenticatedClock, AnchoredClockError, MonotonicAnchor,
     },
@@ -15,6 +18,8 @@ use std::path::Path;
 pub enum GenerationGuardError {
     Clock(AnchoredClockError),
     Ledger,
+    Journal(GenerationTransitionJournalError),
+    IncompleteTransition,
     Generation(StateGenerationError),
     Poisoned,
     SlotOverflow,
@@ -22,6 +27,7 @@ pub enum GenerationGuardError {
 pub struct GenerationGuardedClock {
     clock: AnchoredAuthenticatedClock<Box<dyn MonotonicAnchor>>,
     _ledger: FileRecoveryLedger,
+    journal: GenerationTransitionJournal,
     generation_anchor: Box<dyn GenerationAnchor>,
     generation_key: StateAuthenticationKey,
     snapshot: StateSnapshot,
@@ -34,6 +40,8 @@ impl GenerationGuardedClock {
         clock_key: PublicClockAuthKey,
         ledger_path: impl AsRef<Path>,
         ledger_key: StateAuthenticationKey,
+        journal_path: impl AsRef<Path>,
+        journal_key: StateAuthenticationKey,
         generation_key: StateAuthenticationKey,
         binding: AnchorBinding,
         monotonic_anchor: Box<dyn MonotonicAnchor>,
@@ -42,6 +50,16 @@ impl GenerationGuardedClock {
         let ledger =
             FileRecoveryLedger::open(ledger_path, binding.epoch, binding.generation, ledger_key)
                 .map_err(|_| GenerationGuardError::Ledger)?;
+        let journal = GenerationTransitionJournal::open(
+            journal_path,
+            binding.epoch,
+            binding.generation,
+            journal_key,
+        )
+        .map_err(GenerationGuardError::Journal)?;
+        if journal.state() != GenerationTransitionState::Clean {
+            return Err(GenerationGuardError::IncompleteTransition);
+        }
         let clock =
             AnchoredAuthenticatedClock::open(clock_path, binding, clock_key, monotonic_anchor)
                 .map_err(GenerationGuardError::Clock)?;
@@ -56,6 +74,7 @@ impl GenerationGuardedClock {
         Ok(Self {
             clock,
             _ledger: ledger,
+            journal,
             generation_anchor,
             generation_key,
             snapshot,
@@ -71,6 +90,10 @@ impl GenerationGuardedClock {
         }
         if slot == self.snapshot.clock_slot {
             return Ok(());
+        }
+        if let Err(e) = self.journal.prepare(self.snapshot.clock_slot, slot) {
+            self.poisoned = true;
+            return Err(GenerationGuardError::Journal(e));
         }
         if let Err(e) = self.clock.advance(slot) {
             self.poisoned = true;
@@ -89,6 +112,10 @@ impl GenerationGuardedClock {
         ) {
             self.poisoned = true;
             return Err(GenerationGuardError::Generation(e));
+        }
+        if let Err(e) = self.journal.commit().and_then(|_| self.journal.clear()) {
+            self.poisoned = true;
+            return Err(GenerationGuardError::Journal(e));
         }
         self.snapshot = next;
         Ok(())

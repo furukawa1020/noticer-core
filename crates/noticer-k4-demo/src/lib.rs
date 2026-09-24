@@ -316,6 +316,8 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
         public_clock_key: PublicClockAuthKey,
         recovery_ledger_path: impl AsRef<Path>,
         recovery_ledger_key: noticer_crypto::StateAuthenticationKey,
+        generation_journal_path: impl AsRef<Path>,
+        generation_journal_key: noticer_crypto::StateAuthenticationKey,
         generation_key: noticer_crypto::StateAuthenticationKey,
         state_generation: u64,
         monotonic_anchor: M,
@@ -334,6 +336,8 @@ impl<const ACTIVE_FRAMES: usize, const CONSUMED_TOKENS: usize>
             public_clock_key,
             recovery_ledger_path,
             recovery_ledger_key,
+            generation_journal_path,
+            generation_journal_key,
             generation_key,
             AnchorBinding {
                 epoch,

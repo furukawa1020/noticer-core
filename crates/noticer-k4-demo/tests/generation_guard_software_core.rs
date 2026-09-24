@@ -85,6 +85,7 @@ struct Paths {
     replay: PathBuf,
     clock: PathBuf,
     ledger: PathBuf,
+    journal: PathBuf,
 }
 
 impl Paths {
@@ -101,13 +102,14 @@ impl Paths {
             replay: base.with_extension("replay"),
             clock: base.with_extension("clock"),
             ledger: base.with_extension("ledger"),
+            journal: base.with_extension("journal"),
         }
     }
 }
 
 impl Drop for Paths {
     fn drop(&mut self) {
-        for path in [&self.replay, &self.clock, &self.ledger] {
+        for path in [&self.replay, &self.clock, &self.ledger, &self.journal] {
             if path.exists() {
                 fs::remove_file(path).unwrap();
             }
@@ -128,6 +130,10 @@ fn clock_key() -> PublicClockAuthKey {
 
 fn ledger_key() -> StateAuthenticationKey {
     StateAuthenticationKey::new([52; 32])
+}
+
+fn journal_key() -> StateAuthenticationKey {
+    StateAuthenticationKey::new([54; 32])
 }
 
 fn generation_key() -> StateAuthenticationKey {
@@ -219,6 +225,8 @@ fn make_core(
         clock_key(),
         &paths.ledger,
         ledger_key(),
+        &paths.journal,
+        journal_key(),
         generation_key(),
         GENERATION,
         monotonic,
