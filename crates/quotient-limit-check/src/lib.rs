@@ -249,3 +249,9 @@ mod tests {
         );
     }
 }
+
+mod dual;
+pub use dual::{
+    check_certified_optimal, check_dual, DualCheckError, DualWitness, OptimalityCheckError,
+    OptimalityWitness, DOMAIN_DUAL,
+};
