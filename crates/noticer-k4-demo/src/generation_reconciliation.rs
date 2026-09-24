@@ -120,17 +120,17 @@ pub fn reconcile_generation_transition<J: ReconciliationJournal, L: RecoveryLedg
     }
     if all_old {
         journal
-            .abort()
-            .map_err(GenerationReconciliationError::Journal)
+            .reconciliation_abort()
+            .map_err(|_| GenerationReconciliationError::Journal)
     } else {
         if !committed {
             journal
-                .commit()
-                .map_err(GenerationReconciliationError::Journal)?;
+                .reconciliation_commit()
+                .map_err(|_| GenerationReconciliationError::Journal)?;
         }
         journal
-            .clear()
-            .map_err(GenerationReconciliationError::Journal)
+            .reconciliation_clear()
+            .map_err(|_| GenerationReconciliationError::Journal)
     }
 }
 
