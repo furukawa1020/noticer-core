@@ -9,6 +9,7 @@ pub mod durable_recovery_ledger;
 pub mod generation_guard;
 pub mod generation_reconciliation;
 pub mod generation_transition_journal;
+pub mod journal_head_anchor;
 pub mod monotonic_anchor;
 pub mod public_clock;
 pub mod recovery;
