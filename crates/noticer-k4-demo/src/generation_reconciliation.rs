@@ -63,7 +63,12 @@ pub fn reconcile_generation_transition<L: RecoveryLedger>(
     let all_new = observation.record_slot == to_slot
         && observation.anchor_slot == to_slot
         && observation.generation_at_target;
-    if committed && !all_new || !committed && !all_old && !all_new {
+    let consistent = if committed {
+        all_new
+    } else {
+        all_old || all_new
+    };
+    if !consistent {
         return Err(GenerationReconciliationError::Ambiguous);
     }
     verifier
