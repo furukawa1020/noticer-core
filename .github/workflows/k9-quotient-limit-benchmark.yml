@@ -1,0 +1,30 @@
+﻿name: K9 QuotientLimit Benchmark Corpus
+
+on:
+  push:
+    paths:
+      - "crates/quotient-limit-benchmark/**"
+      - ".github/workflows/k9-quotient-limit-benchmark.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-limit-benchmark/**"
+      - ".github/workflows/k9-quotient-limit-benchmark.yml"
+
+jobs:
+  frozen-corpus-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          components: rustfmt
+      - name: Check formatting
+        run: rustfmt --edition 2021 --check crates/quotient-limit-benchmark/src/lib.rs
+      - name: Test frozen corpus
+        run: |
+          mkdir -p target/k9-quotient-limit
+          rustc --edition 2021 --test crates/quotient-limit-benchmark/src/lib.rs -o target/k9-quotient-limit/quotient-limit-benchmark-tests
+          target/k9-quotient-limit/quotient-limit-benchmark-tests
+      - name: Build no_std corpus contract
+        run: rustc --edition 2021 --crate-name quotient_limit_benchmark --crate-type lib crates/quotient-limit-benchmark/src/lib.rs -o target/k9-quotient-limit/libquotient_limit_benchmark.rlib
