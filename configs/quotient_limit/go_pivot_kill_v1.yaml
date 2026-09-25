@@ -1,0 +1,62 @@
+schema_version: quotient-limit-decision-policy/v1
+decision_precedence: [KILL, PIVOT, GO]
+missing_evidence_action: PIVOT
+hardware_status: NOT_VERIFIED
+boundaries:
+  - PREDECLARED_RULE_EVALUATION
+  - NON_COMPENSATORY
+  - NOT_A_PROOF
+  - GENERATED_ARTIFACTS_UNCOMMITTED
+required_package_paths:
+  - configs/quotient_limit/k9_ql_research_v1.toml
+  - crates/quotient-limit-check/src/lib.rs
+  - crates/quotient-limit-codegen/src/lib.rs
+  - crates/quotient-limit-model/src/lib.rs
+  - crates/quotient-limit-noticer/src/lib.rs
+  - crates/quotient-limit-sequence-lp/src/lib.rs
+  - crates/quotient-limit-trace-lp/src/lib.rs
+  - lean/QuotientLimit.lean
+  - lean/QuotientLimit/Basic.lean
+  - src/noticer_core/attacks/quotient_limit.py
+  - src/noticer_core/evaluation/quotient_limit_evaluation.py
+  - studio/src/scripts/quotient-limit/studio.ts
+criteria:
+  GO:
+    LEAN_NO_SORRY: Lean theorem contains no sorry
+    LP_FORMULATIONS_AGREE: Explicit and sequence LP agree on every small model
+    EXACT_CERTIFICATES_ACCEPTED: Exact checker accepts valid primal and dual certificates
+    MUTATIONS_REJECTED: Certificate mutation rejection rate is 100 percent
+    INFEASIBLE_CASES_8: At least eight cases are certified infeasible
+    OPTIMAL_CASES_16: At least sixteen cases are certified optimal
+    HELD_OUT_MECHANISM: An optimal held-out mechanism is generated
+    OPTIMALITY_VALUE: Lower cost than handwritten mechanisms or nontrivial optimality is certified
+    COLLUSION_DEFECT: Joint model detects a marginal-only collusion defect
+    APPROX_FRONTIER: Approximate frontier has a nontrivial privacy-latency trade-off
+    SCALABILITY_GATE: A horizon64 histories16 services4 case completes
+    ATTACK_ALIGNMENT: Certified results agree with the empirical Bayes attacker
+    QUOTIENT_DISTINCTION: Difference from optimization without action quotient is explicit
+  PIVOT:
+    SYNTHESIS_SCALABILITY_LIMIT: Scalable optimal synthesis is difficult
+    LOWER_BOUND_ONLY: Only the lower-bound checker is strong
+    EXACT_ONLY: Scope must narrow to exact AETP
+    SINGLE_ACTION_ONLY: Scope must narrow to a single-action timing theorem
+    COLLUSION_SEPARATE: Collusion must move to a separate paper
+    CODEGEN_REMOVE: Code generation must be removed
+    PARAMETRIC_CERTIFICATE_FOCUS: Work must focus on parametric theorem and certificate
+    COLUMN_GENERATION_REQUIRED: Column generation is required instead of sequence form
+    RATIONAL_RECONSTRUCTION_BOTTLENECK: Exact rational reconstruction is the bottleneck
+    STUDIO_REDUCE: Studio scope must be reduced
+  KILL:
+    FLOATING_ONLY: Only floating LP results remain
+    NO_DUAL_CERTIFICATE: No dual certificate exists
+    NO_EXACT_CHECKER: No exact checker exists
+    TRIVIAL_READINESS_ONLY: Only the trivial latest-readiness result remains
+    INDISTINGUISHABLE_FROM_BOUNDED_UNSAT: Result cannot be distinguished from bounded UNSAT
+    QUOTIENT_NOT_IN_MATRIX: Action quotient is not materially reflected in the matrix
+    CAUSAL_INFORMATION_IGNORED: Causal information sets are ignored
+    PRIVATE_FUTURE_VISIBLE: Mechanism can inspect private future state
+    UTILITY_BY_SUPPRESSION: Utility is met by suppressing allowed actions
+    MARGINAL_COLLUSION_ONLY: Marginal privacy substitutes for joint collusion privacy
+    NO_HANDWRITTEN_GAP: Gap to handwritten mechanisms cannot be calculated
+    NO_CERTIFIED_OUTCOME: Neither optimality nor infeasibility can be certified
+    GENERIC_LP_WRAPPER_ONLY: Contribution is only a generic LP wrapper
