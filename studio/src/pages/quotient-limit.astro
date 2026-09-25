@@ -1,0 +1,65 @@
+---
+import "../styles/global.css";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Interactive bounded workbench for action-equivalent trace privacy lower bounds." />
+    <title>QuotientLimit Studio</title>
+  </head>
+  <body>
+    <main id="ql-studio" class="ql-shell">
+      <nav class="ql-nav">
+        <a href="/" class="ql-brand"><i>QL</i> QuotientLimit <b>Studio</b></a>
+        <span>BOUNDed model / browser demonstration</span>
+      </nav>
+      <header class="ql-hero">
+        <div><p class="ql-eyebrow">ACTION-EQUIVALENT TRACE PRIVACY</p><h1>How late must<br />privacy <em>wait?</em></h1></div>
+        <p>Place two private readiness histories. The Studio finds the earliest observable release that preserves their permitted action semantics, then exposes the cost and its certificate.</p>
+      </header>
+
+      <section class="ql-workbench">
+        <aside class="ql-controls">
+          <div class="ql-section-title"><span>01</span><h2>Private world</h2></div>
+          <label>History h1 ready <output id="ql-ready-a-value">3</output><input id="ql-ready-a" type="range" min="0" max="12" value="3" oninput="document.querySelector('#ql-ready-a-value').textContent=this.value" /></label>
+          <label>History h2 ready <output id="ql-ready-b-value">9</output><input id="ql-ready-b" type="range" min="0" max="12" value="9" oninput="document.querySelector('#ql-ready-b-value').textContent=this.value" /></label>
+          <label class="ql-check"><input id="ql-same-action" type="checkbox" checked /> Same allowed action quotient</label>
+          <div class="ql-section-title"><span>02</span><h2>Public contract</h2></div>
+          <label>Deadline <output id="ql-deadline-value">12</output><input id="ql-deadline" type="range" min="1" max="16" value="12" /></label>
+          <label>Privacy mode<select id="ql-privacy"><option value="exact">Exact AETP</option><option value="tv">Total variation</option><option value="rho-delta">rho-delta</option></select></label>
+          <label>Tolerance <output id="ql-tolerance-value">0.00</output><input id="ql-tolerance" type="range" min="0" max="1" step="0.05" value="0" /></label>
+          <label>Fault model<select id="ql-fault"><option value="none">None</option><option value="drop-one">Drop one</option><option value="reorder">Reorder</option></select></label>
+          <label>Services<select id="ql-services"><option value="1">1 independent</option><option value="2">2 colluding</option></select></label>
+          <label>Cost objective<select id="ql-cost"><option value="latency">Worst-case latency</option><option value="cover">Cover volume</option><option value="energy">Energy proxy</option></select></label>
+          <label class="ql-check"><input id="ql-observer" type="checkbox" checked /> Timing observer enabled</label>
+          <button id="ql-solve" class="ql-solve" type="button">SOLVE QUOTIENT</button>
+        </aside>
+
+        <div class="ql-stage">
+          <div class="ql-stage-head"><div><span>03 / OBSERVABLE TRACE</span><h2>Two histories. One release.</h2></div><strong id="ql-leak">DISTINGUISHABLE</strong></div>
+          <div id="ql-traces" class="ql-traces"></div>
+          <div class="ql-legend"><span><i class="ready-dot"></i> private ready</span><span><i class="release-dot"></i> public release</span></div>
+          <div class="ql-machine" aria-hidden="true"><div>h1</div><div>h2</div><b>Q</b><span>observable trace</span></div>
+          <div class="ql-verdict-row"><div id="ql-verdict" class="ql-verdict good">CERTIFIED OPTIMAL</div><dl><div><dt>release slot</dt><dd id="ql-slot">9</dd></div><div><dt>worst latency</dt><dd id="ql-latency">6</dd></div><div><dt>mechanism</dt><dd id="ql-mechanism">INDEPENDENT</dd></div></dl></div>
+        </div>
+      </section>
+
+      <section class="ql-evidence">
+        <article><div class="ql-section-title"><span>04</span><h2>Certificate</h2></div><code id="ql-certificate"></code><ul id="ql-core"></ul><button id="ql-verify" type="button">VERIFY CERTIFICATE</button><b id="ql-verify-result">NOT CHECKED</b></article>
+        <article><div class="ql-section-title"><span>05</span><h2>Cost frontier</h2></div><div id="ql-frontier" class="ql-frontier"><div class="axis-y">cover cost</div><div class="axis-x">latency cost</div></div><p>Certified QuotientLimit points are separated from illustrative AETS/APLOT stack comparisons.</p></article>
+      </section>
+      <footer><span>Candidate security primitive / bounded explanatory surface</span><span>No private biosignal or stable identifier enters this page.</span></footer>
+    </main>
+    <script>
+      import { bootstrapQuotientLimitStudio } from "../scripts/quotient-limit/studio";
+      const root = document.querySelector<HTMLElement>("#ql-studio");
+      if (root) bootstrapQuotientLimitStudio(root);
+    </script>
+  </body>
+</html>
+
+<style>
+  :global(body){background:#ebe7dc;color:#14222b}.ql-shell{--lime:#c7f36b;--red:#e54b32;--navy:#102d3a;width:min(1480px,calc(100% - 40px));margin:auto;font-family:"Cascadia Code","Courier New",monospace}.ql-nav{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--navy);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase}.ql-brand{color:var(--navy);text-decoration:none}.ql-brand i{display:inline-grid;place-items:center;width:38px;height:38px;margin-right:10px;border-radius:50%;background:var(--navy);color:var(--lime);font-style:normal}.ql-brand b{color:var(--red)}.ql-hero{display:grid;grid-template-columns:1.4fr .6fr;align-items:end;min-height:360px;padding:55px 0}.ql-eyebrow{color:#326a73;font-size:.72rem;font-weight:800;letter-spacing:.16em}.ql-hero h1{margin:20px 0 0;font-family:"Palatino Linotype",serif;font-size:clamp(4rem,8vw,8rem);font-weight:500;letter-spacing:-.07em;line-height:.76}.ql-hero h1 em{color:var(--red);font-weight:500}.ql-hero>p{padding:25px 0 5px 30px;border-left:3px solid var(--red);font-family:"Palatino Linotype",serif;font-size:1.25rem;line-height:1.55}.ql-workbench{display:grid;grid-template-columns:330px 1fr;border:2px solid var(--navy);box-shadow:9px 9px 0 #abc7be}.ql-controls{padding:25px;background:var(--navy);color:#eef2e8}.ql-section-title{display:flex;align-items:center;gap:12px;margin:5px 0 18px}.ql-section-title span{color:var(--red);font-size:.7rem}.ql-section-title h2{margin:0;font-family:"Palatino Linotype",serif;font-size:1.5rem}.ql-controls label{display:block;margin:15px 0;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase}.ql-controls output{float:right;color:var(--lime);font-size:1rem}.ql-controls input[type=range]{width:100%;margin-top:10px;accent-color:var(--lime)}.ql-controls select{width:100%;margin-top:8px;padding:9px;border:1px solid #70828a;background:#173b49;color:white}.ql-check{display:flex!important;gap:9px;align-items:center;text-transform:none!important}.ql-check input{accent-color:var(--lime)}.ql-solve{width:100%;margin-top:16px;padding:15px;border:0;background:var(--lime);color:var(--navy);font-weight:900;letter-spacing:.08em;cursor:pointer}.ql-stage{position:relative;padding:32px;background:linear-gradient(135deg,#f5f2e9,#e1eadf);overflow:hidden}.ql-stage-head{display:flex;justify-content:space-between;align-items:start}.ql-stage-head span{font-size:.66rem;letter-spacing:.14em}.ql-stage-head h2{margin:8px 0;font-family:"Palatino Linotype",serif;font-size:2.5rem}.ql-stage-head strong{padding:8px;border:1px solid currentColor;font-size:.68rem}.danger-text{color:var(--red)}.safe-text{color:#24704f}.ql-traces{margin:42px 0}.trace-row{display:grid;grid-template-columns:35px 1fr 45px;gap:12px;align-items:center;margin:22px 0}.trace-row em{font-size:.7rem}.trace-line{position:relative;height:10px;background:#afbab6}.trace-line span{display:block;height:100%;background:#608d8b}.trace-line i{position:absolute;z-index:2;top:-7px;width:4px;height:24px}.trace-line .ready{background:var(--red)}.trace-line .release{background:var(--navy);transition:left .5s cubic-bezier(.2,.8,.2,1)}.ql-shell.solving .trace-line .release{animation:pulse .8s ease}.ql-legend{display:flex;gap:28px;font-size:.64rem}.ql-legend i{display:inline-block;width:8px;height:8px;margin-right:7px}.ready-dot{background:var(--red)}.release-dot{background:var(--navy)}.ql-machine{display:grid;grid-template-columns:70px 70px 90px 1fr;gap:12px;align-items:center;margin:46px 0 30px}.ql-machine div,.ql-machine span{padding:12px;border:1px solid var(--navy);text-align:center;font-size:.68rem}.ql-machine b{display:grid;place-items:center;height:64px;border-radius:50%;background:var(--navy);color:var(--lime);font-family:"Palatino Linotype",serif;font-size:2rem}.ql-verdict-row{display:flex;align-items:center;justify-content:space-between;padding-top:23px;border-top:2px solid var(--navy)}.ql-verdict{padding:13px 16px;border:2px solid;font-weight:900;letter-spacing:.08em}.ql-verdict.good{color:#24704f}.ql-verdict.bad{color:var(--red)}.ql-verdict-row dl{display:flex;gap:26px;margin:0}.ql-verdict-row dl div{min-width:92px}.ql-verdict-row dt{font-size:.6rem;text-transform:uppercase}.ql-verdict-row dd{margin:5px 0 0;font-size:1.25rem;font-weight:900}.ql-evidence{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px;margin:20px 0}.ql-evidence article{min-height:300px;padding:28px;border:2px solid var(--navy);background:#f4f0e6}.ql-evidence code{display:block;padding:14px;background:var(--navy);color:var(--lime);word-break:break-all}.ql-evidence li{margin:9px 0;font-size:.75rem}.ql-evidence button{padding:10px 15px;border:0;background:var(--red);color:white;font-weight:800;cursor:pointer}.ql-evidence article>b{margin-left:15px;font-size:.75rem}.ql-frontier{position:relative;height:190px;margin:20px 0;border-left:2px solid var(--navy);border-bottom:2px solid var(--navy);background:linear-gradient(90deg,transparent 49%,#ccd3cc 50%,transparent 51%),linear-gradient(transparent 49%,#ccd3cc 50%,transparent 51%);background-size:60px 60px}.frontier-point{position:absolute;left:var(--x);bottom:var(--y)}.frontier-point i{display:block;width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 0 5px #e54b3230}.frontier-point.active i{width:18px;height:18px;background:var(--navy);box-shadow:0 0 0 7px var(--lime)}.frontier-point span{position:absolute;left:14px;top:-4px;white-space:nowrap;font-size:.6rem;font-weight:800}.frontier-point small{display:block;font-weight:400}.axis-x,.axis-y{position:absolute;font-size:.58rem}.axis-x{right:0;bottom:-18px}.axis-y{left:-23px;top:0;writing-mode:vertical-rl}.ql-evidence article>p{font-size:.7rem;color:#56646a}footer{display:flex;justify-content:space-between;padding:25px 0;font-size:.62rem;text-transform:uppercase}@keyframes pulse{50%{transform:scaleY(1.8);box-shadow:0 0 16px var(--lime)}}@media(max-width:850px){.ql-nav>span{display:none}.ql-hero{grid-template-columns:1fr;min-height:420px}.ql-hero>p{margin-top:35px}.ql-workbench,.ql-evidence{grid-template-columns:1fr}.ql-verdict-row{align-items:start;gap:20px}.ql-verdict-row dl{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ql-machine{grid-template-columns:1fr 1fr}.ql-machine b,.ql-machine span{grid-column:span 2}.frontier-point span{white-space:normal;width:90px}footer{gap:15px}}
+</style>
