@@ -255,3 +255,9 @@ pub use dual::{
     check_certified_optimal, check_dual, DualCheckError, DualWitness, OptimalityCheckError,
     OptimalityWitness, DOMAIN_DUAL,
 };
+
+mod infeasible;
+pub use infeasible::{
+    check_farkas_infeasible, explain_farkas_support, ConstraintCategory, ConstraintLabel,
+    CoreMinimality, ExplanationCore, FarkasWitness, InfeasibilityCheckError, DOMAIN_FARKAS,
+};
