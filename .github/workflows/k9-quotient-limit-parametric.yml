@@ -1,0 +1,40 @@
+﻿name: K9 QuotientLimit Parametric and Lean
+
+on:
+  push:
+    paths:
+      - "crates/quotient-limit-parametric/**"
+      - "lean/**"
+      - ".github/workflows/k9-quotient-limit-parametric.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-limit-parametric/**"
+      - "lean/**"
+      - ".github/workflows/k9-quotient-limit-parametric.yml"
+
+jobs:
+  parametric-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          components: rustfmt
+      - name: Check formatting
+        run: rustfmt --edition 2021 --check crates/quotient-limit-parametric/src/lib.rs
+      - name: Test exact frontier
+        run: |
+          mkdir -p target/k9-quotient-limit
+          rustc --edition 2021 --test crates/quotient-limit-parametric/src/lib.rs -o target/k9-quotient-limit/quotient-limit-parametric-tests
+          target/k9-quotient-limit/quotient-limit-parametric-tests
+      - name: Build no_std library
+        run: rustc --edition 2021 --crate-name quotient_limit_parametric --crate-type lib crates/quotient-limit-parametric/src/lib.rs -o target/k9-quotient-limit/libquotient_limit_parametric.rlib
+
+  lean-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
