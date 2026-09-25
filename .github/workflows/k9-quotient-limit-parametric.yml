@@ -1,4 +1,4 @@
-﻿name: K9 QuotientLimit Parametric and Lean
+name: K9 QuotientLimit Parametric and Lean
 
 on:
   push:
@@ -38,3 +38,4 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
+          auto-config: false
