@@ -1,0 +1,6 @@
+﻿name = "QuotientLimit"
+version = "0.1.0"
+defaultTargets = ["QuotientLimit"]
+
+[[lean_lib]]
+name = "QuotientLimit"
