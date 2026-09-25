@@ -1,0 +1,35 @@
+﻿name: K9 QuotientLimit Codegen
+
+on:
+  push:
+    paths:
+      - "crates/quotient-limit-rational/**"
+      - "crates/quotient-limit-codegen/**"
+      - ".github/workflows/k9-quotient-limit-codegen.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-limit-rational/**"
+      - "crates/quotient-limit-codegen/**"
+      - ".github/workflows/k9-quotient-limit-codegen.yml"
+
+jobs:
+  exact-transducer-codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          components: rustfmt
+      - name: Check formatting
+        run: rustfmt --edition 2021 --check crates/quotient-limit-rational/src/lib.rs crates/quotient-limit-codegen/src/lib.rs
+      - name: Build exact rational dependency
+        run: |
+          mkdir -p target/k9-quotient-limit
+          rustc --edition 2021 --crate-name quotient_limit_rational --crate-type lib crates/quotient-limit-rational/src/lib.rs -o target/k9-quotient-limit/libquotient_limit_rational.rlib
+      - name: Test generated runtime
+        run: |
+          rustc --edition 2021 --test crates/quotient-limit-codegen/src/lib.rs --extern quotient_limit_rational=target/k9-quotient-limit/libquotient_limit_rational.rlib -o target/k9-quotient-limit/quotient-limit-codegen-tests
+          target/k9-quotient-limit/quotient-limit-codegen-tests
+      - name: Build no_std codegen library
+        run: rustc --edition 2021 --crate-name quotient_limit_codegen --crate-type lib crates/quotient-limit-codegen/src/lib.rs --extern quotient_limit_rational=target/k9-quotient-limit/libquotient_limit_rational.rlib -o target/k9-quotient-limit/libquotient_limit_codegen.rlib

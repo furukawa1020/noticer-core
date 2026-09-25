@@ -1,0 +1,11 @@
+﻿[package]
+name = "quotient-limit-codegen"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[dependencies]
+quotient-limit-rational = { path = "../quotient-limit-rational" }
+
+[workspace]
