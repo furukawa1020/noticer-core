@@ -1,0 +1,29 @@
+﻿name: QuotientGuard relation monitor
+
+on:
+  pull_request:
+    paths:
+      - "crates/quotient-guard-monitor/**"
+      - "crates/quotient-guard-shadow/**"
+      - ".github/workflows/quotient-guard-monitor.yml"
+  push:
+    branches: [main]
+    paths:
+      - "crates/quotient-guard-monitor/**"
+      - "crates/quotient-guard-shadow/**"
+      - ".github/workflows/quotient-guard-monitor.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+      - run: cargo fmt --manifest-path crates/quotient-guard-monitor/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-guard-monitor/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-guard-monitor/Cargo.toml
