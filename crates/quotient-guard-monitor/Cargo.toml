@@ -1,0 +1,11 @@
+﻿[package]
+name = "quotient-guard-monitor"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[dependencies]
+quotient-guard-shadow = { path = "../quotient-guard-shadow" }
+
+[workspace]
