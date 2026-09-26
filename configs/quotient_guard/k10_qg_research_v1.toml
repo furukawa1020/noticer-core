@@ -1,0 +1,77 @@
+schema = "noticer.quotient-guard.research-contract.v1"
+contract_id = "K10-QG-00"
+status = "FROZEN_BEFORE_RESULTS"
+parent_issue = 479
+artifact_root = "artifacts/k10_quotient_guard"
+hardware_claim = "NOT_VERIFIED"
+claim_language = "candidate runtime enforcement architecture"
+
+[tcb]
+components = ["certificate_checker", "private_ingress", "shadow_executor", "relation_monitor", "safe_sink", "canonical_clock"]
+untrusted = ["transport", "polar_adapter", "application", "studio", "artifact_renderer", "wall_clock", "operating_system_scheduler"]
+
+[state]
+private = ["raw_sensor_frame", "normalized_biometric_event", "private_readiness", "counterfactual_history", "shadow_machine_state", "private_randomness"]
+public = ["allowed_action", "release_trace", "observer_profile", "fault_class", "monitor_verdict", "certificate_digest", "runtime_epoch"]
+prohibited_public = ["raw_biosignal", "baseline", "private_history", "private_readiness", "subject_id", "device_id", "stable_identifier", "secret_key"]
+
+[observers]
+required = ["TIMING", "PAYLOAD", "ERROR", "SERVICE", "LONGITUDINAL", "COLLUSION"]
+
+[faults]
+required = ["CLOCK_DRIFT", "MISSING_FRAME", "DUPLICATE_FRAME", "REORDER", "DELAY", "DISCONNECT", "RECONNECT", "RESOURCE_EXHAUSTION", "CONFIG_ROLLBACK"]
+
+[outcomes]
+classes = ["RUNNING_VALID", "FAIL_CLOSED", "INVALID_BINDING", "RELATION_VIOLATION", "INCONCLUSIVE_RESOURCE", "INCONCLUSIVE_CLOCK"]
+only_success = "RUNNING_VALID"
+
+[fail_closed]
+triggers = ["INVALID_BINDING", "RELATION_VIOLATION", "RESOURCE_EXHAUSTION", "CONFIG_ROLLBACK", "UNKNOWN_FAULT", "CLOCK_BOUND_EXCEEDED"]
+sink_public_action = "NO_RELEASE"
+recovery_requires = ["NEW_VERIFIED_CAPSULE", "EPOCH_INCREMENT", "EXPLICIT_PUBLIC_RESET"]
+automatic_recovery = false
+
+[minimums]
+shadow_histories = 2
+observer_profiles = 6
+fault_families = 9
+attack_families = 6
+held_out_attack_families = 2
+cross_platforms = 2
+longitudinal_slots = 4096
+mutation_rejection_percent = 100
+
+[limits]
+max_shadow_histories = 16
+max_event_bytes = 4096
+max_trace_slots = 65536
+max_clock_skew_ms = 250
+max_reorder_window = 32
+max_monitor_states = 1000000
+max_artifact_bytes = 16777216
+max_step_time_ms = 50
+
+[seeds]
+shadow_generation = 100001
+fault_schedule = 100002
+attack_schedule = 100003
+replay = 100004
+
+[canonical_domains]
+binding = "QUOTIENT_GUARD_BINDING_V1"
+event = "QUOTIENT_GUARD_EVENT_V1"
+trace = "QUOTIENT_GUARD_TRACE_V1"
+witness = "QUOTIENT_GUARD_WITNESS_V1"
+report = "QUOTIENT_GUARD_REPORT_V1"
+
+[artifacts]
+generated_committed = false
+prohibited = ["raw_biosignal", "baseline", "private_history", "private_readiness", "subject_id", "device_id", "stable_identifier", "secret_key"]
+
+[non_goals]
+values = ["sensor_authenticity", "medical_decision", "identity_authentication", "microarchitectural_timing", "physical_rf_security", "os_compromise", "hardware_energy_proof", "unbounded_liveness"]
+
+[amendment]
+requires_new_version = true
+preserve_previous = true
+disclose_results_seen = true
