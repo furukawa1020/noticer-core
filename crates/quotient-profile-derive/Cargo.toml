@@ -1,0 +1,14 @@
+﻿[package]
+name = "quotient-profile-derive"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace]
+
+[dependencies]
+quotient-limit-privacy = { path = "../quotient-limit-privacy" }
+quotient-limit-rational = { path = "../quotient-limit-rational" }
+
+[lints.rust]
+unsafe_code = "forbid"
