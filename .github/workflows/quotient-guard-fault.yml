@@ -1,0 +1,20 @@
+﻿name: QuotientGuard fault guard
+on:
+  pull_request:
+    paths: ["crates/quotient-guard-fault/**", ".github/workflows/quotient-guard-fault.yml"]
+  push:
+    branches: [main]
+    paths: ["crates/quotient-guard-fault/**", ".github/workflows/quotient-guard-fault.yml"]
+permissions:
+  contents: read
+jobs:
+  fault:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+      - run: cargo fmt --manifest-path crates/quotient-guard-fault/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-guard-fault/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-guard-fault/Cargo.toml
