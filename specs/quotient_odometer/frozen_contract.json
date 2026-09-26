@@ -1,0 +1,98 @@
+﻿{
+  "contract_id": "QUOTIENT_ODOMETER_FROZEN_EVAL_V1",
+  "status": "FROZEN_BEFORE_IMPLEMENTATION",
+  "seed": 1364148230,
+  "quantity": {
+    "name": "Action-Quotient Excess Privacy Loss",
+    "abbreviation": "AQEPL",
+    "conditioned_on": ["authorized_action_semantics", "public_transcript", "selected_certified_mechanism"],
+    "charges": "observable_release_trace_beyond_authorized_actions",
+    "does_not_charge": "authorized_action_semantics",
+    "infinite_on_support_mismatch": true
+  },
+  "profile": {
+    "name": "Action-Quotient Privacy Profile",
+    "abbreviation": "AQPP",
+    "alpha_orders": [2, 3, 4, 8, 16, 32, 64],
+    "directions": ["P0_TO_P1", "P1_TO_P0"],
+    "production_derivations": ["EXACT_FINITE", "ANALYTIC"],
+    "lab_only_derivations": ["EMPIRICAL_LAB_ONLY"],
+    "rounding": "DIRECTED_UPPER",
+    "overflow": "FAIL_CLOSED"
+  },
+  "budget": {
+    "delta_target": "1/1000000",
+    "maximum_epsilon_q16_16": 131072,
+    "maximum_releases": 10000,
+    "time_uniform_beta": "1/1000000",
+    "all_representations_must_pass": true
+  },
+  "adaptive_attacks": [
+    "A0_BUDGET_SHOPPING",
+    "A1_SERVICE_SPLITTING",
+    "A2_COALITION_ESCALATION",
+    "A3_MECHANISM_SWITCHING",
+    "A4_SHARED_RANDOMNESS",
+    "A5_POLICY_VERSION_CHURN",
+    "A6_CRASH_ROLLBACK",
+    "A7_CONCURRENT_DOUBLE_SPEND",
+    "A8_RECEIPT_SIDE_CHANNEL",
+    "A9_STOP_TIME"
+  ],
+  "required_attack_outcomes": {
+    "budget_bypass": 0,
+    "double_spend": 0,
+    "untracked_coalition_allow": 0,
+    "incompatible_profile_allow": 0,
+    "rollback_undercharge": 0,
+    "private_dependent_selection": 0
+  },
+  "benchmark": {
+    "minimum_families": 24,
+    "split_unit": "BENCHMARK_FAMILY",
+    "variant_overlap_allowed": false,
+    "families": ["EXACT", "APPROXIMATE", "ADAPTIVE", "CONCURRENT", "COALITION", "LONGITUDINAL", "CRASH"],
+    "held_out_required": ["ADAPTIVE_MECHANISM_SELECTION", "CONCURRENT_SERVICE", "COLLUSION", "MODEL_CHANGE", "CRASH"],
+    "services": [2, 4],
+    "evaluation_releases": 10000
+  },
+  "baselines": [
+    "B0_NO_ACCOUNTING",
+    "B1_RELEASE_COUNT",
+    "B2_PER_SERVICE_SUM",
+    "B3_STATIC_EPSILON_SUM",
+    "B4_RDP_WITHOUT_ACTION_QUOTIENT",
+    "B5_CLAIM_ONLY",
+    "B6_GENERIC_PRIVACY_ODOMETER",
+    "M_QUOTIENT_ODOMETER"
+  ],
+  "metrics": {
+    "privacy": ["exact_composed_rdp", "epsilon_at_target_delta", "fdp_tradeoff", "bayes_attack_success", "aqepl_upper_bound", "odometer_bound", "exact_pld", "tightness_gap", "coalition_leakage", "longitudinal_leakage", "profile_invalidation_count"],
+    "utility": ["authorized_action_success", "deadline_miss", "mean_delay", "p95_delay", "local_only_fraction", "deny_fraction", "reauthorization_count", "mechanism_switch_count", "service_availability", "user_visible_interruption", "bandwidth", "energy_proxy"],
+    "runtime_safety": ["double_spend_attempts", "prevented_double_spends", "crash_recoveries", "uncertain_charged_releases", "illegal_rollback_attempts", "unprofiled_mechanisms", "rejected_coalitions", "stale_profile_attempts", "receipt_chain_corruption_detections"]
+  },
+  "resource_limits": {
+    "max_profiles": 100000,
+    "max_alpha_orders": 64,
+    "max_secret_families": 64,
+    "max_services": 64,
+    "max_tracked_coalitions": 1024,
+    "max_receipts": 10000000,
+    "max_ledger_bytes": 4294967296,
+    "max_exact_distribution_support": 1000000,
+    "max_rational_bits": 8192,
+    "max_checker_seconds": 1800,
+    "max_memory_mb": 16384
+  },
+  "claims": {
+    "allowed": ["candidate action-conditioned privacy accountant", "proposed action-quotient privacy profile", "AETP-aware runtime accounting", "proof-carrying privacy budget enforcement"],
+    "forbidden": ["world-first privacy accountant", "first privacy odometer", "first adaptive composition system", "first Pufferfish composition implementation", "perfect longitudinal privacy"]
+  },
+  "artifact_policy": {
+    "forbid_private_biosignal": true,
+    "forbid_baseline": true,
+    "forbid_identity": true,
+    "forbid_exact_private_timing": true,
+    "generated_artifacts_committed": false
+  }
+}
