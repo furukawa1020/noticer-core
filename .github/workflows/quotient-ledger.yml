@@ -1,0 +1,23 @@
+﻿name: quotient-ledger
+
+on:
+  push:
+    paths:
+      - "crates/quotient-ledger/**"
+      - ".github/workflows/quotient-ledger.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-ledger/**"
+      - ".github/workflows/quotient-ledger.yml"
+
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-ledger/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-ledger/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-ledger/Cargo.toml
