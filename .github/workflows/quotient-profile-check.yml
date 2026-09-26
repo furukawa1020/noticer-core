@@ -1,0 +1,28 @@
+﻿name: quotient-profile-check
+
+on:
+  push:
+    paths:
+      - "crates/quotient-profile-certificate/**"
+      - "crates/quotient-profile-check/**"
+      - ".github/workflows/quotient-profile-check.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-profile-certificate/**"
+      - "crates/quotient-profile-check/**"
+      - ".github/workflows/quotient-profile-check.yml"
+
+jobs:
+  aqpc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-profile-certificate/Cargo.toml --check
+      - run: cargo fmt --manifest-path crates/quotient-profile-check/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-profile-certificate/Cargo.toml --all-targets -- -D warnings
+      - run: cargo clippy --manifest-path crates/quotient-profile-check/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-profile-certificate/Cargo.toml
+      - run: cargo test --manifest-path crates/quotient-profile-check/Cargo.toml
