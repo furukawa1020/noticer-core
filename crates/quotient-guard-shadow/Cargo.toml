@@ -1,0 +1,8 @@
+﻿[package]
+name = "quotient-guard-shadow"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace]
