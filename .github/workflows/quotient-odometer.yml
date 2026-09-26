@@ -1,0 +1,23 @@
+﻿name: quotient-odometer
+
+on:
+  push:
+    paths:
+      - "crates/quotient-odometer/**"
+      - ".github/workflows/quotient-odometer.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-odometer/**"
+      - ".github/workflows/quotient-odometer.yml"
+
+jobs:
+  odometer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-odometer/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-odometer/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-odometer/Cargo.toml
