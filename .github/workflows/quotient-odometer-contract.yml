@@ -1,0 +1,27 @@
+﻿name: quotient-odometer-contract
+
+on:
+  push:
+    paths:
+      - "specs/quotient_odometer/frozen_contract.json"
+      - "src/noticer_core/quotient_odometer/**"
+      - "tests/test_quotient_odometer_contract.py"
+      - ".github/workflows/quotient-odometer-contract.yml"
+  pull_request:
+    paths:
+      - "specs/quotient_odometer/frozen_contract.json"
+      - "src/noticer_core/quotient_odometer/**"
+      - "tests/test_quotient_odometer_contract.py"
+      - ".github/workflows/quotient-odometer-contract.yml"
+
+jobs:
+  frozen-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install pytest ruff
+      - run: python -m ruff check src/noticer_core/quotient_odometer tests/test_quotient_odometer_contract.py
+      - run: python -m pytest -q tests/test_quotient_odometer_contract.py
