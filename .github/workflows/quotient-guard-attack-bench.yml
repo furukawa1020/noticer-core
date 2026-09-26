@@ -1,0 +1,24 @@
+﻿name: quotient-guard-attack-bench
+
+on:
+  push:
+    paths:
+      - "crates/quotient-guard-attack-bench/**"
+      - ".github/workflows/quotient-guard-attack-bench.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-guard-attack-bench/**"
+      - ".github/workflows/quotient-guard-attack-bench.yml"
+
+jobs:
+  attack-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-guard-attack-bench/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-guard-attack-bench/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-guard-attack-bench/Cargo.toml
+      - run: cargo run --quiet --manifest-path crates/quotient-guard-attack-bench/Cargo.toml
