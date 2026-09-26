@@ -1,0 +1,20 @@
+﻿name: QuotientGuard ingress
+on:
+  pull_request:
+    paths: ["crates/quotient-guard-ingress/**", ".github/workflows/quotient-guard-ingress.yml"]
+  push:
+    branches: [main]
+    paths: ["crates/quotient-guard-ingress/**", ".github/workflows/quotient-guard-ingress.yml"]
+permissions:
+  contents: read
+jobs:
+  ingress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+      - run: cargo fmt --manifest-path crates/quotient-guard-ingress/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-guard-ingress/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-guard-ingress/Cargo.toml
