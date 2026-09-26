@@ -1,0 +1,27 @@
+﻿name: QuotientGuard shadow executor
+
+on:
+  pull_request:
+    paths:
+      - "crates/quotient-guard-shadow/**"
+      - ".github/workflows/quotient-guard-shadow.yml"
+  push:
+    branches: [main]
+    paths:
+      - "crates/quotient-guard-shadow/**"
+      - ".github/workflows/quotient-guard-shadow.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  shadow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+      - run: cargo fmt --manifest-path crates/quotient-guard-shadow/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-guard-shadow/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-guard-shadow/Cargo.toml
