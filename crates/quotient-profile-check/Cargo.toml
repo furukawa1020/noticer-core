@@ -1,0 +1,13 @@
+﻿[package]
+name = "quotient-profile-check"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace]
+
+[dev-dependencies]
+quotient-profile-certificate = { path = "../quotient-profile-certificate" }
+
+[lints.rust]
+unsafe_code = "forbid"
