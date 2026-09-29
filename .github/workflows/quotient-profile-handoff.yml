@@ -1,0 +1,23 @@
+﻿name: quotient-profile-handoff
+
+on:
+  push:
+    paths:
+      - "crates/quotient-profile-handoff/**"
+      - ".github/workflows/quotient-profile-handoff.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-profile-handoff/**"
+      - ".github/workflows/quotient-profile-handoff.yml"
+
+jobs:
+  handoff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-profile-handoff/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-profile-handoff/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-profile-handoff/Cargo.toml
