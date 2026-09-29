@@ -1,0 +1,17 @@
+﻿name: quotient-selector
+on:
+  push:
+    paths: ["crates/quotient-selector/**", ".github/workflows/quotient-selector.yml"]
+  pull_request:
+    paths: ["crates/quotient-selector/**", ".github/workflows/quotient-selector.yml"]
+jobs:
+  selector:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-selector/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-selector/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-selector/Cargo.toml
