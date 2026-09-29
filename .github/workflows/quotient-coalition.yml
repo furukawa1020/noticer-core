@@ -1,0 +1,25 @@
+﻿name: quotient-coalition
+
+on:
+  push:
+    paths:
+      - "crates/quotient-coalition/**"
+      - "crates/quotient-ledger/**"
+      - ".github/workflows/quotient-coalition.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-coalition/**"
+      - "crates/quotient-ledger/**"
+      - ".github/workflows/quotient-coalition.yml"
+
+jobs:
+  coalition:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-coalition/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-coalition/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-coalition/Cargo.toml
