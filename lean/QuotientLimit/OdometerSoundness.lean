@@ -4,13 +4,13 @@ def Profile := Nat → Nat
 
 def zeroProfile : Profile := fun _ => 0
 
-def compose (left right : Profile) : Profile := fun prefix => left prefix + right prefix
+def compose (left right : Profile) : Profile := fun index => left index + right index
 
 def SoundUpperBound (profile reported : Profile) : Prop :=
-  ∀ prefix, profile prefix ≤ reported prefix
+  ∀ index, profile index ≤ reported index
 
 @[simp] theorem zero_profile_sound : SoundUpperBound zeroProfile zeroProfile := by
-  intro prefix
+  intro index
   exact Nat.le_refl 0
 
 inductive PointwiseLe : List Nat → List Nat → Prop
@@ -102,11 +102,11 @@ theorem public_handoff_preserves_protected_dimensions
       left.model = right.model ∧
       left.mechanism = right.mechanism ∧
       left.alphaGrid = right.alphaGrid := by
-  exact ⟨compatible.protected.schema,
-    compatible.protected.policy,
-    compatible.protected.model,
-    compatible.protected.mechanism,
-    compatible.protected.alphaGrid⟩
+  exact ⟨compatible.protectedDims.schema,
+    compatible.protectedDims.policy,
+    compatible.protectedDims.model,
+    compatible.protectedDims.mechanism,
+    compatible.protectedDims.alphaGrid⟩
 
 structure CoalitionLedger where
   spent : Nat
