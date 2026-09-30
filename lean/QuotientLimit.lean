@@ -1,4 +1,4 @@
-﻿import QuotientLimit.Basic
+import QuotientLimit.Basic
 import QuotientLimit.OdometerSoundness
 
 namespace QuotientLimit

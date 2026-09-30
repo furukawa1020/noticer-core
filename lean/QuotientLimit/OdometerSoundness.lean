@@ -1,4 +1,4 @@
-﻿namespace QuotientLimit.Odometer
+namespace QuotientLimit.Odometer
 
 def Profile := Nat → Nat
 
