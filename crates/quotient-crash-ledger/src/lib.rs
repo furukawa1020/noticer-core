@@ -305,6 +305,7 @@ struct DecodedReceipt {
     trace_commitment: [u8; 32],
 }
 
+#[allow(clippy::too_many_arguments)]
 fn encode_receipt(
     key: &[u8; 32],
     kind: RecordKind,
