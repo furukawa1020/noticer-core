@@ -91,7 +91,7 @@ structure ProtectedCompatible (left right : ProfileDescriptor) : Prop where
   alphaGrid : left.alphaGrid = right.alphaGrid
 
 structure PublicHandoffCompatible (left right : ProfileDescriptor) : Prop where
-  protected : ProtectedCompatible left right
+  protectedDims : ProtectedCompatible left right
   publicTransitionAllowed : left.publicState = right.publicState ∨ left.publicState ≠ right.publicState
 
 theorem public_handoff_preserves_protected_dimensions
