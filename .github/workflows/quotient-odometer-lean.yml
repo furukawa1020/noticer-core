@@ -28,4 +28,7 @@ jobs:
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: lean
-          build: true
+          auto-config: false
+      - name: Kernel-check all imported proofs
+        working-directory: lean
+        run: lean QuotientLimit.lean
