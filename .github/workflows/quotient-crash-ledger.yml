@@ -1,0 +1,23 @@
+﻿name: quotient-crash-ledger
+
+on:
+  push:
+    paths:
+      - "crates/quotient-crash-ledger/**"
+      - ".github/workflows/quotient-crash-ledger.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-crash-ledger/**"
+      - ".github/workflows/quotient-crash-ledger.yml"
+
+jobs:
+  crash-ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-crash-ledger/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-crash-ledger/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-crash-ledger/Cargo.toml
