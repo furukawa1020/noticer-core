@@ -1,4 +1,4 @@
-﻿namespace QuotientLimit
+namespace QuotientLimit
 
 structure ReadinessPoint where
   readySpan : Nat

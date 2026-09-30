@@ -1,0 +1,39 @@
+name: quotient-odometer-lean
+
+on:
+  push:
+    paths:
+      - "lean/**"
+      - "docs/lean_odometer_soundness.md"
+      - ".github/workflows/quotient-odometer-lean.yml"
+  pull_request:
+    paths:
+      - "lean/**"
+      - "docs/lean_odometer_soundness.md"
+      - ".github/workflows/quotient-odometer-lean.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lean-soundness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject proof placeholders
+        run: |
+          if grep -REn '\b(sorry|axiom)\b' lean/QuotientLimit/OdometerSoundness.lean; then
+            exit 1
+          fi
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+          auto-config: false
+      - name: Kernel-check all imported proofs
+        working-directory: lean
+        env:
+          LEAN_PATH: .
+        run: |
+          lean -o QuotientLimit/Basic.olean QuotientLimit/Basic.lean
+          lean -o QuotientLimit/OdometerSoundness.olean QuotientLimit/OdometerSoundness.lean
+          lean QuotientLimit.lean
