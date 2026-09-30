@@ -1,4 +1,4 @@
-﻿name: quotient-odometer-lean
+name: quotient-odometer-lean
 
 on:
   push:
@@ -33,5 +33,7 @@ jobs:
         working-directory: lean
         env:
           LEAN_PATH: .
-        run: lean QuotientLimit.lean
-
+        run: |
+          lean -o QuotientLimit/Basic.olean QuotientLimit/Basic.lean
+          lean -o QuotientLimit/OdometerSoundness.olean QuotientLimit/OdometerSoundness.lean
+          lean QuotientLimit.lean
