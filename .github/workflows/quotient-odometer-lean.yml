@@ -31,4 +31,7 @@ jobs:
           auto-config: false
       - name: Kernel-check all imported proofs
         working-directory: lean
+        env:
+          LEAN_PATH: .
         run: lean QuotientLimit.lean
+
