@@ -1,0 +1,12 @@
+﻿[package]
+name = "quotient-odometer-scalability"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+rust-version = "1.85"
+
+[workspace]
+
+[dependencies]
+quotient-accountant-core = { path = "../quotient-accountant-core" }
+quotient-odometer = { path = "../quotient-odometer" }
