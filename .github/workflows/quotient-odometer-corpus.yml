@@ -1,0 +1,29 @@
+﻿name: K10 QuotientOdometer Benchmark Corpus
+
+on:
+  push:
+    paths:
+      - "crates/quotient-odometer-corpus/**"
+      - ".github/workflows/quotient-odometer-corpus.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-odometer-corpus/**"
+      - ".github/workflows/quotient-odometer-corpus.yml"
+
+jobs:
+  frozen-corpus-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+          components: rustfmt, clippy
+      - name: Check formatting
+        run: cargo fmt --manifest-path crates/quotient-odometer-corpus/Cargo.toml --check
+      - name: Lint frozen corpus
+        run: cargo clippy --manifest-path crates/quotient-odometer-corpus/Cargo.toml --all-targets -- -D warnings
+      - name: Test split and coverage gates
+        run: cargo test --manifest-path crates/quotient-odometer-corpus/Cargo.toml
+      - name: Build no_std contract
+        run: cargo build --manifest-path crates/quotient-odometer-corpus/Cargo.toml --lib
