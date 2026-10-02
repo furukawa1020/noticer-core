@@ -1,0 +1,15 @@
+﻿name: K10 QuotientGuard Replication
+on:
+  push:
+    paths: ["configs/quotient_guard/**", "src/noticer_core/evaluation/quotient_guard_replication.py", "tools/validate_quotient_guard_package.py", "tests/test_quotient_guard_replication.py", ".github/workflows/quotient-guard-replication.yml"]
+  pull_request:
+    paths: ["configs/quotient_guard/**", "src/noticer_core/evaluation/quotient_guard_replication.py", "tools/validate_quotient_guard_package.py", "tests/test_quotient_guard_replication.py", ".github/workflows/quotient-guard-replication.yml"]
+jobs:
+  replication-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -e . pytest
+      - run: python -m pytest tests/test_quotient_guard_replication.py
