@@ -1,0 +1,49 @@
+﻿schema_version: quotient-odometer-decision-policy/v1
+decision_precedence: [KILL, PIVOT, GO]
+missing_evidence_action: PIVOT
+hardware_status: NOT_VERIFIED
+boundaries: [PREDECLARED_RULE_EVALUATION, NON_COMPENSATORY, NOT_A_PROOF, SOFTWARE_ONLY, GENERATED_ARTIFACTS_UNCOMMITTED]
+required_package_paths:
+  - crates/quotient-accountant-core/src/lib.rs
+  - crates/quotient-adaptive-attacker/src/lib.rs
+  - crates/quotient-coalition/src/lib.rs
+  - crates/quotient-crash-ledger/src/lib.rs
+  - crates/quotient-filter/src/lib.rs
+  - crates/quotient-odometer-corpus/src/lib.rs
+  - crates/quotient-odometer-scalability/src/lib.rs
+  - crates/quotient-odometer/src/lib.rs
+  - crates/quotient-offline-auditor/src/lib.rs
+  - crates/quotient-profile-handoff/src/lib.rs
+  - studio/src/scripts/quotient-odometer/studio.ts
+criteria:
+  GO:
+    EXACT_ACCOUNTING: Exact conditional composition passes independent checks
+    APPROXIMATE_AUDIT: PLD and f-DP audit agrees with declared bounds
+    ADAPTIVE_ODOMETER: Time-uniform adaptive accounting remains monotone
+    PRE_RELEASE_FILTER: Excess is rejected before observable release
+    CONCURRENT_LEDGER: Concurrent reservations are linearizable
+    COALITION_SCOPE: Joint coalition spend is tracked
+    CRASH_CONSISTENCY: Recovery preserves durable spend and receipt chain
+    HANDOFF_INVALIDATION: Policy or model handoff invalidates stale profiles
+    HELD_OUT_ATTACKS: Frozen held-out attackers do not violate declared bounds
+    SCALABILITY_10000: Ten thousand releases across four services complete
+  PIVOT:
+    APPROXIMATE_ONLY: Exact accounting scope must be removed
+    SINGLE_SERVICE_ONLY: Scope must narrow to one service
+    COALITION_SEPARATE: Coalition accounting must move to separate work
+    CRASH_MODEL_NARROW: Crash guarantees require a narrower fault model
+    OFFLINE_ONLY: Runtime enforcement is not supportable
+    TIGHTNESS_WEAK: Bounds are safe but too loose for useful actions
+    PERFORMANCE_LIMIT: Accounting overhead exceeds the deployment budget
+    STUDIO_REDUCE: Studio must remain an explanatory appendix
+  KILL:
+    POST_RELEASE_ENFORCEMENT: Budget is checked only after release
+    ROLLBACK_LOSES_SPEND: Crash recovery can erase privacy spend
+    MARGINAL_AS_JOINT: Marginal service accounting substitutes for coalition privacy
+    ADAPTIVE_UNSOUND: Adaptive selection invalidates the bound
+    RECEIPT_CHAIN_FORGEABLE: Mutated receipt chains validate
+    PROFILE_REUSE: Invalidated profiles remain releasable
+    ACCOUNTING_UNDERFLOW: Arithmetic can understate accumulated loss
+    ATTACK_EXCEEDS_BOUND: Held-out attack exceeds the declared privacy bound
+    NO_INDEPENDENT_AUDIT: Claimed bound cannot be independently recomputed
+    GENERIC_COUNTER_ONLY: Contribution reduces to a generic request counter

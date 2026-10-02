@@ -1,0 +1,15 @@
+name: K10 QuotientOdometer Replication
+on:
+  push:
+    paths: ["configs/quotient_odometer/**", "src/noticer_core/evaluation/quotient_odometer_replication.py", "tools/validate_quotient_odometer_package.py", "tests/test_quotient_odometer_replication.py", ".github/workflows/quotient-odometer-replication.yml"]
+  pull_request:
+    paths: ["configs/quotient_odometer/**", "src/noticer_core/evaluation/quotient_odometer_replication.py", "tools/validate_quotient_odometer_package.py", "tests/test_quotient_odometer_replication.py", ".github/workflows/quotient-odometer-replication.yml"]
+jobs:
+  replication-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.11"}
+      - run: pip install -e . pytest
+      - run: python -m pytest tests/test_quotient_odometer_replication.py
