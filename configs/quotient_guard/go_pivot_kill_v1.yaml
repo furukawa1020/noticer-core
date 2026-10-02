@@ -1,0 +1,44 @@
+﻿schema_version: quotient-guard-decision-policy/v1
+decision_precedence: [KILL, PIVOT, GO]
+missing_evidence_action: PIVOT
+hardware_status: NOT_VERIFIED
+boundaries: [PREDECLARED_RULE_EVALUATION, NON_COMPENSATORY, NOT_A_PROOF, SOFTWARE_ONLY, GENERATED_ARTIFACTS_UNCOMMITTED]
+required_package_paths:
+  - crates/quotient-guard-attack-bench/src/lib.rs
+  - crates/quotient-guard-binding/src/lib.rs
+  - crates/quotient-guard-fault/src/lib.rs
+  - crates/quotient-guard-ingress/src/lib.rs
+  - crates/quotient-guard-monitor/src/lib.rs
+  - crates/quotient-guard-shadow/src/lib.rs
+  - docs/quotient_guard_research_contract.md
+  - studio/src/scripts/quotient-guard/observatory.ts
+criteria:
+  GO:
+    BINDING_VERIFIED: Certificate mechanism observer and runtime digests are bound
+    PRIVATE_FREE_SHADOW: Runtime output excludes individual private shadow state
+    STICKY_DIVERGENCE: First divergence witness cannot be overwritten
+    FAIL_CLOSED_FAULTS: Unbounded and unknown faults enter a sticky safe sink
+    POLAR_REPLAY_BOUNDARY: Recorded and live adapters preserve the public-only boundary
+    ATTACK_REJECTION: Held-out adaptive runtime attacks are rejected
+    OVERHEAD_REPORTED: Runtime overhead is measured without hiding censored outcomes
+    CROSS_PLATFORM_REPLAY: Frozen artifacts reproduce on declared platforms
+    DEMO_BOUNDARY: Observatory states software-only and bounded-evidence limits
+  PIVOT:
+    RECORDED_ONLY: Scope must narrow from live adapter to recorded replay
+    SINGLE_SHADOW_PAIR: Scope must narrow to one counterfactual pair
+    FAULT_MODEL_NARROW: Fault guarantee requires a smaller declared model
+    MONITOR_ONLY: Enforcement must be removed and scope narrowed to detection
+    PERFORMANCE_LIMIT: Runtime monitoring exceeds the deployment overhead budget
+    PLATFORM_LIMIT: Reproduction is supported on only one software platform
+    OBSERVATORY_APPENDIX: Interactive demo must remain an explanatory appendix
+  KILL:
+    PRIVATE_STATE_EXPOSED: Artifact or API exposes an individual private shadow state
+    DIVERGENCE_RELEASED: Observable action is released after relation divergence
+    SINK_AUTO_RECOVERY: Safe sink can recover without an explicit ceremony
+    BINDING_BYPASS: Runtime executes without verified certificate binding
+    CAPSULE_ROLLBACK: A stale capsule or epoch rollback is accepted
+    SLOT_REPLAY_ACCEPTED: Duplicate or non-consecutive slots remain releasable
+    SHADOW_INDEX_EXPOSED: Divergence output identifies the differing shadow
+    ATTACK_ESCAPES: Held-out implementation-derived attack reaches a forbidden release
+    RESOURCE_AS_SUCCESS: Resource exhaustion is reported as security success
+    GENERIC_MONITOR_ONLY: Contribution reduces to a generic stream monitor
