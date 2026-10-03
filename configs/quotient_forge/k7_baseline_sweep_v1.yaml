@@ -1,0 +1,26 @@
+format_version: noticer.k7.baseline-parameter-sweep.v1
+candidate_source: comparison_manifest.mechanisms[].candidate_config_sha256
+selection_split: development
+evaluation_split: held_out
+selection:
+  kind: lexicographic_lower_is_better
+  order:
+    - failure
+    - attack
+    - latency
+    - bandwidth
+    - state
+  final_tie_breaker: config_sha256
+report:
+  axes:
+    - attack
+    - bandwidth
+    - failure
+    - latency
+    - state
+  aggregate_score: forbidden
+  cross_notion_ranking: forbidden
+validation:
+  require_every_candidate_on_both_splits: true
+  reject_duplicate_observations: true
+  require_precommitted_selected_config: true
