@@ -1,0 +1,7 @@
+# K7 Transport Cost Selection
+
+K7-14dはsecurity、utility、unauthorized action、deadlineのhard gateをcost比較より先に適用する。違反候補はcostがゼロでも選択対象にならない。
+
+選択modeはlexicographic、weighted、Paretoの3種類である。lexicographicの軸順とweightedの全軸正整数weightはpolicy digestへ事前固定する。Paretoは全宣言軸で悪化せず少なくとも1軸で改善するときだけdominanceとし、同値・incomparable候補を保持する。
+
+weighted scoreは同一cost notion内の選択補助であり、security proof、utility保証、異なるprivacy notionの総合順位ではない。
