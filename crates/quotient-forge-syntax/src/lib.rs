@@ -5,6 +5,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::{self, Write};
 
+mod fuzz;
+
+pub use fuzz::{
+    run_dsl_import_fuzz, DslFuzzError, DslFuzzLimits, DslFuzzReport, DSL_FUZZ_REPORT_SCHEMA,
+};
+
 pub const LANGUAGE_VERSION: u64 = 1;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
