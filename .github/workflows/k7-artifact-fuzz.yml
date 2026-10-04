@@ -27,5 +27,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install pytest PyYAML
+      - run: python -m pip install -e . pytest
       - run: python -m pytest -q tests/test_k7_canonical_ir_differential.py
