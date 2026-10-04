@@ -6,6 +6,7 @@ mod action_state;
 mod bundle;
 mod coverage;
 mod fuzzer;
+mod resource_contract;
 mod shrinker;
 
 pub use action_state::{
@@ -28,6 +29,11 @@ pub use fuzzer::{
     AdaptiveFuzzReport, FuzzCounterexample, FuzzError, FuzzInconclusiveReason, FuzzStep,
     FuzzVerdict, FuzzViolationKind, PublicFuzzInput, PublicFuzzTarget, PublicTargetStatus,
     PublicTargetStep, ADAPTIVE_FUZZ_REPORT_SCHEMA,
+};
+pub use resource_contract::{
+    build_report, load_contract, validate_report, ArtifactTarget, FuzzBudget, FuzzContractError,
+    FuzzResourceContract, FuzzRunReport, InputShape, RunStatus, TargetLimits, CONTRACT_SCHEMA,
+    REPORT_SCHEMA,
 };
 pub use shrinker::{
     shrink_counterexample, CheckerRole, IndependentReplayChecker, ReplayResult, ShrinkAttempt,

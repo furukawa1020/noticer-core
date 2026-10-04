@@ -1,4 +1,4 @@
-use quotient_forge_fuzz::{
+use quotient_seal_fuzz::{
     build_report, load_contract, validate_report, ArtifactTarget, FuzzContractError, InputShape,
     RunStatus,
 };
