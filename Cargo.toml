@@ -44,6 +44,7 @@ members = [
     "crates/quotient-forge-repair",
     "crates/quotient-forge-codegen",
     "crates/quotient-forge-noticer",
+    "crates/quotient-forge-fuzz",
     "crates/quotient-forge-studio-wasm",
     "crates/quotient-seal-abi",
     "crates/quotient-seal-context",

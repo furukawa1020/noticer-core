@@ -1,0 +1,25 @@
+name: k7-artifact-fuzz
+
+on:
+  push:
+    paths:
+      - "crates/quotient-forge-fuzz/**"
+      - "configs/quotient_forge/fuzz_resource_contract_v1.json"
+      - ".github/workflows/k7-artifact-fuzz.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-forge-fuzz/**"
+      - "configs/quotient_forge/fuzz_resource_contract_v1.json"
+      - ".github/workflows/k7-artifact-fuzz.yml"
+
+jobs:
+  resource-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-forge-fuzz/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-forge-fuzz/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-forge-fuzz/Cargo.toml
