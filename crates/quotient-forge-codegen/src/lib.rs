@@ -6,6 +6,13 @@ use std::fmt::{self, Write as _};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+mod artifact_validator;
+
+pub use artifact_validator::{
+    validate_generated_artifacts, ArtifactValidationError, ArtifactValidationLimits,
+    GeneratedArtifact,
+};
+
 use quotient_forge_caqt::{
     artifact_digest, verify, Certificate, CertificateLimits, CertificateVerdict, Digest,
     ExpectedContract, OutputRecord,
