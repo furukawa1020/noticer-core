@@ -26,6 +26,7 @@ jobs:
       - run: cargo test --manifest-path crates/quotient-forge-syntax/Cargo.toml --test dsl_import_fuzz
       - run: cargo test --manifest-path crates/quotient-forge-caqt/Cargo.toml --test caqt_binary_fuzz
       - run: cargo test --manifest-path crates/quotient-forge-solver/Cargo.toml --test solver_model_fuzz
+      - run: cargo test --manifest-path crates/quotient-forge-codegen/Cargo.toml --test artifact_validator_fuzz
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
