@@ -1,0 +1,58 @@
+{
+  "schema": "noticer-core.k7-package-contract.v1",
+  "evidence_origin": "REPOSITORY_CONTRACT",
+  "hardware_status": "NOT_VERIFIED",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "tasks": [
+    {
+      "category": "FROZEN_CONTRACT",
+      "command": ["python", "-m", "pytest", "-q", "tests/test_aqrs_contract.py"],
+      "cwd": ".",
+      "depends_on": [],
+      "id": "frozen-contract",
+      "inputs": ["configs/aqrs/research_contract_v1.yaml"],
+      "limits": {"max_output_bytes": 1048576, "timeout_seconds": 180},
+      "outputs": ["artifacts/k7_replication/frozen-contract/result.json"]
+    },
+    {
+      "category": "SEMANTICS_CERTIFICATE",
+      "command": ["python", "-m", "pytest", "-q", "tests/test_aqrs_oracle.py", "tests/test_caqt_certificate.py"],
+      "cwd": ".",
+      "depends_on": ["frozen-contract"],
+      "id": "semantics-certificates",
+      "inputs": ["artifacts/k7_replication/frozen-contract/result.json"],
+      "limits": {"max_output_bytes": 2097152, "timeout_seconds": 600},
+      "outputs": ["artifacts/k7_replication/semantics-certificates/result.json"]
+    },
+    {
+      "category": "SYNTHESIS_SCALABILITY",
+      "command": ["cargo", "test", "-p", "quotient-forge-solver", "-p", "quotient-forge-caqt"],
+      "cwd": ".",
+      "depends_on": ["semantics-certificates"],
+      "id": "backend-scalability",
+      "inputs": ["artifacts/k7_replication/semantics-certificates/result.json", "configs/quotient_forge/solver_matrix_v1.json"],
+      "limits": {"max_output_bytes": 8388608, "timeout_seconds": 7200},
+      "outputs": ["artifacts/k7_replication/backend-scalability/result.json"]
+    },
+    {
+      "category": "ATTACK_COMPOSITION_BASELINE",
+      "command": ["python", "-m", "pytest", "-q", "tests/test_k7_adaptive_attack.py", "tests/test_k7_longitudinal_composition.py", "tests/test_k7_prior_baseline.py"],
+      "cwd": ".",
+      "depends_on": ["backend-scalability"],
+      "id": "attack-composition-baseline",
+      "inputs": ["artifacts/k7_replication/backend-scalability/result.json"],
+      "limits": {"max_output_bytes": 8388608, "timeout_seconds": 3600},
+      "outputs": ["artifacts/k7_replication/attack-composition-baseline/result.json"]
+    },
+    {
+      "category": "COST_FUZZ",
+      "command": ["python", "-m", "pytest", "-q", "tests/test_k7_calibrated_pareto_report.py", "tests/test_k7_artifact_fuzz_replication.py"],
+      "cwd": ".",
+      "depends_on": ["attack-composition-baseline"],
+      "id": "cost-fuzz",
+      "inputs": ["artifacts/k7_replication/attack-composition-baseline/result.json", "configs/quotient_forge/artifact_fuzz_replication_v1.json"],
+      "limits": {"max_output_bytes": 8388608, "timeout_seconds": 3600},
+      "outputs": ["artifacts/k7_replication/cost-fuzz/result.json"]
+    }
+  ]
+}
