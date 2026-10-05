@@ -17,6 +17,28 @@ pub enum ParseModelError {
     InvalidInteger { name: String, value: String },
     DuplicateDefinition(String),
     MissingDefinition(String),
+    ResourceLimit(&'static str),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct SolverOutputLimits {
+    pub max_bytes: usize,
+    pub max_tokens: usize,
+    pub max_atom_bytes: usize,
+    pub max_depth: usize,
+    pub max_variables: usize,
+}
+
+impl Default for SolverOutputLimits {
+    fn default() -> Self {
+        Self {
+            max_bytes: 1_048_576,
+            max_tokens: 262_144,
+            max_atom_bytes: 4_096,
+            max_depth: 256,
+            max_variables: 65_536,
+        }
+    }
 }
 
 impl std::fmt::Display for ParseModelError {
@@ -31,6 +53,15 @@ pub fn parse_solver_output(
     output: &str,
     expected_variables: &[String],
 ) -> Result<ParsedSolverOutput, ParseModelError> {
+    parse_solver_output_bounded(output, expected_variables, SolverOutputLimits::default())
+}
+
+pub fn parse_solver_output_bounded(
+    output: &str,
+    expected_variables: &[String],
+    limits: SolverOutputLimits,
+) -> Result<ParsedSolverOutput, ParseModelError> {
+    preflight(output, expected_variables.len(), limits)?;
     let tokens = tokenize(output);
     let mut position = 0;
     while matches!(tokens.get(position), Some(Token::Atom(value)) if value == "success") {
@@ -62,6 +93,69 @@ pub fn parse_solver_output(
         }
         other => Err(ParseModelError::UnknownStatus(other.to_owned())),
     }
+}
+
+fn preflight(
+    output: &str,
+    variable_count: usize,
+    limits: SolverOutputLimits,
+) -> Result<(), ParseModelError> {
+    if limits.max_bytes == 0
+        || limits.max_tokens == 0
+        || limits.max_atom_bytes == 0
+        || limits.max_depth == 0
+        || limits.max_variables == 0
+    {
+        return Err(ParseModelError::ResourceLimit("invalid_limits"));
+    }
+    if output.len() > limits.max_bytes {
+        return Err(ParseModelError::ResourceLimit("bytes"));
+    }
+    if variable_count > limits.max_variables {
+        return Err(ParseModelError::ResourceLimit("variables"));
+    }
+    let mut depth = 0_usize;
+    let mut tokens = 0_usize;
+    let mut atom_bytes = 0_usize;
+    let mut in_comment = false;
+    for byte in output.bytes() {
+        if in_comment {
+            if byte == b'\n' {
+                in_comment = false;
+            }
+            continue;
+        }
+        match byte {
+            b';' => in_comment = true,
+            b'(' => {
+                depth = depth.saturating_add(1);
+                tokens = tokens.saturating_add(1);
+                atom_bytes = 0;
+                if depth > limits.max_depth {
+                    return Err(ParseModelError::ResourceLimit("depth"));
+                }
+            }
+            b')' => {
+                depth = depth.saturating_sub(1);
+                tokens = tokens.saturating_add(1);
+                atom_bytes = 0;
+            }
+            value if value.is_ascii_whitespace() => atom_bytes = 0,
+            _ => {
+                if atom_bytes == 0 {
+                    tokens = tokens.saturating_add(1);
+                }
+                atom_bytes = atom_bytes.saturating_add(1);
+                if atom_bytes > limits.max_atom_bytes {
+                    return Err(ParseModelError::ResourceLimit("atom"));
+                }
+            }
+        }
+        if tokens > limits.max_tokens {
+            return Err(ParseModelError::ResourceLimit("tokens"));
+        }
+    }
+    Ok(())
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
