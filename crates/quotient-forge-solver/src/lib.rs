@@ -11,6 +11,7 @@ mod artifact;
 mod backend;
 mod comparison;
 mod matrix;
+mod model_fuzz;
 mod parser;
 mod probe;
 mod process;
@@ -45,7 +46,13 @@ pub use matrix::{
     SolverAsset, SolverCommands, SolverId, SolverMatrix, SolverMatrixError, SolverPin,
     SolverPlatform, MAX_SOLVER_MATRIX_BYTES, SOLVER_MATRIX_SCHEMA_V1,
 };
-pub use parser::{parse_solver_output, ParseModelError, ParsedSolverOutput};
+pub use model_fuzz::{
+    compare_solver_models, ModelDifferentialReport, ModelDifferentialStatus, QdimacsModelError,
+};
+pub use parser::{
+    parse_solver_output, parse_solver_output_bounded, ParseModelError, ParsedSolverOutput,
+    SolverOutputLimits,
+};
 pub use probe::{
     run_capability_probe, CapabilityProbeArtifact, CapabilityProbeArtifactError,
     CapabilityProbeCheck, CapabilityProbeStatus, SolverCapability, SOLVER_PROBE_SCHEMA_V1,
