@@ -24,6 +24,7 @@ jobs:
       - run: cargo clippy --manifest-path crates/quotient-seal-fuzz/Cargo.toml --all-targets -- -D warnings
       - run: cargo test --manifest-path crates/quotient-seal-fuzz/Cargo.toml
       - run: cargo test --manifest-path crates/quotient-forge-syntax/Cargo.toml --test dsl_import_fuzz
+      - run: cargo test --manifest-path crates/quotient-forge-caqt/Cargo.toml --test caqt_binary_fuzz
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
