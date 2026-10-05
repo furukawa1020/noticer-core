@@ -247,6 +247,27 @@ def run_package(
     return log
 
 
+def verify_run_log(log: Mapping[str, Any]) -> None:
+    """Full-recompute a run log and every embedded task result digest."""
+
+    if log.get("schema") != RUN_SCHEMA or not isinstance(log.get("tasks"), list):
+        raise K7RunnerError("run log schema is invalid")
+    for record in log["tasks"]:
+        if not isinstance(record, dict) or set(record) != {"result", "reused"}:
+            raise K7RunnerError("run log task record is invalid")
+        result = record["result"]
+        if not isinstance(result, dict) or set(result) != _RESULT_KEYS:
+            raise K7RunnerError("task result schema is invalid")
+        unsigned_result = dict(result)
+        result_digest = unsigned_result.pop("result_digest")
+        if result_digest != _digest(unsigned_result):
+            raise K7RunnerError("task result digest mismatch")
+    unsigned_log = dict(log)
+    run_digest = unsigned_log.pop("run_digest", None)
+    if run_digest != _digest(unsigned_log):
+        raise K7RunnerError("run log digest mismatch")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Inspect the environment and execute the K7 DAG with one command."""
 
