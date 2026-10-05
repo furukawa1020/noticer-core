@@ -1,0 +1,36 @@
+{
+  "schema": "quotient-forge-artifact-fuzz-spec/v1",
+  "seed": "6b372d31352d7075626c69632d66757a7a2d7265706c69636174696f6e2d7631",
+  "targets": [
+    {
+      "command": ["cargo", "test", "-p", "quotient-forge-syntax", "--test", "dsl_import_fuzz"],
+      "corpus": [{"case_id": "empty-module", "expected_status": "PASS", "input_hex": ""}],
+      "id": "dsl-import-graph",
+      "limits": {"max_bytes": 65536, "max_cases": 512, "timeout_seconds": 30}
+    },
+    {
+      "command": ["python", "-m", "pytest", "-q", "tests/test_k7_canonical_ir_differential.py"],
+      "corpus": [{"case_id": "empty-object", "expected_status": "PASS", "input_hex": "7b7d"}],
+      "id": "canonical-json-ir",
+      "limits": {"max_bytes": 65536, "max_cases": 512, "timeout_seconds": 30}
+    },
+    {
+      "command": ["cargo", "test", "-p", "quotient-forge-caqt", "--test", "caqt_binary_fuzz"],
+      "corpus": [{"case_id": "empty-input", "expected_status": "PASS", "input_hex": ""}],
+      "id": "caqt-binary",
+      "limits": {"max_bytes": 65536, "max_cases": 512, "timeout_seconds": 30}
+    },
+    {
+      "command": ["cargo", "test", "-p", "quotient-forge-solver", "--test", "solver_model_fuzz"],
+      "corpus": [{"case_id": "unknown", "expected_status": "PASS", "input_hex": "756e6b6e6f776e0a"}],
+      "id": "solver-model",
+      "limits": {"max_bytes": 65536, "max_cases": 512, "timeout_seconds": 30}
+    },
+    {
+      "command": ["cargo", "test", "-p", "quotient-forge-codegen", "--test", "artifact_validator_fuzz"],
+      "corpus": [{"case_id": "empty-object", "expected_status": "PASS", "input_hex": "7b7d"}],
+      "id": "codegen-artifacts",
+      "limits": {"max_bytes": 65536, "max_cases": 512, "timeout_seconds": 30}
+    }
+  ]
+}
