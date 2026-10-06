@@ -27,6 +27,7 @@ EXPECTED_POLICY: dict[str, PolicyValue] = {
     "num_threads": 4,
 }
 MAX_CAPTURE_BYTES = 1024 * 1024
+MAX_DIAGNOSTIC_CHARS = 4096
 
 
 class ExternalCheckerError(RuntimeError):
@@ -243,9 +244,15 @@ def execute_checker(
             stdout_sha256=sha256_file(stdout_path),
             stderr_sha256=sha256_file(stderr_path),
         )
+        diagnostic = stderr_path.read_text(encoding="utf-8", errors="replace")
     if result.return_code != 0:
+        diagnostic = "".join(
+            character if character in "\n\r\t" or character.isprintable() else "?"
+            for character in diagnostic[-MAX_DIAGNOSTIC_CHARS:]
+        ).strip()
         raise ExternalCheckerError(
-            f"external checker rejected export with code {result.return_code}"
+            f"external checker rejected export with code {result.return_code}; "
+            f"stderr tail: {diagnostic or '<empty>'}"
         )
     return result
 

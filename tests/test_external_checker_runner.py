@@ -88,7 +88,15 @@ def test_rejection_timeout_and_excessive_diagnostics_fail_closed(tmp_path: Path)
     export.write_text("fixture\n", encoding="utf-8")
 
     with pytest.raises(ExternalCheckerError, match="code 7"):
-        execute_checker(_checker(tmp_path, "import sys\nsys.exit(7)\n"), export, EXPECTED_POLICY, 5)
+        execute_checker(
+            _checker(
+                tmp_path,
+                "import sys\nprint('fixture rejected', file=sys.stderr)\nsys.exit(7)\n",
+            ),
+            export,
+            EXPECTED_POLICY,
+            5,
+        )
     with pytest.raises(ExternalCheckerError, match="timed out"):
         execute_checker(
             _checker(tmp_path, "import time\ntime.sleep(2)\n"),
