@@ -4,12 +4,18 @@ on:
   pull_request:
     paths:
       - "formal/aqrs/**"
+      - "tests/fixtures/aqrs_external_checker_bad/**"
+      - "scripts/run_pinned_external_checker.py"
+      - "scripts/probe_aqrs_external_checker.sh"
       - "docs/aqrs_lean_soundness.md"
       - ".github/workflows/k7-lean-soundness.yml"
   push:
     branches: [main]
     paths:
       - "formal/aqrs/**"
+      - "tests/fixtures/aqrs_external_checker_bad/**"
+      - "scripts/run_pinned_external_checker.py"
+      - "scripts/probe_aqrs_external_checker.sh"
       - "docs/aqrs_lean_soundness.md"
       - ".github/workflows/k7-lean-soundness.yml"
   workflow_dispatch:
@@ -20,7 +26,7 @@ permissions:
 jobs:
   bounded-aqni:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Reject proof escape hatches
@@ -43,12 +49,17 @@ jobs:
           leanchecker: true
           nanoda: false
 
+      - name: Run pinned independent kernel checker
+        shell: bash
+        run: bash scripts/probe_aqrs_external_checker.sh
       - name: Record external checker status
         run: |
           {
             echo "### External checker status"
             echo "- bundled leanchecker: REQUIRED"
-            echo "- nanoda: NOT_VERIFIED (#115; Lean 4.30 export incompatibility)"
+            echo "- pinned nanoda external kernel: REQUIRED"
+            echo "- forbidden axiom fixture: REQUIRED_REJECTION"
+            echo "- malformed export fixture: REQUIRED_REJECTION"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Assert theorem axiom surface
         working-directory: formal/aqrs

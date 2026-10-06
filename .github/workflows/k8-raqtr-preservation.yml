@@ -82,6 +82,6 @@ jobs:
             echo "### RAQTR checker status"
             echo "- Lean kernel build: REQUIRED"
             echo "- independent leanchecker: REQUIRED"
-            echo "- nanoda: NOT_VERIFIED (#115; Lean 4.30 export incompatibility)"
+            echo "- pinned nanoda: VERIFIED by blocking K7 AQRS workflow (#115)"
             echo "- hardware: NOT_VERIFIED"
           } >> "$GITHUB_STEP_SUMMARY"

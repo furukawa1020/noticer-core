@@ -44,7 +44,7 @@ lake env lean Aqrs/Audit.lean
 
 CIでは公式`lean-action`と`actions/checkout`をcommit SHAへ固定する。通常のLean kernel buildに加え、bundled `leanchecker`で生成済みoleanを再検証する。source guardは`sorry`、追加の論理公理宣言、`opaque`、`unsafe`を拒否する。
 
-Rust製external checker `nanoda`は、Lean 4.30 exportを読み込む段階で`invalid digit found in string`となるため`NOT_VERIFIED`であり、K7-02の成功条件へ数えない。再導入条件と失敗証拠は#115で追跡する。
+Rust製external checker `nanoda` v0.4.17はsource revision `4c544ed4099c8227f07d5de77ad1e69fb0740a27`へ固定する。Lean 4.30のAQRS exportを完走し、未許可公理を実際に使用するfixtureとmalformed NDJSONを拒否するblocking CIとして運用する。environment再構成用の標準4公理と、AQRS theoremごとの公理依存監査は分離し、後者は`propext`だけを許可する。
 
 生成される`.lake/`はGitへcommitしない。
 

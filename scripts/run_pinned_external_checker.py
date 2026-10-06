@@ -142,8 +142,8 @@ def load_lock(path: Path) -> ExternalCheckerLock:
         raise ExternalCheckerError("unexpected external checker lock schema")
     if document["lean_toolchain"] != "leanprover/lean4:v4.30.0":
         raise ExternalCheckerError("external checker lock must target Lean 4.30.0")
-    if document["verification_status"] != "NOT_VERIFIED":
-        raise ExternalCheckerError("checker cannot be promoted before a green compatibility run")
+    if document["verification_status"] != "VERIFIED":
+        raise ExternalCheckerError("checker lock must record the green compatibility run")
     if document["policy"] != EXPECTED_POLICY:
         raise ExternalCheckerError("external checker policy is not the fail-closed policy")
     limits = document["limits"]
