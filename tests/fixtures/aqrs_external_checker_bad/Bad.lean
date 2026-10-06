@@ -1,3 +1,3 @@
-axiom Forbidden : Prop
+axiom forbiddenWitness : False
 
-theorem usesForbidden : Forbidden := Forbidden
+theorem usesForbidden : False := forbiddenWitness
