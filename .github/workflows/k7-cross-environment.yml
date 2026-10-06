@@ -1,0 +1,31 @@
+name: K7 cross-environment validator
+
+on:
+  push:
+    paths:
+      - "src/noticer_core/replication/k7_cross_environment.py"
+      - "tests/test_k7_cross_environment.py"
+      - ".github/workflows/k7-cross-environment.yml"
+  pull_request:
+    paths:
+      - "src/noticer_core/replication/k7_cross_environment.py"
+      - "tests/test_k7_cross_environment.py"
+      - ".github/workflows/k7-cross-environment.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e . pytest
+      - run: python -m pytest -q tests/test_k7_cross_environment.py
