@@ -1,0 +1,31 @@
+{
+  "schema": "noticer-core.k7-audit-policy.v1",
+  "allowed_files": [
+    "environment.json",
+    "publication/manifest.json",
+    "publication/summary.json",
+    "publication/task-status.csv",
+    "publication/task-status.svg",
+    "run-log.json"
+  ],
+  "limits": {
+    "max_file_bytes": 16777216,
+    "max_total_bytes": 67108864
+  },
+  "prohibited_json_keys": [
+    "api_key",
+    "credential",
+    "device_id",
+    "password",
+    "personal_baseline",
+    "private_key",
+    "raw_biosignal",
+    "secret_key",
+    "stable_identifier",
+    "subject_id"
+  ],
+  "prohibited_suffixes": [".credentials", ".env", ".key", ".p12", ".pem", ".pfx"],
+  "audit_scope": "BOUNDED_PUBLIC_PACKAGE_AUDIT",
+  "security_interpretation": "NOT_A_SECURITY_VERDICT",
+  "hardware_status": "NOT_VERIFIED"
+}

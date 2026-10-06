@@ -112,15 +112,21 @@ def _figure_bytes(summary: Mapping[str, Any]) -> bytes:
     return svg.encode("utf-8")
 
 
-def generate_artifacts(log: Mapping[str, Any], output_dir: Path) -> dict[str, Any]:
-    """Write deterministic JSON, CSV, SVG, and their digest manifest."""
+def publication_files(summary: Mapping[str, Any]) -> dict[str, bytes]:
+    """Return all deterministic publication payloads before filesystem output."""
 
-    summary = build_summary(log)
-    files = {
+    return {
         "summary.json": canonical_json(summary),
         "task-status.csv": _table_bytes(summary),
         "task-status.svg": _figure_bytes(summary),
     }
+
+
+def generate_artifacts(log: Mapping[str, Any], output_dir: Path) -> dict[str, Any]:
+    """Write deterministic JSON, CSV, SVG, and their digest manifest."""
+
+    summary = build_summary(log)
+    files = publication_files(summary)
     output_dir.mkdir(parents=True, exist_ok=True)
     records = []
     for name, content in sorted(files.items()):

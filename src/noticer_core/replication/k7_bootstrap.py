@@ -8,7 +8,7 @@ import json
 import platform
 import re
 import subprocess
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any, Final, NamedTuple
 
@@ -197,6 +197,37 @@ def inspect_environment(lock: dict[str, Any], probe: Probe = subprocess_probe) -
     }
     report["report_digest"] = _digest(report)
     return report
+
+
+def verify_environment_report(lock: Mapping[str, Any], report: Mapping[str, Any]) -> None:
+    """Reject modified, incomplete, or lock-detached environment reports."""
+
+    expected_keys = {
+        "hardware_status",
+        "network_actions",
+        "overall_status",
+        "platform",
+        "report_digest",
+        "schema",
+        "security_interpretation",
+        "toolchain_lock_digest",
+        "toolchains",
+    }
+    if set(report) != expected_keys or report.get("schema") != REPORT_SCHEMA:
+        raise K7BootstrapError("environment report schema is invalid")
+    if report.get("toolchain_lock_digest") != _digest(lock):
+        raise K7BootstrapError("environment report lock digest mismatch")
+    tool_ids = [tool["id"] for tool in lock["toolchains"]]
+    records = report.get("toolchains")
+    if not isinstance(records, list) or [record.get("id") for record in records] != tool_ids:
+        raise K7BootstrapError("environment report toolchain inventory mismatch")
+    known_statuses = {"MATCH", "MISSING", "MISMATCH", "ERROR"}
+    if any(record.get("status") not in known_statuses for record in records):
+        raise K7BootstrapError("environment report contains an unknown status")
+    unsigned = dict(report)
+    report_digest = unsigned.pop("report_digest")
+    if report_digest != _digest(unsigned):
+        raise K7BootstrapError("environment report digest mismatch")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
