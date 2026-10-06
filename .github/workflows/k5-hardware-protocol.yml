@@ -6,6 +6,7 @@ on:
       - "src/noticer_core/evaluation/hardware_evidence.py"
       - "src/noticer_core/evaluation/hardware_preflight.py"
       - "src/noticer_core/evaluation/tier_b_receipt.py"
+      - "src/noticer_core/evaluation/tier_c_attestation.py"
       - "schemas/k5_hardware_evidence_public.schema.json"
       - "configs/k5/hardware_protocol.yaml"
       - "tools/validate_k5_hardware_evidence.py"
@@ -13,9 +14,11 @@ on:
       - "tests/test_k5_hardware_evidence.py"
       - "tests/test_k5_hardware_preflight.py"
       - "tests/test_k5_tier_b_receipt.py"
+      - "tests/test_k5_tier_c_attestation.py"
       - "docs/k5_hardware_protocol.md"
       - "docs/k5_hardware_preflight.md"
       - "docs/k5_tier_b_receipt.md"
+      - "docs/k5_tier_c_attestation_bridge.md"
       - ".github/workflows/k5-hardware-protocol.yml"
   push:
     branches: [main]
@@ -23,6 +26,7 @@ on:
       - "src/noticer_core/evaluation/hardware_evidence.py"
       - "src/noticer_core/evaluation/hardware_preflight.py"
       - "src/noticer_core/evaluation/tier_b_receipt.py"
+      - "src/noticer_core/evaluation/tier_c_attestation.py"
       - "schemas/k5_hardware_evidence_public.schema.json"
       - "configs/k5/hardware_protocol.yaml"
       - "tools/validate_k5_hardware_evidence.py"
@@ -30,9 +34,11 @@ on:
       - "tests/test_k5_hardware_evidence.py"
       - "tests/test_k5_hardware_preflight.py"
       - "tests/test_k5_tier_b_receipt.py"
+      - "tests/test_k5_tier_c_attestation.py"
       - "docs/k5_hardware_protocol.md"
       - "docs/k5_hardware_preflight.md"
       - "docs/k5_tier_b_receipt.md"
+      - "docs/k5_tier_c_attestation_bridge.md"
       - ".github/workflows/k5-hardware-protocol.yml"
   workflow_dispatch:
 
@@ -57,17 +63,20 @@ jobs:
           tests/test_k5_hardware_evidence.py
           tests/test_k5_hardware_preflight.py
           tests/test_k5_tier_b_receipt.py
+          tests/test_k5_tier_c_attestation.py
       - name: Lint protocol implementation
         run: >-
           python -m ruff check
           src/noticer_core/evaluation/hardware_evidence.py
           src/noticer_core/evaluation/hardware_preflight.py
           src/noticer_core/evaluation/tier_b_receipt.py
+          src/noticer_core/evaluation/tier_c_attestation.py
           tools/validate_k5_hardware_evidence.py
           tools/seal_k5_hardware_preflight.py
           tests/test_k5_hardware_evidence.py
           tests/test_k5_hardware_preflight.py
           tests/test_k5_tier_b_receipt.py
+          tests/test_k5_tier_c_attestation.py
       - name: Exercise NOT_VERIFIED artifacts only
         shell: bash
         run: |
