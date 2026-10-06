@@ -17,7 +17,9 @@
     "nat_extension": true,
     "string_extension": true,
     "permitted_axioms": [
-      "propext"
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
     ],
     "unpermitted_axiom_hard_error": false,
     "unsafe_permit_all_axioms": false,
