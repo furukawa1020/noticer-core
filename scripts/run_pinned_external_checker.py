@@ -21,7 +21,12 @@ EXPECTED_POLICY: dict[str, PolicyValue] = {
     "use_stdin": True,
     "nat_extension": True,
     "string_extension": True,
-    "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"],
+    "permitted_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "Lean.trustCompiler",
+    ],
     "unpermitted_axiom_hard_error": False,
     "unsafe_permit_all_axioms": False,
     "num_threads": 4,

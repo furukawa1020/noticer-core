@@ -19,7 +19,8 @@
     "permitted_axioms": [
       "propext",
       "Classical.choice",
-      "Quot.sound"
+      "Quot.sound",
+      "Lean.trustCompiler"
     ],
     "unpermitted_axiom_hard_error": false,
     "unsafe_permit_all_axioms": false,

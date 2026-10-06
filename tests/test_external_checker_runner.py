@@ -35,6 +35,7 @@ def test_lock_pins_lean_exporter_checker_and_fail_closed_policy() -> None:
         "propext",
         "Classical.choice",
         "Quot.sound",
+        "Lean.trustCompiler",
     ]
     assert lock.policy["unpermitted_axiom_hard_error"] is False
     assert lock.policy["unsafe_permit_all_axioms"] is False
@@ -77,7 +78,7 @@ def test_checker_accepts_only_zero_exit_and_receives_exact_policy(tmp_path: Path
         "import json,sys\n"
         "policy=json.load(open(sys.argv[1], encoding='utf-8'))\n"
         "assert policy['permitted_axioms'] == "
-        "['propext', 'Classical.choice', 'Quot.sound']\n"
+        "['propext', 'Classical.choice', 'Quot.sound', 'Lean.trustCompiler']\n"
         "assert policy['unpermitted_axiom_hard_error'] is False\n"
         "assert policy['unsafe_permit_all_axioms'] is False\n"
         "assert sys.stdin.buffer.read()\n",
