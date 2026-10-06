@@ -16,7 +16,10 @@
     "use_stdin": true,
     "nat_extension": true,
     "string_extension": true,
-    "unpermitted_axiom_hard_error": true,
+    "permitted_axioms": [
+      "propext"
+    ],
+    "unpermitted_axiom_hard_error": false,
     "unsafe_permit_all_axioms": false,
     "num_threads": 4
   },

@@ -16,11 +16,13 @@ from typing import Any
 from urllib.parse import urlparse
 
 SCHEMA = "noticer.aqrs.external_checker_lock.v1"
-EXPECTED_POLICY: dict[str, bool | int] = {
+PolicyValue = bool | int | list[str]
+EXPECTED_POLICY: dict[str, PolicyValue] = {
     "use_stdin": True,
     "nat_extension": True,
     "string_extension": True,
-    "unpermitted_axiom_hard_error": True,
+    "permitted_axioms": ["propext"],
+    "unpermitted_axiom_hard_error": False,
     "unsafe_permit_all_axioms": False,
     "num_threads": 4,
 }
@@ -48,7 +50,7 @@ class ExternalCheckerLock:
     lean_toolchain: str
     exporter: PinnedTool
     checker: PinnedTool
-    policy: dict[str, bool | int]
+    policy: dict[str, PolicyValue]
     timeout_seconds: int
     max_export_bytes: int
     lock_digest: str
@@ -197,7 +199,7 @@ def resolve_pinned_binary(
 def execute_checker(
     command: Sequence[str],
     export_path: Path,
-    policy: dict[str, bool | int],
+    policy: dict[str, PolicyValue],
     timeout_seconds: int,
 ) -> CheckerResult:
     """Execute a checker and convert every abnormal outcome into an error."""

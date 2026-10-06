@@ -1,0 +1,6 @@
+name = "AqrsExternalCheckerBad"
+version = "0.0.0"
+defaultTargets = ["Bad"]
+
+[[lean_lib]]
+name = "Bad"
