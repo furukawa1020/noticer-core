@@ -1,0 +1,28 @@
+{
+  "schema_version": "noticer.aqrs.external_checker_lock.v1",
+  "lean_toolchain": "leanprover/lean4:v4.30.0",
+  "exporter": {
+    "repository": "https://github.com/leanprover/lean4export.git",
+    "revision": "66f1fb4bc256072069767fce52d39480e4524869",
+    "binary": ".lake/build/bin/lean4export"
+  },
+  "checker": {
+    "name": "nanoda",
+    "repository": "https://github.com/ammkrn/nanoda_lib.git",
+    "revision": "4c544ed4099c8227f07d5de77ad1e69fb0740a27",
+    "binary": "target/release/nanoda_bin"
+  },
+  "policy": {
+    "use_stdin": true,
+    "nat_extension": true,
+    "string_extension": true,
+    "unpermitted_axiom_hard_error": true,
+    "unsafe_permit_all_axioms": false,
+    "num_threads": 4
+  },
+  "limits": {
+    "timeout_seconds": 900,
+    "max_export_bytes": 1073741824
+  },
+  "verification_status": "NOT_VERIFIED"
+}
