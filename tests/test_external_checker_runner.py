@@ -41,7 +41,7 @@ def test_lock_pins_lean_exporter_checker_and_fail_closed_policy() -> None:
     assert lock.policy["unsafe_permit_all_axioms"] is False
 
 
-def test_policy_or_promotion_tamper_is_rejected(tmp_path: Path) -> None:
+def test_policy_or_verification_status_tamper_is_rejected(tmp_path: Path) -> None:
     value = json.loads(LOCK.read_text(encoding="utf-8"))
     value["policy"]["unsafe_permit_all_axioms"] = True
     altered = tmp_path / "lock.json"
@@ -50,9 +50,9 @@ def test_policy_or_promotion_tamper_is_rejected(tmp_path: Path) -> None:
         load_lock(altered)
 
     value = json.loads(LOCK.read_text(encoding="utf-8"))
-    value["verification_status"] = "VERIFIED"
+    value["verification_status"] = "NOT_VERIFIED"
     altered.write_text(json.dumps(value), encoding="utf-8")
-    with pytest.raises(ExternalCheckerError, match="before a green"):
+    with pytest.raises(ExternalCheckerError, match="green compatibility"):
         load_lock(altered)
 
 

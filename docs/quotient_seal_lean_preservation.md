@@ -70,7 +70,7 @@ negative modelは「観測を消せば安全」という退化解と、機能出
 - theoremの公理面は`propext`だけを許可し、`Classical.choice`、`Quot.sound`、
   `sorryAx`をCIで拒否する。
 - proof escape hatchをsource guardで拒否する。
-- nanodaはLean 4.30 export incompatibilityを解消するまで`NOT_VERIFIED`である（#115）。
+- nanoda v0.4.17の固定revisionはLean 4.30 AQRS exportを完走し、未許可公理fixtureとmalformed exportを拒否するblocking K7 CIとして検証済みである（#115）。
 - RustからLean modelへのlowering correctnessは本Issueの証明対象外である。
 - infinite-trace liveness、native JIT、OS、microarchitecture、hardwareは証明対象外である。
 - 実hardware状態は`NOT_VERIFIED`である。

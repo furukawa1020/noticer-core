@@ -30,5 +30,5 @@
     "timeout_seconds": 900,
     "max_export_bytes": 1073741824
   },
-  "verification_status": "NOT_VERIFIED"
+  "verification_status": "VERIFIED"
 }
