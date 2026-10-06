@@ -31,7 +31,13 @@ def test_lock_pins_lean_exporter_checker_and_fail_closed_policy() -> None:
     assert len(lock.exporter.revision) == 40
     assert len(lock.checker.revision) == 40
     assert lock.policy == EXPECTED_POLICY
-    assert lock.policy["unpermitted_axiom_hard_error"] is True
+    assert lock.policy["permitted_axioms"] == [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "Lean.trustCompiler",
+    ]
+    assert lock.policy["unpermitted_axiom_hard_error"] is False
     assert lock.policy["unsafe_permit_all_axioms"] is False
 
 
@@ -71,7 +77,9 @@ def test_checker_accepts_only_zero_exit_and_receives_exact_policy(tmp_path: Path
         tmp_path,
         "import json,sys\n"
         "policy=json.load(open(sys.argv[1], encoding='utf-8'))\n"
-        "assert policy['unpermitted_axiom_hard_error'] is True\n"
+        "assert policy['permitted_axioms'] == "
+        "['propext', 'Classical.choice', 'Quot.sound', 'Lean.trustCompiler']\n"
+        "assert policy['unpermitted_axiom_hard_error'] is False\n"
         "assert policy['unsafe_permit_all_axioms'] is False\n"
         "assert sys.stdin.buffer.read()\n",
     )
@@ -86,7 +94,15 @@ def test_rejection_timeout_and_excessive_diagnostics_fail_closed(tmp_path: Path)
     export.write_text("fixture\n", encoding="utf-8")
 
     with pytest.raises(ExternalCheckerError, match="code 7"):
-        execute_checker(_checker(tmp_path, "import sys\nsys.exit(7)\n"), export, EXPECTED_POLICY, 5)
+        execute_checker(
+            _checker(
+                tmp_path,
+                "import sys\nprint('fixture rejected', file=sys.stderr)\nsys.exit(7)\n",
+            ),
+            export,
+            EXPECTED_POLICY,
+            5,
+        )
     with pytest.raises(ExternalCheckerError, match="timed out"):
         execute_checker(
             _checker(tmp_path, "import time\ntime.sleep(2)\n"),

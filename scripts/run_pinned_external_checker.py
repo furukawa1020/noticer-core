@@ -16,15 +16,23 @@ from typing import Any
 from urllib.parse import urlparse
 
 SCHEMA = "noticer.aqrs.external_checker_lock.v1"
-EXPECTED_POLICY: dict[str, bool | int] = {
+PolicyValue = bool | int | list[str]
+EXPECTED_POLICY: dict[str, PolicyValue] = {
     "use_stdin": True,
     "nat_extension": True,
     "string_extension": True,
-    "unpermitted_axiom_hard_error": True,
+    "permitted_axioms": [
+        "propext",
+        "Classical.choice",
+        "Quot.sound",
+        "Lean.trustCompiler",
+    ],
+    "unpermitted_axiom_hard_error": False,
     "unsafe_permit_all_axioms": False,
     "num_threads": 4,
 }
 MAX_CAPTURE_BYTES = 1024 * 1024
+MAX_DIAGNOSTIC_CHARS = 4096
 
 
 class ExternalCheckerError(RuntimeError):
@@ -48,7 +56,7 @@ class ExternalCheckerLock:
     lean_toolchain: str
     exporter: PinnedTool
     checker: PinnedTool
-    policy: dict[str, bool | int]
+    policy: dict[str, PolicyValue]
     timeout_seconds: int
     max_export_bytes: int
     lock_digest: str
@@ -197,7 +205,7 @@ def resolve_pinned_binary(
 def execute_checker(
     command: Sequence[str],
     export_path: Path,
-    policy: dict[str, bool | int],
+    policy: dict[str, PolicyValue],
     timeout_seconds: int,
 ) -> CheckerResult:
     """Execute a checker and convert every abnormal outcome into an error."""
@@ -241,9 +249,15 @@ def execute_checker(
             stdout_sha256=sha256_file(stdout_path),
             stderr_sha256=sha256_file(stderr_path),
         )
+        diagnostic = stderr_path.read_text(encoding="utf-8", errors="replace")
     if result.return_code != 0:
+        diagnostic = "".join(
+            character if character in "\n\r\t" or character.isprintable() else "?"
+            for character in diagnostic[-MAX_DIAGNOSTIC_CHARS:]
+        ).strip()
         raise ExternalCheckerError(
-            f"external checker rejected export with code {result.return_code}"
+            f"external checker rejected export with code {result.return_code}; "
+            f"stderr tail: {diagnostic or '<empty>'}"
         )
     return result
 

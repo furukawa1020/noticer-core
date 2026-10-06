@@ -1,0 +1,34 @@
+name: K7 external checker compatibility probe
+
+on:
+  pull_request:
+    paths:
+      - "formal/aqrs/**"
+      - "tests/fixtures/aqrs_external_checker_bad/**"
+      - "scripts/run_pinned_external_checker.py"
+      - "scripts/probe_aqrs_external_checker.sh"
+      - ".github/workflows/k7-external-checker-probe.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external-kernel-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install Lean 4.30 and build AQRS
+        uses: leanprover/lean-action@38fbc41a8c28c4cbaec22d7f7de508ec2e7c0dd9 # v1
+        with:
+          lake-package-directory: formal/aqrs
+          build: true
+          test: false
+          lint: false
+          use-mathlib-cache: false
+          leanchecker: true
+          nanoda: false
+      - name: Run pinned external checker compatibility probe
+        shell: bash
+        run: bash scripts/probe_aqrs_external_checker.sh
