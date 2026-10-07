@@ -1,0 +1,25 @@
+name: quotient-commit-core
+
+on:
+  push:
+    paths:
+      - "crates/quotient-commit-core/**"
+      - "docs/quotient_commit_transaction.md"
+      - ".github/workflows/quotient-commit-core.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-commit-core/**"
+      - "docs/quotient_commit_transaction.md"
+      - ".github/workflows/quotient-commit-core.yml"
+
+jobs:
+  transaction:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --manifest-path crates/quotient-commit-core/Cargo.toml --check
+      - run: cargo clippy --manifest-path crates/quotient-commit-core/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path crates/quotient-commit-core/Cargo.toml
