@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 
+const base = import.meta.env.BASE_URL;
 const frontier = [
   { index: "A", title: "Cadence lock", note: "Lowest payload cost", tone: "mint" },
   { index: "B", title: "Bucket + cover", note: "Lower added latency", tone: "amber" },
@@ -28,7 +29,7 @@ const frontier = [
         </a>
         <div class="topbar-meta">
           <span class="mode-pill"><i></i> WASM small-model mode</span>
-          <a href="/quotient-commit">QuotientCommit</a>
+          <a href={`${base}quotient-commit`}>QuotientCommit</a>
           <a href="#method">Method note</a>
         </div>
       </header>
