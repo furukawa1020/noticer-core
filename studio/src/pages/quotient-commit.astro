@@ -1,0 +1,49 @@
+---
+import "../styles/global.css";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Interactive software model of a QuotientCommit atomic release transaction." />
+    <title>QuotientCommit Studio</title>
+  </head>
+  <body>
+    <main id="qc-studio" class="qc-shell">
+      <nav><a href="/">NOTICER / <b>QC</b></a><span>ATOMIC RELEASE CONTROL ROOM</span><small>CANDIDATE RESEARCH MECHANISM</small></nav>
+      <header>
+        <div><p>K11 / QUOTIENTCOMMIT</p><h1>Nothing leaves<br /><em>half-approved.</em></h1></div>
+        <aside>Monitor acceptance is not release. Budget reservation is not release. Only one transaction that binds both may open the public gate.</aside>
+      </header>
+      <section class="qc-scenarios" aria-label="Attack scenarios">
+        <button class="active" data-scenario="nominal">01 NOMINAL</button>
+        <button data-scenario="relation">02 RELATION DIVERGENCE</button>
+        <button data-scenario="budget">03 BUDGET REJECTION</button>
+        <button data-scenario="substitution">04 BINDING ATTACK</button>
+        <button id="qc-play" class="play">PLAY TRANSACTION</button>
+      </section>
+      <section class="qc-console">
+        <div class="qc-head"><span>TRANSACTION <code id="qc-transaction">--------</code></span><b id="qc-integrity">TRACE VALID</b><span id="qc-position">1 / 4</span></div>
+        <div id="qc-flow" class="qc-flow"></div>
+        <input id="qc-scrubber" type="range" min="0" max="3" value="0" />
+        <div class="qc-verdict"><div><small>CURRENT STATE</small><strong id="qc-state" class="qc-state prepared">PREPARED</strong><p id="qc-event">canonical bindings frozen into transaction</p></div><div id="qc-permit" class="qc-permit">NO PERMIT</div></div>
+      </section>
+      <section class="qc-grid">
+        <article><small>01 / GUARD</small><h2>Relation monitor</h2><strong id="qc-monitor">PENDING</strong><code id="qc-relation">AQREL:3c07e442</code><p>Two action-equivalent histories must remain observer-equivalent online.</p></article>
+        <article><small>02 / ODOMETER</small><h2>Budget reservation</h2><strong id="qc-budget">PENDING</strong><code id="qc-profile">AQPP:fe2a60b9</code><p>Adaptive privacy spend is reserved before the release boundary opens.</p></article>
+        <article class="output"><small>03 / PUBLIC EDGE</small><h2>Release gate</h2><strong id="qc-output">SEALED</strong><code id="qc-certificate">CAQT:91d6a1f2</code><p>No private history enters this explanatory surface. Only bound public commitments appear.</p></article>
+      </section>
+      <footer><span>Software-only deterministic model · not a deployment trust anchor</span><span>Hardware remains NOT_VERIFIED</span></footer>
+      <script>
+        import { bootstrapCommitStudio } from "../scripts/quotient-commit/studio";
+        const root = document.querySelector<HTMLElement>("#qc-studio");
+        if (root) bootstrapCommitStudio(root);
+      </script>
+    </main>
+  </body>
+</html>
+
+<style>
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:#efe9dc;color:#17201d}.qc-shell{--ink:#17201d;--paper:#efe9dc;--signal:#ff4d22;--acid:#d8ff57;--line:#a7a194;min-height:100vh;padding:0 clamp(18px,4vw,72px) 32px;background:radial-gradient(circle at 78% 13%,#ffcdbd 0,transparent 23%),repeating-linear-gradient(90deg,transparent 0 79px,#17201d0b 80px),var(--paper);font-family:"Cascadia Mono","Courier New",monospace}nav{height:70px;display:flex;align-items:center;gap:32px;border-bottom:1px solid var(--line);font-size:.65rem;letter-spacing:.14em}nav a{color:var(--ink);text-decoration:none;font-weight:900}nav b{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--acid)}nav small{margin-left:auto}header{min-height:300px;display:grid;grid-template-columns:1.5fr .5fr;align-items:end;padding:48px 0}header p{color:#a52a13;font-size:.68rem;letter-spacing:.18em}h1{margin:16px 0 0;font-family:Georgia,serif;font-size:clamp(3.8rem,8vw,8rem);font-weight:400;letter-spacing:-.07em;line-height:.8}h1 em{color:var(--signal);font-weight:400}header aside{border-left:3px solid var(--signal);padding:18px;font-family:Georgia,serif;font-size:1.08rem;line-height:1.55}.qc-scenarios{display:flex;gap:5px;margin-bottom:9px}.qc-scenarios button{padding:12px 15px;border:1px solid var(--line);background:transparent;font:700 .62rem inherit;letter-spacing:.06em;cursor:pointer}.qc-scenarios button.active{background:var(--ink);color:var(--acid)}.qc-scenarios .play{margin-left:auto;background:var(--signal);color:white;border-color:var(--signal)}.qc-console{padding:28px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:10px 10px 0 #ff4d2240}.qc-head{display:flex;justify-content:space-between;gap:20px;font-size:.62rem;letter-spacing:.1em}.qc-head code{color:var(--acid)}.qc-head b{color:var(--acid)}.qc-flow{display:flex;align-items:center;min-height:110px;margin-top:22px}.qc-flow button{position:relative;flex:1;height:62px;border:0;border-top:2px solid #65706c;background:transparent;color:#a5afaa;font:700 .62rem inherit;cursor:pointer}.qc-flow button i{position:absolute;top:-8px;left:50%;width:14px;height:14px;border-radius:50%;background:#65706c}.qc-flow button.active i{background:var(--acid);box-shadow:0 0 0 7px #d8ff5733}.qc-flow button.rejected i,.qc-flow button.aborted i{background:var(--signal)}.qc-flow button span{display:block;margin-top:16px}.qc-console input{width:100%;accent-color:var(--signal)}.qc-verdict{display:grid;grid-template-columns:1fr 260px;align-items:center;margin-top:22px;padding-top:22px;border-top:1px solid #53605b}.qc-verdict small,.qc-grid small{font-size:.58rem;letter-spacing:.14em;color:#858f8b}.qc-state{display:block;margin:8px 0;color:var(--acid);font-family:Georgia,serif;font-size:2rem}.qc-state.rejected,.qc-state.aborted{color:var(--signal)}.qc-verdict p{margin:0;color:#9da8a3;font-size:.7rem}.qc-permit{display:grid;place-items:center;height:82px;border:1px dashed #68736f;color:#89938f;font-weight:900;letter-spacing:.1em}.qc-permit.live{border:0;background:var(--acid);color:var(--ink);box-shadow:0 0 32px #d8ff5766;animation:permit .45s ease-out}.qc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:18px}.qc-grid article{min-height:220px;padding:24px;border:1px solid var(--line);background:#f8f3e9}.qc-grid article.output{background:#ffddd2}.qc-grid h2{font-family:Georgia,serif;font-weight:400}.qc-grid strong,.qc-grid code{display:block;margin:15px 0}.qc-grid strong{color:#a52a13;font-size:1.3rem}.qc-grid code{font-size:.68rem}.qc-grid p{font-family:Georgia,serif;line-height:1.5;color:#5d625e}footer{display:flex;justify-content:space-between;padding-top:25px;color:#686b67;font-size:.58rem;letter-spacing:.08em}@keyframes permit{from{transform:scale(.92);opacity:.2}to{transform:scale(1);opacity:1}}@media(max-width:850px){header,.qc-verdict,.qc-grid{grid-template-columns:1fr}.qc-scenarios{flex-wrap:wrap}.qc-scenarios .play{margin-left:0}.qc-flow{align-items:stretch;flex-direction:column}.qc-flow button{min-height:45px;border-top:0;border-left:2px solid #65706c;text-align:left;padding-left:30px}.qc-flow button i{top:16px;left:-8px}.qc-flow button span{margin:0}.qc-verdict{gap:18px}nav>span{display:none}footer{gap:14px}}
+</style>
