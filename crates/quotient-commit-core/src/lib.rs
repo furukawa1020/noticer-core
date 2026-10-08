@@ -1,10 +1,11 @@
 #![forbid(unsafe_code)]
 
+pub mod ledger;
 mod sha256;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct TransactionId(pub [u8; 32]);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

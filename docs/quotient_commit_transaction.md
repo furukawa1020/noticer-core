@@ -24,3 +24,10 @@ into the transaction.
 This first core is intentionally in-memory. It does not yet claim durable crash
 atomicity, distributed consensus, hardware enforcement, or physical validation.
 Those properties require separate issues and evidence.
+
+The crash journal extension records every accepted transition in a
+domain-separated HMAC-SHA-256 chain. In-memory state advances only after
+`append_and_sync` succeeds. Startup replay preserves an uncertain prepared or
+reserved state without issuing a release permit, and rejects mutation,
+reordering, replay, and any transition after a terminal record. The provided
+memory store is a deterministic test adapter, not an OS durability claim.
