@@ -31,3 +31,10 @@ domain-separated HMAC-SHA-256 chain. In-memory state advances only after
 reserved state without issuing a release permit, and rejects mutation,
 reordering, replay, and any transition after a terminal record. The provided
 memory store is a deterministic test adapter, not an OS durability claim.
+
+The durable coordinator closes the call-order gap between the transaction and
+the journal. It validates each transition on a copied candidate, synchronizes
+the corresponding journal record, and only then replaces live state. A commit
+permit is withheld until both state machines agree on `COMMITTED`. Binding
+failure or store failure therefore cannot advance the externally visible
+transaction state.

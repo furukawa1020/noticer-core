@@ -147,6 +147,10 @@ impl<S: DurableStore> DurableJournal<S> {
         self.store
     }
 
+    pub fn store_mut(&mut self) -> &mut S {
+        &mut self.store
+    }
+
     fn ensure_capacity(&self) -> Result<(), JournalError> {
         let count = usize::try_from(self.sequence).map_err(|_| JournalError::ResourceLimit)?;
         if count >= self.maximum_records {
