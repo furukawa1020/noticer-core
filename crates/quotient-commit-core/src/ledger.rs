@@ -151,6 +151,19 @@ impl<S: DurableStore> DurableJournal<S> {
         &mut self.store
     }
 
+    pub fn records_for(
+        &self,
+        transaction_id: TransactionId,
+    ) -> Result<Vec<JournalRecord>, JournalError> {
+        Ok(self
+            .store
+            .load()
+            .map_err(JournalError::Store)?
+            .into_iter()
+            .filter(|record| record.transaction_id == transaction_id)
+            .collect())
+    }
+
     fn ensure_capacity(&self) -> Result<(), JournalError> {
         let count = usize::try_from(self.sequence).map_err(|_| JournalError::ResourceLimit)?;
         if count >= self.maximum_records {
