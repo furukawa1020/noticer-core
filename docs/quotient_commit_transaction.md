@@ -38,3 +38,11 @@ the corresponding journal record, and only then replaces live state. A commit
 permit is withheld until both state machines agree on `COMMITTED`. Binding
 failure or store failure therefore cannot advance the externally visible
 transaction state.
+
+Recovery requires the original public transition evidence and checks each item
+against its authenticated journal digest before rebuilding state. A normal
+commit exposes its permit through a one-shot take operation. Recovery of an
+already committed transaction deliberately exposes no permit because the
+system cannot distinguish a crash before delivery from a crash after delivery.
+This fail-closed rule prevents automatic duplicate release at the cost of
+possible lost utility.

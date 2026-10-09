@@ -11,6 +11,14 @@ const EVIDENCE_DOMAIN: &[u8] = b"noticer.quotient-commit.coordinator-evidence.v1
 pub struct DurableCoordinator<S> {
     transaction: ReleaseTransaction,
     journal: DurableJournal<S>,
+    permit: Option<ReleasePermit>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct RecoveryEvidence {
+    pub monitor: Option<MonitorAcceptance>,
+    pub reservation: Option<BudgetReservation>,
+    pub commit: Option<CommitEvidence>,
 }
 
 impl<S: DurableStore> DurableCoordinator<S> {
@@ -37,6 +45,105 @@ impl<S: DurableStore> DurableCoordinator<S> {
         Ok(Self {
             transaction,
             journal,
+            permit: None,
+        })
+    }
+
+    pub fn recover(
+        bindings: ReleaseBindings,
+        store: S,
+        authentication_key: [u8; 32],
+        maximum_records: usize,
+        evidence: RecoveryEvidence,
+    ) -> Result<Self, CoordinatorError> {
+        let mut transaction =
+            ReleaseTransaction::prepare(bindings).map_err(CoordinatorError::Commit)?;
+        let journal = DurableJournal::new(store, authentication_key, maximum_records)
+            .map_err(CoordinatorError::Journal)?;
+        let records = journal
+            .records_for(transaction.id())
+            .map_err(CoordinatorError::Journal)?;
+        if records.is_empty() {
+            return Err(CoordinatorError::RecoveryRecordMissing);
+        }
+        for (index, record) in records.iter().enumerate() {
+            let expected = match record.kind {
+                RecordKind::Prepare if index == 0 => {
+                    evidence_digest(RecordKind::Prepare, &[&transaction.id().0])
+                }
+                RecordKind::Prepare => return Err(CoordinatorError::InvalidRecoveryRecord),
+                RecordKind::MonitorAccept => {
+                    let value = evidence
+                        .monitor
+                        .ok_or(CoordinatorError::RecoveryEvidenceMissing)?;
+                    transaction
+                        .accept_monitor(value)
+                        .map_err(CoordinatorError::Commit)?;
+                    evidence_digest(
+                        RecordKind::MonitorAccept,
+                        &[
+                            &value.transaction_id.0,
+                            &value.certificate_digest,
+                            &value.relation_digest,
+                        ],
+                    )
+                }
+                RecordKind::BudgetReserve => {
+                    let value = evidence
+                        .reservation
+                        .ok_or(CoordinatorError::RecoveryEvidenceMissing)?;
+                    transaction
+                        .reserve_budget(value)
+                        .map_err(CoordinatorError::Commit)?;
+                    evidence_digest(
+                        RecordKind::BudgetReserve,
+                        &[
+                            &value.transaction_id.0,
+                            &value.profile_digest,
+                            &value.reservation_digest,
+                        ],
+                    )
+                }
+                RecordKind::Commit => {
+                    let value = evidence
+                        .commit
+                        .ok_or(CoordinatorError::RecoveryEvidenceMissing)?;
+                    transaction
+                        .commit(value)
+                        .map_err(CoordinatorError::Commit)?;
+                    evidence_digest(
+                        RecordKind::Commit,
+                        &[
+                            &value.transaction_id.0,
+                            &value.public_trace_digest,
+                            &value.reservation_digest,
+                        ],
+                    )
+                }
+                RecordKind::Reject => {
+                    transaction
+                        .reject(transaction.id())
+                        .map_err(CoordinatorError::Commit)?;
+                    evidence_digest(RecordKind::Reject, &[&transaction.id().0])
+                }
+                RecordKind::Abort => {
+                    transaction
+                        .abort(transaction.id())
+                        .map_err(CoordinatorError::Commit)?;
+                    evidence_digest(RecordKind::Abort, &[&transaction.id().0])
+                }
+            };
+            if record.evidence_digest != expected {
+                return Err(CoordinatorError::RecoveryEvidenceMismatch);
+            }
+        }
+        if journal.state(transaction.id()) != Some(transaction.state()) {
+            return Err(CoordinatorError::StateMismatch);
+        }
+        Ok(Self {
+            transaction,
+            journal,
+            permit: None,
         })
     }
 
@@ -74,7 +181,7 @@ impl<S: DurableStore> DurableCoordinator<S> {
         self.persist_candidate(candidate, RecordKind::BudgetReserve, digest)
     }
 
-    pub fn commit(&mut self, evidence: CommitEvidence) -> Result<ReleasePermit, CoordinatorError> {
+    pub fn commit(&mut self, evidence: CommitEvidence) -> Result<(), CoordinatorError> {
         self.require_alignment()?;
         let mut candidate = self.transaction;
         let permit = candidate
@@ -89,10 +196,11 @@ impl<S: DurableStore> DurableCoordinator<S> {
             ],
         );
         self.persist_candidate(candidate, RecordKind::Commit, digest)?;
-        if self.release_permit() != Some(permit) {
+        if !self.journal.release_committed(self.transaction.id()) {
             return Err(CoordinatorError::StateMismatch);
         }
-        Ok(permit)
+        self.permit = Some(permit);
+        Ok(())
     }
 
     pub fn reject(&mut self) -> Result<(), CoordinatorError> {
@@ -114,13 +222,13 @@ impl<S: DurableStore> DurableCoordinator<S> {
     }
 
     #[must_use]
-    pub fn release_permit(&self) -> Option<ReleasePermit> {
+    pub fn take_release_permit(&mut self) -> Option<ReleasePermit> {
         if self.journal.state(self.transaction.id()) != Some(self.transaction.state())
             || !self.journal.release_committed(self.transaction.id())
         {
             return None;
         }
-        self.transaction.release_permit()
+        self.permit.take()
     }
 
     #[must_use]
@@ -179,6 +287,10 @@ pub enum CoordinatorError {
     Commit(CommitError),
     Journal(JournalError),
     RecoveryRequired,
+    RecoveryRecordMissing,
+    RecoveryEvidenceMissing,
+    RecoveryEvidenceMismatch,
+    InvalidRecoveryRecord,
     StateMismatch,
     InvalidTerminalKind,
 }
@@ -239,15 +351,16 @@ mod tests {
         coordinator
             .reserve_budget(reservation(&coordinator))
             .unwrap();
-        assert_eq!(coordinator.release_permit(), None);
-        let permit = coordinator
+        assert_eq!(coordinator.take_release_permit(), None);
+        coordinator
             .commit(CommitEvidence {
                 transaction_id: coordinator.transaction_id(),
                 public_trace_digest: [4; 32],
                 reservation_digest: [5; 32],
             })
             .unwrap();
-        assert_eq!(coordinator.release_permit(), Some(permit));
+        assert!(coordinator.take_release_permit().is_some());
+        assert_eq!(coordinator.take_release_permit(), None);
         assert_eq!(coordinator.journal_sequence(), 4);
     }
 
@@ -263,7 +376,7 @@ mod tests {
         );
         assert_eq!(coordinator.state(), TransactionState::Prepared);
         assert_eq!(coordinator.journal_sequence(), 1);
-        assert_eq!(coordinator.release_permit(), None);
+        assert_eq!(coordinator.take_release_permit(), None);
     }
 
     #[test]
@@ -306,7 +419,83 @@ mod tests {
         coordinator.accept_monitor(monitor(&coordinator)).unwrap();
         coordinator.reject().unwrap();
         assert_eq!(coordinator.state(), TransactionState::Rejected);
-        assert_eq!(coordinator.release_permit(), None);
+        assert_eq!(coordinator.take_release_permit(), None);
         assert_eq!(coordinator.journal_sequence(), 3);
+    }
+
+    #[test]
+    fn reserved_recovery_restores_state_without_a_permit() {
+        let mut coordinator = coordinator();
+        let monitor = monitor(&coordinator);
+        let reservation = reservation(&coordinator);
+        coordinator.accept_monitor(monitor).unwrap();
+        coordinator.reserve_budget(reservation).unwrap();
+        let mut recovered = DurableCoordinator::recover(
+            bindings(),
+            coordinator.into_store(),
+            KEY,
+            16,
+            RecoveryEvidence {
+                monitor: Some(monitor),
+                reservation: Some(reservation),
+                commit: None,
+            },
+        )
+        .unwrap();
+        assert_eq!(recovered.state(), TransactionState::BudgetReserved);
+        assert_eq!(recovered.take_release_permit(), None);
+    }
+
+    #[test]
+    fn committed_recovery_never_reissues_an_ambiguous_permit() {
+        let mut coordinator = coordinator();
+        let monitor = monitor(&coordinator);
+        let reservation = reservation(&coordinator);
+        let commit = CommitEvidence {
+            transaction_id: coordinator.transaction_id(),
+            public_trace_digest: [4; 32],
+            reservation_digest: [5; 32],
+        };
+        coordinator.accept_monitor(monitor).unwrap();
+        coordinator.reserve_budget(reservation).unwrap();
+        coordinator.commit(commit).unwrap();
+        let mut recovered = DurableCoordinator::recover(
+            bindings(),
+            coordinator.into_store(),
+            KEY,
+            16,
+            RecoveryEvidence {
+                monitor: Some(monitor),
+                reservation: Some(reservation),
+                commit: Some(commit),
+            },
+        )
+        .unwrap();
+        assert_eq!(recovered.state(), TransactionState::Committed);
+        assert_eq!(recovered.take_release_permit(), None);
+    }
+
+    #[test]
+    fn recovery_rejects_substituted_evidence() {
+        let mut coordinator = coordinator();
+        let monitor = monitor(&coordinator);
+        coordinator.accept_monitor(monitor).unwrap();
+        let mut substituted = monitor;
+        substituted.relation_digest = [8; 32];
+        assert_eq!(
+            DurableCoordinator::recover(
+                bindings(),
+                coordinator.into_store(),
+                KEY,
+                16,
+                RecoveryEvidence {
+                    monitor: Some(substituted),
+                    reservation: None,
+                    commit: None,
+                },
+            )
+            .unwrap_err(),
+            CoordinatorError::Commit(CommitError::MonitorBindingMismatch)
+        );
     }
 }
