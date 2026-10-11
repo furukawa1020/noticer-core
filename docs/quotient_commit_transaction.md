@@ -53,3 +53,25 @@ after every complete append. Reopening rejects truncated tails, malformed
 headers, unknown record kinds, oversized files, and authenticated payload
 mutation. It does not claim that every filesystem or storage controller honors
 the same durability semantics, and it does not silently repair corruption.
+
+## Idempotent release delivery ceremony
+
+QuotientCommit separates durable `COMMITTED` state from delivery to an
+external sink. A live coordinator exposes one one-shot permit through
+`deliver_once`. If the sink applies the effect but its acknowledgement is
+lost, the caller must recover the coordinator from the authenticated journal
+and call `reconcile_committed`.
+
+The sink contract uses the transaction ID as an idempotency key. It must
+durably return `Delivered` for the first identical binding,
+`AlreadyDelivered` for a duplicate identical binding, and `BindingConflict`
+when the same ID is presented with different public semantics. This gives an
+exactly-once effect only conditionally on that sink contract. QuotientCommit
+does not claim generic exactly-once network delivery, actuator execution, or
+hardware persistence.
+
+The recovery API never returns a reusable permit. It passes the committed
+descriptor directly into the idempotent sink ceremony, preserving the
+one-shot boundary for ordinary callers. A delivery receipt reports the public
+transaction binding and the sink's answer; it is not independent proof that a
+dishonest or non-durable sink honored the contract.

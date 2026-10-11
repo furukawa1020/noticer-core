@@ -231,6 +231,18 @@ impl<S: DurableStore> DurableCoordinator<S> {
         self.permit.take()
     }
 
+    /// Returns the committed public descriptor only for crate-internal
+    /// recovery reconciliation. This does not reissue the one-shot permit to
+    /// ordinary callers.
+    pub(crate) fn committed_descriptor(&self) -> Option<ReleasePermit> {
+        if self.journal.state(self.transaction.id()) != Some(self.transaction.state())
+            || !self.journal.release_committed(self.transaction.id())
+        {
+            return None;
+        }
+        self.transaction.release_permit()
+    }
+
     #[must_use]
     pub const fn journal_sequence(&self) -> u64 {
         self.journal.sequence()
