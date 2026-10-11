@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod coordinator;
+pub mod file_store;
 pub mod ledger;
 mod sha256;
 

@@ -32,6 +32,9 @@ pub trait DurableStore {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StoreError {
     IoFailure,
+    LockUnavailable,
+    MalformedRecord,
+    ResourceLimit,
 }
 
 #[derive(Clone, Debug, Default)]
