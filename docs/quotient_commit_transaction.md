@@ -46,3 +46,10 @@ already committed transaction deliberately exposes no permit because the
 system cannot distinguish a crash before delivery from a crash after delivery.
 This fail-closed rule prevents automatic duplicate release at the cost of
 possible lost utility.
+
+The cross-platform file adapter serializes each journal entry as a versioned
+144-byte record, holds a create-new single-writer lock, and calls `sync_data`
+after every complete append. Reopening rejects truncated tails, malformed
+headers, unknown record kinds, oversized files, and authenticated payload
+mutation. It does not claim that every filesystem or storage controller honors
+the same durability semantics, and it does not silently repair corruption.
