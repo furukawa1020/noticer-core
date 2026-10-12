@@ -106,3 +106,9 @@ versioned 208-byte records, a create-new single-writer lock, bounded file size,
 and `sync_data` after each complete append. Restart loading preserves every
 field needed for full keyed replay and rejects malformed or truncated data.
 Its durability claim remains conditional on local filesystem sync semantics.
+
+`ReceiptKeyring` makes receipt key rotation explicit. New receipts use only a
+selected active epoch, while registered historical epochs remain available for
+verification. Epoch identifiers and keys cannot be zero or overwritten, and
+unknown epochs fail closed. The in-memory reference keyring does not provide
+key distribution, revocation policy, KMS integration, or HSM protection.
