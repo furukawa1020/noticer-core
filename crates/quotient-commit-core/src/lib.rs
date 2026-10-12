@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod audited_delivery;
 pub mod checkpoint;
 pub mod coordinator;
 pub mod delivery;
