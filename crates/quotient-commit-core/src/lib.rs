@@ -5,6 +5,7 @@ pub mod delivery;
 pub mod file_sink;
 pub mod file_store;
 pub mod ledger;
+pub mod receipt;
 mod sha256;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";

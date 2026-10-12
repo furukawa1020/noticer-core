@@ -84,3 +84,11 @@ rejects conflicting duplicate IDs, malformed or truncated records, and size
 limit violations rather than repairing them. These properties do not extend
 to distributed hosts, network filesystems, storage controllers that violate
 sync semantics, or physical actuators.
+
+Delivery receipts can be sealed with a domain-separated HMAC-SHA-256 over the
+transaction ID, public trace digest, release sequence, policy epoch, sink
+outcome, and sink epoch. Verification detects mutation and cross-transaction
+substitution while keeping the receipt free of private evidence. The MAC is a
+symmetric integrity mechanism: it does not prove to a third party that the
+sink performed an effect, and it does not replace remote attestation or a
+hardware root of trust.
