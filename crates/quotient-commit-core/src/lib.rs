@@ -4,6 +4,7 @@ pub mod coordinator;
 pub mod delivery;
 pub mod file_sink;
 pub mod file_store;
+pub mod keyring;
 pub mod ledger;
 pub mod receipt;
 pub mod receipt_file;
