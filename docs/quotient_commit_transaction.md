@@ -125,3 +125,12 @@ then advances the live head. A failed store operation therefore leaves the
 in-memory checkpoint unchanged. Startup performs full keyed replay before
 accepting another receipt. This ordering is local crash consistency, not a
 distributed transaction across the sink effect and audit storage.
+
+`deliver_and_audit` connects the one-shot coordinator permit, idempotent sink,
+receipt keyring, and durable receipt log in one explicit ceremony. Keyring
+readiness is checked before consuming the permit. Sink failure and audit
+failure are distinct: if the sink succeeds but audit synchronization fails,
+the API returns `DeliveredButUnaudited` with the sealed public receipt rather
+than pretending the external effect was rolled back. This exposes the exact
+boundary where reconciliation is required and does not claim cross-device
+atomicity.
