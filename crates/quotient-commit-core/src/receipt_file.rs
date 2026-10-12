@@ -21,6 +21,11 @@ pub enum ReceiptFileError {
     ResourceLimit,
 }
 
+pub trait ReceiptStore {
+    fn append_and_sync(&mut self, record: ReceiptLogRecord) -> Result<(), ReceiptFileError>;
+    fn load(&self) -> Result<Vec<ReceiptLogRecord>, ReceiptFileError>;
+}
+
 #[derive(Debug)]
 pub struct ReceiptFile {
     path: PathBuf,
@@ -65,8 +70,10 @@ impl ReceiptFile {
             _lock: lock,
         })
     }
+}
 
-    pub fn append_and_sync(&mut self, record: ReceiptLogRecord) -> Result<(), ReceiptFileError> {
+impl ReceiptStore for ReceiptFile {
+    fn append_and_sync(&mut self, record: ReceiptLogRecord) -> Result<(), ReceiptFileError> {
         let current = fs::metadata(&self.path)
             .map_err(|_| ReceiptFileError::IoFailure)?
             .len();
@@ -85,7 +92,7 @@ impl ReceiptFile {
         file.sync_data().map_err(|_| ReceiptFileError::IoFailure)
     }
 
-    pub fn load(&self) -> Result<Vec<ReceiptLogRecord>, ReceiptFileError> {
+    fn load(&self) -> Result<Vec<ReceiptLogRecord>, ReceiptFileError> {
         let bytes = fs::read(&self.path).map_err(|_| ReceiptFileError::IoFailure)?;
         if bytes.len() as u64 > self.maximum_bytes {
             return Err(ReceiptFileError::ResourceLimit);

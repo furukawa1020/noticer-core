@@ -8,6 +8,7 @@ pub mod file_store;
 pub mod keyring;
 pub mod ledger;
 pub mod receipt;
+pub mod receipt_coordinator;
 pub mod receipt_file;
 pub mod receipt_log;
 mod sha256;

@@ -118,3 +118,10 @@ identity, record count, head authenticator, and checkpoint epoch. This detects
 checkpoint mutation and cross-log substitution when the checkpoint key is
 trusted and retained separately. It does not publish the checkpoint, provide a
 trusted timestamp, or make the symmetric MAC publicly verifiable.
+
+`DurableReceiptLog` coordinates chain state with a `ReceiptStore`. It builds
+and validates a candidate chain, synchronizes the candidate record, and only
+then advances the live head. A failed store operation therefore leaves the
+in-memory checkpoint unchanged. Startup performs full keyed replay before
+accepting another receipt. This ordering is local crash consistency, not a
+distributed transaction across the sink effect and audit storage.
