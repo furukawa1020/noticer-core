@@ -92,3 +92,11 @@ substitution while keeping the receipt free of private evidence. The MAC is a
 symmetric integrity mechanism: it does not prove to a third party that the
 sink performed an effect, and it does not replace remote attestation or a
 hardware root of trust.
+
+Sealed receipts can be ordered in a keyed append-only receipt log. Each record
+authenticates its log sequence, predecessor authenticator, and sealed receipt,
+so full replay rejects mutation, reordering, middle deletion, wrong keys, and
+cross-log substitution. A separately retained count/head checkpoint detects
+tail truncation. Without that external checkpoint, a valid prefix remains a
+valid prefix; this layer does not provide trusted timestamps, transparency
+publication, or durable storage by itself.
