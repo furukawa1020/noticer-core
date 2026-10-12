@@ -75,3 +75,12 @@ descriptor directly into the idempotent sink ceremony, preserving the
 one-shot boundary for ordinary callers. A delivery receipt reports the public
 transaction binding and the sink's answer; it is not independent proof that a
 dishonest or non-durable sink honored the contract.
+
+`FileSink` is a local-filesystem reference implementation of that contract. It
+stores versioned fixed-size public permit bindings, synchronizes each new
+record before reporting `Delivered`, and rebuilds its deduplication index on
+restart. A create-new lock limits the reference adapter to one writer. It
+rejects conflicting duplicate IDs, malformed or truncated records, and size
+limit violations rather than repairing them. These properties do not extend
+to distributed hosts, network filesystems, storage controllers that violate
+sync semantics, or physical actuators.

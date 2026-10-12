@@ -2,6 +2,7 @@
 
 pub mod coordinator;
 pub mod delivery;
+pub mod file_sink;
 pub mod file_store;
 pub mod ledger;
 mod sha256;
