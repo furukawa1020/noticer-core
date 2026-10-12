@@ -100,3 +100,9 @@ cross-log substitution. A separately retained count/head checkpoint detects
 tail truncation. Without that external checkpoint, a valid prefix remains a
 valid prefix; this layer does not provide trusted timestamps, transparency
 publication, or durable storage by itself.
+
+`ReceiptFile` is the local-filesystem reference store for that chain. It uses
+versioned 208-byte records, a create-new single-writer lock, bounded file size,
+and `sync_data` after each complete append. Restart loading preserves every
+field needed for full keyed replay and rejects malformed or truncated data.
+Its durability claim remains conditional on local filesystem sync semantics.
