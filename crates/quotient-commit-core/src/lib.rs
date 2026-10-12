@@ -6,6 +6,7 @@ pub mod file_sink;
 pub mod file_store;
 pub mod ledger;
 pub mod receipt;
+pub mod receipt_file;
 pub mod receipt_log;
 mod sha256;
 
