@@ -112,3 +112,9 @@ selected active epoch, while registered historical epochs remain available for
 verification. Epoch identifiers and keys cannot be zero or overwritten, and
 unknown epochs fail closed. The in-memory reference keyring does not provide
 key distribution, revocation policy, KMS integration, or HSM protection.
+
+A receipt-log checkpoint can be independently sealed over a non-zero log
+identity, record count, head authenticator, and checkpoint epoch. This detects
+checkpoint mutation and cross-log substitution when the checkpoint key is
+trusted and retained separately. It does not publish the checkpoint, provide a
+trusted timestamp, or make the symmetric MAC publicly verifiable.
