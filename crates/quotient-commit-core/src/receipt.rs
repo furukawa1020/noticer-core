@@ -67,7 +67,7 @@ fn authenticate(receipt: DeliveryReceipt, sink_epoch: u64, key: [u8; 32]) -> [u8
     hmac_sha256(key, &message)
 }
 
-fn hmac_sha256(key: [u8; 32], message: &[u8]) -> [u8; 32] {
+pub(crate) fn hmac_sha256(key: [u8; 32], message: &[u8]) -> [u8; 32] {
     let mut inner_pad = [0x36_u8; 64];
     let mut outer_pad = [0x5c_u8; 64];
     for index in 0..key.len() {
