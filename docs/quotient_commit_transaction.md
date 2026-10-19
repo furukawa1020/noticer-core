@@ -134,3 +134,10 @@ the API returns `DeliveredButUnaudited` with the sealed public receipt rather
 than pretending the external effect was rolled back. This exposes the exact
 boundary where reconciliation is required and does not claim cross-device
 atomicity.
+
+`reconcile_audit` consumes the sealed receipt returned by a partial delivery
+and retries only the durable audit step. An identical authenticator converges
+to `AlreadyRecorded`; a different receipt for an existing transaction ID is a
+hard conflict. Receipt verification occurs before lookup or append, and store
+failure leaves the live audit head unchanged. This repairs audit availability
+without reissuing a release permit or replaying the external effect.

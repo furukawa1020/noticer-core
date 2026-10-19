@@ -15,6 +15,19 @@ pub struct AuditedDelivery {
     pub audit_record: ReceiptLogRecord,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AuditReconciliation {
+    Recorded(ReceiptLogRecord),
+    AlreadyRecorded(ReceiptLogRecord),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum AuditReconciliationError {
+    InvalidReceipt,
+    ConflictingReceipt,
+    Audit(ReceiptCoordinatorError),
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AuditedDeliveryError {
     NotReady(KeyringError),
@@ -71,6 +84,28 @@ where
         receipt: sealed,
         audit_record,
     })
+}
+
+pub fn reconcile_audit<A: ReceiptStore>(
+    receipt: SealedReceipt,
+    keyring: &ReceiptKeyring,
+    audit: &mut DurableReceiptLog<A>,
+) -> Result<AuditReconciliation, AuditReconciliationError> {
+    if !keyring.verify(&receipt) {
+        return Err(AuditReconciliationError::InvalidReceipt);
+    }
+    for record in audit.records() {
+        if record.receipt.authenticator == receipt.authenticator {
+            return Ok(AuditReconciliation::AlreadyRecorded(*record));
+        }
+        if record.receipt.receipt.transaction_id == receipt.receipt.transaction_id {
+            return Err(AuditReconciliationError::ConflictingReceipt);
+        }
+    }
+    audit
+        .append(receipt)
+        .map(AuditReconciliation::Recorded)
+        .map_err(AuditReconciliationError::Audit)
 }
 
 #[cfg(test)]
@@ -226,5 +261,77 @@ mod tests {
         ));
         assert_eq!(sink.effects, 1);
         assert!(audit.records().is_empty());
+    }
+
+    #[test]
+    fn unaudited_receipt_reconciliation_is_idempotent() {
+        let keyring = keyring();
+        let receipt = keyring
+            .seal(DeliveryReceipt {
+                transaction_id: crate::TransactionId([1; 32]),
+                public_trace_digest: [2; 32],
+                release_sequence: 3,
+                policy_epoch: 4,
+                outcome: DeliveryOutcome::Delivered,
+            })
+            .unwrap();
+        let mut audit = DurableReceiptLog::open(MemoryAuditStore::default(), KEY, 8).unwrap();
+        assert!(matches!(
+            reconcile_audit(receipt, &keyring, &mut audit),
+            Ok(AuditReconciliation::Recorded(_))
+        ));
+        assert!(matches!(
+            reconcile_audit(receipt, &keyring, &mut audit),
+            Ok(AuditReconciliation::AlreadyRecorded(_))
+        ));
+        assert_eq!(audit.records().len(), 1);
+    }
+
+    #[test]
+    fn conflicting_invalid_and_store_failed_reconciliation_fail_closed() {
+        let keyring = keyring();
+        let original = keyring
+            .seal(DeliveryReceipt {
+                transaction_id: crate::TransactionId([1; 32]),
+                public_trace_digest: [2; 32],
+                release_sequence: 3,
+                policy_epoch: 4,
+                outcome: DeliveryOutcome::Delivered,
+            })
+            .unwrap();
+        let conflicting = keyring
+            .seal(DeliveryReceipt {
+                outcome: DeliveryOutcome::AlreadyDelivered,
+                ..original.receipt
+            })
+            .unwrap();
+        let mut audit = DurableReceiptLog::open(MemoryAuditStore::default(), KEY, 8).unwrap();
+        reconcile_audit(original, &keyring, &mut audit).unwrap();
+        assert_eq!(
+            reconcile_audit(conflicting, &keyring, &mut audit),
+            Err(AuditReconciliationError::ConflictingReceipt)
+        );
+
+        let mut invalid = original;
+        invalid.authenticator[0] ^= 1;
+        assert_eq!(
+            reconcile_audit(invalid, &keyring, &mut audit),
+            Err(AuditReconciliationError::InvalidReceipt)
+        );
+
+        let mut failed = DurableReceiptLog::open(
+            MemoryAuditStore {
+                records: Vec::new(),
+                fail: true,
+            },
+            KEY,
+            8,
+        )
+        .unwrap();
+        assert!(matches!(
+            reconcile_audit(original, &keyring, &mut failed),
+            Err(AuditReconciliationError::Audit(_))
+        ));
+        assert!(failed.records().is_empty());
     }
 }
