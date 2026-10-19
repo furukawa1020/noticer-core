@@ -156,6 +156,15 @@ impl<S: OutboxStore> DeliveryOutbox<S> {
         self.states.get(&transaction_id).copied()
     }
 
+    #[must_use]
+    pub fn latest_record(&self, transaction_id: TransactionId) -> Option<OutboxRecord> {
+        self.records
+            .iter()
+            .rev()
+            .find(|record| record.intent.transaction_id == transaction_id)
+            .copied()
+    }
+
     fn append(
         &mut self,
         intent: DeliveryIntent,

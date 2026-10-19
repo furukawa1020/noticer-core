@@ -88,7 +88,24 @@ impl<S: SealedReceiptVaultStore> DurableSealedReceiptVault<S> {
         outbox_record: OutboxRecord,
         receipt: SealedReceipt,
     ) -> Result<SealedReceiptRecord, SealedReceiptVaultError> {
-        validate_binding(outbox_record, receipt)?;
+        self.bind(outbox_record, receipt, OutboxState::Delivered)
+    }
+
+    pub fn bind_pending(
+        &mut self,
+        outbox_record: OutboxRecord,
+        receipt: SealedReceipt,
+    ) -> Result<SealedReceiptRecord, SealedReceiptVaultError> {
+        self.bind(outbox_record, receipt, OutboxState::Pending)
+    }
+
+    fn bind(
+        &mut self,
+        outbox_record: OutboxRecord,
+        receipt: SealedReceipt,
+        expected_state: OutboxState,
+    ) -> Result<SealedReceiptRecord, SealedReceiptVaultError> {
+        validate_binding(outbox_record, receipt, expected_state)?;
         let transaction_id = receipt.receipt.transaction_id;
         if let Some(existing) = self.receipts.get(&transaction_id).copied() {
             if existing.receipt == receipt
@@ -123,14 +140,20 @@ impl<S: SealedReceiptVaultStore> DurableSealedReceiptVault<S> {
 fn validate_binding(
     outbox_record: OutboxRecord,
     receipt: SealedReceipt,
+    expected_state: OutboxState,
 ) -> Result<(), SealedReceiptVaultError> {
-    if outbox_record.state != OutboxState::Delivered
+    let receipt_binding_valid = match expected_state {
+        OutboxState::Pending => outbox_record.receipt_authenticator == [0; 32],
+        OutboxState::Delivered => outbox_record.receipt_authenticator == receipt.authenticator,
+        OutboxState::Audited => false,
+    };
+    if outbox_record.state != expected_state
         || outbox_record.intent.transaction_id != receipt.receipt.transaction_id
         || outbox_record.intent.public_trace_digest != receipt.receipt.public_trace_digest
         || outbox_record.intent.release_sequence != receipt.receipt.release_sequence
         || outbox_record.intent.policy_epoch != receipt.receipt.policy_epoch
         || outbox_record.intent.receipt_epoch != receipt.sink_epoch
-        || outbox_record.receipt_authenticator != receipt.authenticator
+        || !receipt_binding_valid
         || outbox_record.authenticator == [0; 32]
     {
         return Err(SealedReceiptVaultError::InvalidBinding);
