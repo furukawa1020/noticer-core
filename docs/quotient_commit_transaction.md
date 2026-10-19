@@ -150,3 +150,11 @@ only after store synchronization, while restart replay lists incomplete work
 without reissuing a permit. `FileOutbox` is a single-writer local-filesystem
 adapter; the outbox narrows crash ambiguity but does not create a distributed
 transaction with the external sink.
+
+`deliver_with_outbox` fixes the operational ordering: validate key readiness,
+sync `PENDING`, consume the one-shot permit, invoke the idempotent sink, sync
+`DELIVERED`, sync the sealed audit receipt, then sync `AUDITED`. Failure before
+`PENDING` preserves the permit and blocks the sink. Later failures expose
+whether the effect, audit, or terminal outbox marker is incomplete, allowing
+restart code to reconcile from the durable state without claiming distributed
+atomicity.
