@@ -17,6 +17,7 @@ pub mod receipt_log;
 pub mod recovery_worker;
 pub mod sealed_receipt_vault;
 mod sha256;
+pub mod vaulted_delivery;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";
 
