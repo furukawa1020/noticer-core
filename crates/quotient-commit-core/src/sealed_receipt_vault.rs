@@ -142,13 +142,18 @@ fn validate_binding(
     receipt: SealedReceipt,
     expected_state: OutboxState,
 ) -> Result<(), SealedReceiptVaultError> {
+    let receipt_binding_valid = match expected_state {
+        OutboxState::Pending => outbox_record.receipt_authenticator == [0; 32],
+        OutboxState::Delivered => outbox_record.receipt_authenticator == receipt.authenticator,
+        OutboxState::Audited => false,
+    };
     if outbox_record.state != expected_state
         || outbox_record.intent.transaction_id != receipt.receipt.transaction_id
         || outbox_record.intent.public_trace_digest != receipt.receipt.public_trace_digest
         || outbox_record.intent.release_sequence != receipt.receipt.release_sequence
         || outbox_record.intent.policy_epoch != receipt.receipt.policy_epoch
         || outbox_record.intent.receipt_epoch != receipt.sink_epoch
-        || outbox_record.receipt_authenticator != receipt.authenticator
+        || !receipt_binding_valid
         || outbox_record.authenticator == [0; 32]
     {
         return Err(SealedReceiptVaultError::InvalidBinding);
