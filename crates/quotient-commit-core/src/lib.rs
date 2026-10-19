@@ -4,6 +4,7 @@ pub mod audited_delivery;
 pub mod checkpoint;
 pub mod coordinator;
 pub mod delivery;
+pub mod delivery_outbox;
 pub mod file_sink;
 pub mod file_store;
 pub mod keyring;
