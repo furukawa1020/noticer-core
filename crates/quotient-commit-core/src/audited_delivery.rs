@@ -2,6 +2,7 @@
 
 use crate::coordinator::DurableCoordinator;
 use crate::delivery::{DeliveryReceipt, IdempotentSink, SinkError};
+use crate::delivery_outbox::{DeliveryIntent, DeliveryOutbox, OutboxError, OutboxStore};
 use crate::keyring::{KeyringError, ReceiptKeyring};
 use crate::ledger::DurableStore;
 use crate::receipt::SealedReceipt;
@@ -40,6 +41,26 @@ pub enum AuditedDeliveryError {
     DeliveredButUnaudited {
         receipt: Box<SealedReceipt>,
         cause: ReceiptCoordinatorError,
+    },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum OutboxedDeliveryError {
+    NotReady(KeyringError),
+    NoPermit,
+    OutboxBeforeDelivery(OutboxError),
+    PendingSinkFailure(SinkError),
+    DeliveredButOutboxPending {
+        receipt: Box<SealedReceipt>,
+        cause: OutboxError,
+    },
+    DeliveredButUnaudited {
+        receipt: Box<SealedReceipt>,
+        cause: ReceiptCoordinatorError,
+    },
+    AuditedButOutboxIncomplete {
+        delivery: Box<AuditedDelivery>,
+        cause: OutboxError,
     },
 }
 
@@ -108,10 +129,81 @@ pub fn reconcile_audit<A: ReceiptStore>(
         .map_err(AuditReconciliationError::Audit)
 }
 
+pub fn deliver_with_outbox<C, K, A, O>(
+    coordinator: &mut DurableCoordinator<C>,
+    sink: &mut K,
+    keyring: &ReceiptKeyring,
+    audit: &mut DurableReceiptLog<A>,
+    outbox: &mut DeliveryOutbox<O>,
+) -> Result<AuditedDelivery, OutboxedDeliveryError>
+where
+    C: DurableStore,
+    K: IdempotentSink,
+    A: ReceiptStore,
+    O: OutboxStore,
+{
+    let receipt_epoch = keyring
+        .active_epoch()
+        .ok_or(OutboxedDeliveryError::NotReady(KeyringError::NoActiveEpoch))?;
+    let descriptor = coordinator
+        .pending_release_descriptor()
+        .ok_or(OutboxedDeliveryError::NoPermit)?;
+    outbox
+        .prepare(DeliveryIntent {
+            transaction_id: descriptor.transaction_id,
+            public_trace_digest: descriptor.public_trace_digest,
+            release_sequence: descriptor.release_sequence,
+            policy_epoch: descriptor.policy_epoch,
+            receipt_epoch,
+        })
+        .map_err(OutboxedDeliveryError::OutboxBeforeDelivery)?;
+    let permit = coordinator
+        .take_release_permit()
+        .ok_or(OutboxedDeliveryError::NoPermit)?;
+    let outcome = sink
+        .deliver_once(&permit)
+        .map_err(OutboxedDeliveryError::PendingSinkFailure)?;
+    let receipt = DeliveryReceipt {
+        transaction_id: permit.transaction_id,
+        public_trace_digest: permit.public_trace_digest,
+        release_sequence: permit.release_sequence,
+        policy_epoch: permit.policy_epoch,
+        outcome,
+    };
+    let sealed = keyring
+        .seal(receipt)
+        .map_err(OutboxedDeliveryError::NotReady)?;
+    outbox
+        .mark_delivered(permit.transaction_id, sealed.authenticator)
+        .map_err(|cause| OutboxedDeliveryError::DeliveredButOutboxPending {
+            receipt: Box::new(sealed),
+            cause,
+        })?;
+    let audit_record =
+        audit
+            .append(sealed)
+            .map_err(|cause| OutboxedDeliveryError::DeliveredButUnaudited {
+                receipt: Box::new(sealed),
+                cause,
+            })?;
+    let delivery = AuditedDelivery {
+        receipt: sealed,
+        audit_record,
+    };
+    outbox
+        .mark_audited(permit.transaction_id, sealed.authenticator)
+        .map_err(|cause| OutboxedDeliveryError::AuditedButOutboxIncomplete {
+            delivery: Box::new(delivery),
+            cause,
+        })?;
+    Ok(delivery)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::delivery::{DeliveryOutcome, IdempotentSink};
+    use crate::delivery_outbox::{OutboxRecord, OutboxState};
     use crate::ledger::MemoryStore;
     use crate::receipt_file::ReceiptFileError;
     use crate::{
@@ -140,6 +232,27 @@ mod tests {
     struct MemoryAuditStore {
         records: Vec<ReceiptLogRecord>,
         fail: bool,
+    }
+
+    #[derive(Debug, Default)]
+    struct MemoryOutboxStore {
+        records: Vec<OutboxRecord>,
+        fail_next: bool,
+    }
+
+    impl OutboxStore for MemoryOutboxStore {
+        fn append_and_sync(&mut self, record: OutboxRecord) -> Result<(), OutboxError> {
+            if self.fail_next {
+                self.fail_next = false;
+                return Err(OutboxError::IoFailure);
+            }
+            self.records.push(record);
+            Ok(())
+        }
+
+        fn load(&self) -> Result<Vec<OutboxRecord>, OutboxError> {
+            Ok(self.records.clone())
+        }
     }
 
     impl ReceiptStore for MemoryAuditStore {
@@ -333,5 +446,80 @@ mod tests {
             Err(AuditReconciliationError::Audit(_))
         ));
         assert!(failed.records().is_empty());
+    }
+
+    #[test]
+    fn outbox_ceremony_reaches_audited_terminal_state() {
+        let mut coordinator = committed_coordinator();
+        let mut sink = MemorySink::default();
+        let mut audit = DurableReceiptLog::open(MemoryAuditStore::default(), KEY, 8).unwrap();
+        let mut outbox = DeliveryOutbox::open(MemoryOutboxStore::default(), [6; 32], 8).unwrap();
+        let delivery = deliver_with_outbox(
+            &mut coordinator,
+            &mut sink,
+            &keyring(),
+            &mut audit,
+            &mut outbox,
+        )
+        .unwrap();
+        assert_eq!(sink.effects, 1);
+        assert_eq!(audit.records().len(), 1);
+        assert_eq!(delivery.receipt, audit.records()[0].receipt);
+        assert!(outbox.recoverable().is_empty());
+    }
+
+    #[test]
+    fn outbox_preflight_failure_preserves_permit_and_blocks_sink() {
+        let mut coordinator = committed_coordinator();
+        let mut sink = MemorySink::default();
+        let mut audit = DurableReceiptLog::open(MemoryAuditStore::default(), KEY, 8).unwrap();
+        let store = MemoryOutboxStore {
+            fail_next: true,
+            records: Vec::new(),
+        };
+        let mut outbox = DeliveryOutbox::open(store, [6; 32], 8).unwrap();
+        assert_eq!(
+            deliver_with_outbox(
+                &mut coordinator,
+                &mut sink,
+                &keyring(),
+                &mut audit,
+                &mut outbox,
+            ),
+            Err(OutboxedDeliveryError::OutboxBeforeDelivery(
+                OutboxError::IoFailure
+            ))
+        );
+        assert_eq!(sink.effects, 0);
+        assert!(deliver_and_audit(&mut coordinator, &mut sink, &keyring(), &mut audit).is_ok());
+    }
+
+    #[test]
+    fn audit_failure_leaves_delivered_outbox_recoverable() {
+        let mut coordinator = committed_coordinator();
+        let mut sink = MemorySink::default();
+        let mut audit = DurableReceiptLog::open(
+            MemoryAuditStore {
+                records: Vec::new(),
+                fail: true,
+            },
+            KEY,
+            8,
+        )
+        .unwrap();
+        let mut outbox = DeliveryOutbox::open(MemoryOutboxStore::default(), [6; 32], 8).unwrap();
+        assert!(matches!(
+            deliver_with_outbox(
+                &mut coordinator,
+                &mut sink,
+                &keyring(),
+                &mut audit,
+                &mut outbox,
+            ),
+            Err(OutboxedDeliveryError::DeliveredButUnaudited { .. })
+        ));
+        let recoverable = outbox.recoverable();
+        assert_eq!(recoverable.len(), 1);
+        assert_eq!(recoverable[0].1, OutboxState::Delivered);
     }
 }

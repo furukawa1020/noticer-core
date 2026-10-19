@@ -243,6 +243,15 @@ impl<S: DurableStore> DurableCoordinator<S> {
         self.transaction.release_permit()
     }
 
+    pub(crate) fn pending_release_descriptor(&self) -> Option<ReleasePermit> {
+        if self.journal.state(self.transaction.id()) != Some(self.transaction.state())
+            || !self.journal.release_committed(self.transaction.id())
+        {
+            return None;
+        }
+        self.permit
+    }
+
     #[must_use]
     pub const fn journal_sequence(&self) -> u64 {
         self.journal.sequence()
