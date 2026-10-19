@@ -9,6 +9,7 @@ pub mod file_sink;
 pub mod file_store;
 pub mod keyring;
 pub mod ledger;
+pub mod pending_recovery;
 pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
