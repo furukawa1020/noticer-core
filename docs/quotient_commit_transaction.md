@@ -141,3 +141,12 @@ to `AlreadyRecorded`; a different receipt for an existing transaction ID is a
 hard conflict. Receipt verification occurs before lookup or append, and store
 failure leaves the live audit head unchanged. This repairs audit availability
 without reissuing a release permit or replaying the external effect.
+
+`DeliveryOutbox` persists a public intent before delivery and tracks the
+authenticated append-only states `PENDING`, `DELIVERED`, and `AUDITED`. Each
+record binds the transaction, public trace, release and policy sequence,
+receipt-key epoch, predecessor, and any receipt authenticator. State advances
+only after store synchronization, while restart replay lists incomplete work
+without reissuing a permit. `FileOutbox` is a single-writer local-filesystem
+adapter; the outbox narrows crash ambiguity but does not create a distributed
+transaction with the external sink.
