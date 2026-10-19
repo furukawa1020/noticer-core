@@ -13,6 +13,7 @@ pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
 pub mod receipt_log;
+pub mod sealed_receipt_vault;
 mod sha256;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";
