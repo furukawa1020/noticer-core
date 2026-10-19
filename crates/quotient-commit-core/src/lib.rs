@@ -13,6 +13,7 @@ pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
 pub mod receipt_log;
+pub mod recovery_worker;
 pub mod sealed_receipt_vault;
 mod sha256;
 

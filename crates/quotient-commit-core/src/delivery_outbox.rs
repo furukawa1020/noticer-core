@@ -148,6 +148,14 @@ impl<S: OutboxStore> DeliveryOutbox<S> {
             .collect()
     }
 
+    #[must_use]
+    pub fn status(
+        &self,
+        transaction_id: TransactionId,
+    ) -> Option<(DeliveryIntent, OutboxState, [u8; 32])> {
+        self.states.get(&transaction_id).copied()
+    }
+
     fn append(
         &mut self,
         intent: DeliveryIntent,
