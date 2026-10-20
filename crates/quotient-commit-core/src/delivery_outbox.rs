@@ -157,6 +157,11 @@ impl<S: OutboxStore> DeliveryOutbox<S> {
     }
 
     #[must_use]
+    pub fn entries(&self) -> Vec<(DeliveryIntent, OutboxState, [u8; 32])> {
+        self.states.values().copied().collect()
+    }
+
+    #[must_use]
     pub fn latest_record(&self, transaction_id: TransactionId) -> Option<OutboxRecord> {
         self.records
             .iter()
