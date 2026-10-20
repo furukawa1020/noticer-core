@@ -132,7 +132,12 @@ struct ProtocolState {
 fn simulate(point: CrashPoint, substituted_binding: bool) -> CrashWitness {
     let mut state = state_at_crash(point);
     if !state.pending {
-        return witness(point, state, TerminalState::NoDurableIntent, true);
+        return witness(
+            point,
+            state,
+            TerminalState::NoDurableIntent,
+            substituted_binding,
+        );
     }
     if substituted_binding {
         return witness(point, state, TerminalState::RejectedBinding, true);
