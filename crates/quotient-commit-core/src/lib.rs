@@ -5,6 +5,7 @@ pub mod authenticated_compaction;
 pub mod checkpoint;
 pub mod coordinator;
 pub mod crash_matrix;
+pub mod cross_store_certifier;
 pub mod delivery;
 pub mod delivery_outbox;
 pub mod file_sink;
