@@ -18,6 +18,7 @@ pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
 pub mod receipt_log;
+pub mod recovery_admission;
 pub mod recovery_telemetry;
 pub mod recovery_witness;
 pub mod recovery_worker;
