@@ -2,7 +2,8 @@
 
 use crate::delivery::DeliveryReceipt;
 use crate::receipt::{seal_receipt, verify_receipt, ReceiptError, SealedReceipt};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+use zeroize::Zeroizing;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum KeyringError {
@@ -11,13 +12,17 @@ pub enum KeyringError {
     DuplicateEpoch,
     UnknownEpoch,
     NoActiveEpoch,
+    ActiveEpoch,
+    EpochInUse,
+    RetiredEpoch,
     Receipt(ReceiptError),
 }
 
 #[derive(Debug, Default)]
 pub struct ReceiptKeyring {
-    keys: BTreeMap<u64, [u8; 32]>,
+    keys: BTreeMap<u64, Zeroizing<[u8; 32]>>,
     active_epoch: Option<u64>,
+    retired_epochs: BTreeSet<u64>,
 }
 
 impl ReceiptKeyring {
@@ -33,14 +38,20 @@ impl ReceiptKeyring {
         if key == [0; 32] {
             return Err(KeyringError::InvalidKey);
         }
+        if self.retired_epochs.contains(&epoch) {
+            return Err(KeyringError::RetiredEpoch);
+        }
         if self.keys.contains_key(&epoch) {
             return Err(KeyringError::DuplicateEpoch);
         }
-        self.keys.insert(epoch, key);
+        self.keys.insert(epoch, Zeroizing::new(key));
         Ok(())
     }
 
     pub fn activate(&mut self, epoch: u64) -> Result<(), KeyringError> {
+        if self.retired_epochs.contains(&epoch) {
+            return Err(KeyringError::RetiredEpoch);
+        }
         if !self.keys.contains_key(&epoch) {
             return Err(KeyringError::UnknownEpoch);
         }
@@ -51,14 +62,39 @@ impl ReceiptKeyring {
     pub fn seal(&self, receipt: DeliveryReceipt) -> Result<SealedReceipt, KeyringError> {
         let epoch = self.active_epoch.ok_or(KeyringError::NoActiveEpoch)?;
         let key = self.keys.get(&epoch).ok_or(KeyringError::UnknownEpoch)?;
-        seal_receipt(receipt, epoch, *key).map_err(KeyringError::Receipt)
+        seal_receipt(receipt, epoch, **key).map_err(KeyringError::Receipt)
     }
 
     #[must_use]
     pub fn verify(&self, receipt: &SealedReceipt) -> bool {
         self.keys
             .get(&receipt.sink_epoch)
-            .is_some_and(|key| verify_receipt(receipt, *key))
+            .is_some_and(|key| verify_receipt(receipt, **key))
+    }
+
+    pub fn retire(
+        &mut self,
+        epoch: u64,
+        referenced_epochs: &BTreeSet<u64>,
+    ) -> Result<(), KeyringError> {
+        if self.retired_epochs.contains(&epoch) {
+            return Err(KeyringError::RetiredEpoch);
+        }
+        if self.active_epoch == Some(epoch) {
+            return Err(KeyringError::ActiveEpoch);
+        }
+        if referenced_epochs.contains(&epoch) {
+            return Err(KeyringError::EpochInUse);
+        }
+        let material = self.keys.remove(&epoch).ok_or(KeyringError::UnknownEpoch)?;
+        drop(material);
+        self.retired_epochs.insert(epoch);
+        Ok(())
+    }
+
+    #[must_use]
+    pub fn is_retired(&self, epoch: u64) -> bool {
+        self.retired_epochs.contains(&epoch)
     }
 
     #[must_use]
@@ -123,5 +159,48 @@ mod tests {
         let mut substituted = ReceiptKeyring::new();
         substituted.register(1, [9; 32]).unwrap();
         assert!(!substituted.verify(&sealed));
+    }
+
+    #[test]
+    fn active_or_referenced_epoch_cannot_be_retired() {
+        let mut ring = ReceiptKeyring::new();
+        ring.register(1, [1; 32]).unwrap();
+        ring.activate(1).unwrap();
+        assert_eq!(
+            ring.retire(1, &BTreeSet::new()),
+            Err(KeyringError::ActiveEpoch)
+        );
+        ring.register(2, [2; 32]).unwrap();
+        ring.activate(2).unwrap();
+        assert_eq!(
+            ring.retire(1, &BTreeSet::from([1])),
+            Err(KeyringError::EpochInUse)
+        );
+        assert!(ring.verify(&ring.seal(receipt(2)).unwrap()));
+    }
+
+    #[test]
+    fn retirement_erases_material_and_is_irreversible_after_restart() {
+        let mut ring = ReceiptKeyring::new();
+        ring.register(1, [1; 32]).unwrap();
+        ring.activate(1).unwrap();
+        let old = ring.seal(receipt(1)).unwrap();
+        ring.register(2, [2; 32]).unwrap();
+        ring.activate(2).unwrap();
+        ring.retire(1, &BTreeSet::new()).unwrap();
+        assert!(ring.is_retired(1));
+        assert!(!ring.verify(&old));
+        assert_eq!(ring.activate(1), Err(KeyringError::RetiredEpoch));
+        assert_eq!(ring.register(1, [1; 32]), Err(KeyringError::RetiredEpoch));
+
+        let mut restarted = ReceiptKeyring::new();
+        restarted.retired_epochs.insert(1);
+        restarted.register(2, [2; 32]).unwrap();
+        restarted.activate(2).unwrap();
+        assert!(!restarted.verify(&old));
+        assert_eq!(
+            restarted.register(1, [1; 32]),
+            Err(KeyringError::RetiredEpoch)
+        );
     }
 }
