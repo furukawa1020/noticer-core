@@ -26,6 +26,7 @@ pub mod rollback_anchor;
 pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
 mod sha256;
+pub mod startup_admission_gate;
 pub mod startup_recovery;
 pub mod startup_security_gate;
 pub mod vaulted_delivery;
