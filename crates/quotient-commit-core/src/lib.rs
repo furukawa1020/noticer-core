@@ -23,6 +23,7 @@ pub mod recovery_telemetry;
 pub mod recovery_witness;
 pub mod recovery_worker;
 pub mod rollback_anchor;
+pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
 mod sha256;
 pub mod startup_recovery;
