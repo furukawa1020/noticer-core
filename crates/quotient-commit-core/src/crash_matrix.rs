@@ -22,7 +22,7 @@ impl CrashPoint {
         Self::AfterAuditedSync,
     ];
 
-    const fn label(self) -> &'static str {
+    pub const fn label(self) -> &'static str {
         match self {
             Self::BeforePendingSync => "before_pending_sync",
             Self::AfterPendingSync => "after_pending_sync",
@@ -43,7 +43,7 @@ pub enum TerminalState {
 }
 
 impl TerminalState {
-    const fn label(self) -> &'static str {
+    pub const fn label(self) -> &'static str {
         match self {
             Self::NoDurableIntent => "no_durable_intent",
             Self::Audited => "audited",
@@ -117,6 +117,11 @@ impl CrashCampaign {
         output.push_str("]}");
         output
     }
+}
+
+#[must_use]
+pub fn evaluate_crash_point(point: CrashPoint, substituted_binding: bool) -> CrashWitness {
+    simulate(point, substituted_binding)
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
