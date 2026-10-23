@@ -21,6 +21,7 @@ pub mod receipt_log;
 pub mod recovery_admission;
 pub mod recovery_telemetry;
 pub mod recovery_witness;
+pub mod recovery_witness_worker;
 pub mod recovery_worker;
 pub mod rollback_anchor;
 pub mod rollback_anchor_file;
