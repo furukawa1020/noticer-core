@@ -1,40 +1,6 @@
-//! Deterministic bounded crash campaign artifacts.
+//! Deterministic bounded campaigns backed by the real crash-matrix evaluator.
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[repr(u8)]
-pub enum CrashPoint {
-    BeforePendingSync = 0,
-    AfterPendingSync = 1,
-    BeforeSinkCall = 2,
-    AfterSinkCall = 3,
-    AfterDeliveredSync = 4,
-    AfterAuditAppend = 5,
-    AfterAuditedSync = 6,
-}
-
-impl CrashPoint {
-    const ALL: [Self; 7] = [
-        Self::BeforePendingSync,
-        Self::AfterPendingSync,
-        Self::BeforeSinkCall,
-        Self::AfterSinkCall,
-        Self::AfterDeliveredSync,
-        Self::AfterAuditAppend,
-        Self::AfterAuditedSync,
-    ];
-
-    fn name(self) -> &'static str {
-        match self {
-            Self::BeforePendingSync => "before_pending_sync",
-            Self::AfterPendingSync => "after_pending_sync",
-            Self::BeforeSinkCall => "before_sink_call",
-            Self::AfterSinkCall => "after_sink_call",
-            Self::AfterDeliveredSync => "after_delivered_sync",
-            Self::AfterAuditAppend => "after_audit_append",
-            Self::AfterAuditedSync => "after_audited_sync",
-        }
-    }
-}
+use crate::crash_matrix::{evaluate_crash_point, CrashPoint, CrashWitness};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct CampaignConfig {
@@ -54,6 +20,7 @@ pub struct FailureStep {
 pub struct CampaignArtifact {
     pub config: CampaignConfig,
     pub schedule: Vec<FailureStep>,
+    pub evaluations: Vec<CrashWitness>,
     pub at_most_once: bool,
     pub converged: bool,
     pub fail_closed: bool,
@@ -82,12 +49,30 @@ pub fn run_campaign(config: CampaignConfig) -> Result<CampaignArtifact, Campaign
             substituted_binding: state & 1 == 1,
         });
     }
+    let evaluations = schedule
+        .iter()
+        .map(|step| evaluate_crash_point(step.crash_point, step.substituted_binding))
+        .collect::<Vec<_>>();
+    let at_most_once = evaluations
+        .iter()
+        .all(|witness| witness.effect_at_most_once && witness.audit_at_most_once);
+    let converged = schedule
+        .iter()
+        .zip(&evaluations)
+        .filter(|(step, _)| !step.substituted_binding)
+        .all(|(_, witness)| witness.converged);
+    let fail_closed = schedule
+        .iter()
+        .zip(&evaluations)
+        .filter(|(step, _)| step.substituted_binding)
+        .all(|(_, witness)| witness.fail_closed);
     Ok(CampaignArtifact {
         config,
         schedule,
-        at_most_once: true,
-        converged: true,
-        fail_closed: true,
+        evaluations,
+        at_most_once,
+        converged,
+        fail_closed,
     })
 }
 
@@ -110,12 +95,20 @@ pub fn canonical_json(artifact: &CampaignArtifact) -> String {
     let schedule = artifact
         .schedule
         .iter()
-        .map(|step| {
+        .zip(&artifact.evaluations)
+        .map(|(step, witness)| {
             format!(
-                "{{\"iteration\":{},\"crash_point\":\"{}\",\"substituted_binding\":{}}}",
+                "{{\"iteration\":{},\"crash_point\":\"{}\",\"substituted_binding\":{},\"result\":{{\"sink_effects\":{},\"audit_records\":{},\"terminal\":\"{}\",\"effect_at_most_once\":{},\"audit_at_most_once\":{},\"converged\":{},\"fail_closed\":{}}}}}",
                 step.iteration,
-                step.crash_point.name(),
-                step.substituted_binding
+                step.crash_point.label(),
+                step.substituted_binding,
+                witness.sink_effects,
+                witness.audit_records,
+                witness.terminal_state.label(),
+                witness.effect_at_most_once,
+                witness.audit_at_most_once,
+                witness.converged,
+                witness.fail_closed,
             )
         })
         .collect::<Vec<_>>()
@@ -178,7 +171,35 @@ mod tests {
     fn smoke_profile_is_bounded_and_records_invariants() {
         let artifact = run_campaign(config()).unwrap();
         assert_eq!(artifact.schedule.len(), 14);
+        assert_eq!(artifact.evaluations.len(), artifact.schedule.len());
         assert!(artifact.at_most_once && artifact.converged && artifact.fail_closed);
         assert!(canonical_json(&artifact).contains("quotient-chaos"));
+    }
+
+    #[test]
+    fn artifact_contains_real_normal_and_substitution_results() {
+        let artifact = run_campaign(config()).unwrap();
+        for (step, witness) in artifact.schedule.iter().zip(&artifact.evaluations) {
+            assert_eq!(
+                *witness,
+                evaluate_crash_point(step.crash_point, step.substituted_binding)
+            );
+            assert!(witness.effect_at_most_once && witness.audit_at_most_once);
+            if step.substituted_binding {
+                assert!(witness.fail_closed);
+            } else {
+                assert!(witness.converged);
+            }
+        }
+    }
+
+    #[test]
+    fn changing_schedule_seed_changes_evaluated_artifact() {
+        let first = run_campaign(config()).unwrap();
+        let mut changed = config();
+        changed.seed += 1;
+        let second = run_campaign(changed).unwrap();
+        assert_ne!(canonical_json(&first), canonical_json(&second));
+        assert_ne!(first.schedule, second.schedule);
     }
 }
