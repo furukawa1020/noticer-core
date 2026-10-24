@@ -3,6 +3,7 @@
 pub mod audited_delivery;
 pub mod authenticated_compaction;
 pub mod authenticated_compaction_file;
+pub mod ceremony_checkpoint_store;
 pub mod chaos_campaign;
 pub mod checkpoint;
 pub mod coordinator;
