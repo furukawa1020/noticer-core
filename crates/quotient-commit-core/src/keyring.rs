@@ -31,6 +31,17 @@ impl ReceiptKeyring {
         Self::default()
     }
 
+    pub fn with_retired_epochs(retired_epochs: &BTreeSet<u64>) -> Result<Self, KeyringError> {
+        if retired_epochs.contains(&0) {
+            return Err(KeyringError::InvalidEpoch);
+        }
+        Ok(Self {
+            keys: BTreeMap::new(),
+            active_epoch: None,
+            retired_epochs: retired_epochs.clone(),
+        })
+    }
+
     pub fn register(&mut self, epoch: u64, key: [u8; 32]) -> Result<(), KeyringError> {
         if epoch == 0 {
             return Err(KeyringError::InvalidEpoch);
