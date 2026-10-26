@@ -35,6 +35,7 @@ pub mod recovery_showcase;
 pub mod recovery_simulator;
 pub mod recovery_telemetry;
 pub mod recovery_telemetry_budget;
+pub mod recovery_telemetry_oracle;
 pub mod recovery_witness;
 pub mod recovery_witness_worker;
 pub mod recovery_worker;
