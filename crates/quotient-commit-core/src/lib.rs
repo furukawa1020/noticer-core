@@ -22,6 +22,7 @@ pub mod receipt_file;
 pub mod receipt_log;
 pub mod recovery_acceptance;
 pub mod recovery_admission;
+pub mod recovery_artifact_envelope;
 pub mod recovery_ceremony;
 pub mod recovery_equivocation_ledger;
 pub mod recovery_handoff;
