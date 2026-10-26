@@ -28,6 +28,7 @@ pub mod recovery_checkpoint_quorum;
 pub mod recovery_equivocation_ledger;
 pub mod recovery_handoff;
 pub mod recovery_lease;
+pub mod recovery_nonce_ledger;
 pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
 pub mod recovery_showcase;
