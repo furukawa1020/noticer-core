@@ -25,6 +25,18 @@ export interface CommitRun {
   releasePermit: boolean;
 }
 
+export type RecoveryScenario = "normal" | "tamper" | "replay" | "split-brain";
+export interface RecoveryGate { id: string; label: string; passed: boolean; detail: string }
+export interface RecoveryDrill { scenario: RecoveryScenario; ready: boolean; attackDetected: boolean; privacyBudget: number; artifact: string; gates: RecoveryGate[] }
+
+export function simulateRecoveryDrill(scenario: RecoveryScenario): RecoveryDrill {
+  const failures: Partial<Record<RecoveryScenario, string>> = { tamper: "proof", replay: "replay", "split-brain": "lease" };
+  const definitions = [["proof", "PROOF", "bundle authenticator"], ["quorum", "QUORUM", "2 / 3 verifiers"], ["lease", "FENCE", "token 0042"], ["replay", "NONCE", "epoch 0007"], ["privacy", "AETP", "bucket delta 0"], ["audit", "AUDIT", "causal head bound"]];
+  const gates = definitions.map(([id, label, detail]) => ({ id, label, detail, passed: id !== failures[scenario] }));
+  const ready = gates.every((gate) => gate.passed);
+  return { scenario, ready, attackDetected: scenario !== "normal" && !ready, privacyBudget: scenario === "tamper" ? 18 : scenario === "normal" ? 12 : 14, artifact: digest(`recovery|${scenario}|epoch:7|seed:24301`), gates };
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -211,4 +223,20 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
     }, 650);
   });
   select("nominal");
+
+  let recoveryScenario: RecoveryScenario = "normal";
+  const renderRecovery = (): void => {
+    const drill = simulateRecoveryDrill(recoveryScenario);
+    get("qc-recovery-verdict").textContent = drill.ready ? "DEPLOY READY" : "DEPLOY BLOCKED";
+    get("qc-recovery-verdict").className = `qc-recovery-verdict ${drill.ready ? "ready" : "blocked"}`;
+    get("qc-recovery-signal").textContent = drill.ready ? "All six recovery gates agree. Release authority may resume." : `${drill.gates.find((gate) => !gate.passed)?.label} caught ${recoveryScenario.toUpperCase()}. No authority escaped.`;
+    get("qc-recovery-artifact").textContent = `DRILL:${drill.artifact}`;
+    get("qc-privacy-fill").style.width = `${drill.privacyBudget}%`;
+    get("qc-privacy-value").textContent = `${drill.privacyBudget} / 100`;
+    get("qc-recovery-gates").innerHTML = drill.gates.map((gate, index) => `<div class="qc-gate ${gate.passed ? "passed" : "blocked"}" style="--gate-delay:${index * 55}ms"><small>0${index + 1}</small><b>${gate.label}</b><span>${gate.passed ? "VERIFIED" : "REJECTED"}</span><code>${gate.detail}</code></div>`).join("");
+    root.querySelectorAll<HTMLElement>("[data-recovery-scenario]").forEach((node) => node.classList.toggle("active", node.dataset.recoveryScenario === recoveryScenario));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-recovery-scenario]").forEach((button) => button.addEventListener("click", () => { recoveryScenario = button.dataset.recoveryScenario as RecoveryScenario; renderRecovery(); }));
+  get("qc-run-drill").addEventListener("click", () => requestAnimationFrame(renderRecovery));
+  renderRecovery();
 }
