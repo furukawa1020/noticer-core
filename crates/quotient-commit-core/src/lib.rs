@@ -24,6 +24,7 @@ pub mod recovery_acceptance;
 pub mod recovery_admission;
 pub mod recovery_artifact_envelope;
 pub mod recovery_ceremony;
+pub mod recovery_checkpoint_quorum;
 pub mod recovery_equivocation_ledger;
 pub mod recovery_handoff;
 pub mod recovery_proof_bundle;
