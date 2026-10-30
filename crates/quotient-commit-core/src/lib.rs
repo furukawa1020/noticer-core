@@ -35,6 +35,7 @@ pub mod recovery_nonce_ledger;
 pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
 pub mod recovery_readiness;
+pub mod recovery_revocation;
 pub mod recovery_showcase;
 pub mod recovery_simulator;
 pub mod recovery_telemetry;
