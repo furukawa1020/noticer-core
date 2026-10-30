@@ -27,6 +27,7 @@ pub mod recovery_audit_transcript;
 pub mod recovery_ceremony;
 pub mod recovery_checkpoint_quorum;
 pub mod recovery_drill;
+pub mod recovery_epoch_transition;
 pub mod recovery_equivocation_ledger;
 pub mod recovery_handoff;
 pub mod recovery_key_rotation;
