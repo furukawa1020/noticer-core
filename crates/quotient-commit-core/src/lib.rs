@@ -50,6 +50,7 @@ pub mod recovery_slo;
 pub mod recovery_telemetry;
 pub mod recovery_telemetry_budget;
 pub mod recovery_telemetry_oracle;
+pub mod recovery_time_consensus;
 pub mod recovery_witness;
 pub mod recovery_witness_worker;
 pub mod recovery_worker;
