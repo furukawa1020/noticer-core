@@ -45,6 +45,14 @@ export function simulateResilienceTimeline(fault: string): ResilienceStep[] {
   return labels.map((label, step) => ({ label, state: index < 0 || step < index ? "passed" : step === index ? "detected" : "blocked" }));
 }
 
+export interface MissionStage { label: string; status: "verified" | "intercepted" | "withheld" }
+export function simulateMissionControl(threat: string): MissionStage[] {
+  const labels = ["PROVENANCE", "TIME", "OPERATORS", "REGION", "PRIVACY", "LOG", "CANARY", "ATTEST"];
+  const intercept: Record<string, number> = { clock: 1, collusion: 2, region: 3, privacy: 4, canary: 6 };
+  const stop = intercept[threat] ?? -1;
+  return labels.map((label, index) => ({ label, status: stop < 0 || index < stop ? "verified" : index === stop ? "intercepted" : "withheld" }));
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -257,4 +265,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-campaign-fault]").forEach((button) => button.addEventListener("click", () => renderCampaign(button.dataset.campaignFault ?? "clean")));
   renderCampaign("clean");
+
+  const renderMission = (threat: string): void => {
+    const stages = simulateMissionControl(threat);
+    get("qc-mission-rail").innerHTML = stages.map((stage) => `<div class="${stage.status}"><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span></div>`).join("");
+    const stopped = stages.find((stage) => stage.status === "intercepted");
+    get("qc-mission-verdict").textContent = stopped ? `${stopped.label} INTERCEPTED / RELEASE WITHHELD` : "ALL SYSTEMS COHERENT / RELEASE ATTESTED";
+    get("qc-mission-export").textContent = `MISSION:${digest(stages.map((stage) => `${stage.label}:${stage.status}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-mission-threat]").forEach((node) => node.classList.toggle("active", node.dataset.missionThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-mission-threat]").forEach((button) => button.addEventListener("click", () => renderMission(button.dataset.missionThreat ?? "clean")));
+  renderMission("clean");
 }

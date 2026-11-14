@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateRecoveryDrill, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateMissionControl, simulateRecoveryDrill, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -58,4 +58,11 @@ test("resilience timeline blocks every stage after the detected fault", () => {
   assert.equal(timeline[3].state, "detected");
   assert.equal(timeline.slice(4).every((step) => step.state === "blocked"), true);
   assert.equal(simulateResilienceTimeline("clean").every((step) => step.state === "passed"), true);
+});
+
+test("mission control withholds every downstream stage after interception", () => {
+  const mission = simulateMissionControl("privacy");
+  assert.equal(mission[4].status, "intercepted");
+  assert.equal(mission.slice(5).every((stage) => stage.status === "withheld"), true);
+  assert.equal(simulateMissionControl("clean").every((stage) => stage.status === "verified"), true);
 });
