@@ -37,6 +37,14 @@ export function simulateRecoveryDrill(scenario: RecoveryScenario): RecoveryDrill
   return { scenario, ready, attackDetected: scenario !== "normal" && !ready, privacyBudget: scenario === "tamper" ? 18 : scenario === "normal" ? 12 : 14, artifact: digest(`recovery|${scenario}|epoch:7|seed:24301`), gates };
 }
 
+export interface ResilienceStep { label: string; state: "passed" | "detected" | "blocked" }
+export function simulateResilienceTimeline(fault: string): ResilienceStep[] {
+  const labels = ["BOOT", "PROOF", "QUORUM", "LEASE", "HANDOFF", "AUDIT", "ATTEST"];
+  const faultIndex: Record<string, number> = { proof: 1, quorum: 2, lease: 3, handoff: 4, audit: 5 };
+  const index = faultIndex[fault] ?? -1;
+  return labels.map((label, step) => ({ label, state: index < 0 || step < index ? "passed" : step === index ? "detected" : "blocked" }));
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -239,4 +247,14 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   root.querySelectorAll<HTMLButtonElement>("[data-recovery-scenario]").forEach((button) => button.addEventListener("click", () => { recoveryScenario = button.dataset.recoveryScenario as RecoveryScenario; renderRecovery(); }));
   get("qc-run-drill").addEventListener("click", () => requestAnimationFrame(renderRecovery));
   renderRecovery();
+
+  const renderCampaign = (fault: string): void => {
+    const timeline = simulateResilienceTimeline(fault);
+    get("qc-campaign-timeline").innerHTML = timeline.map((step, index) => `<div class="${step.state}"><i>${String(index + 1).padStart(2, "0")}</i><b>${step.label}</b><span>${step.state.toUpperCase()}</span></div>`).join("");
+    const detected = timeline.some((step) => step.state === "detected");
+    get("qc-campaign-result").textContent = detected ? "ATTACK CONTAINED / NO ATTESTATION" : "CLEAN RUN / ATTESTED";
+    root.querySelectorAll<HTMLElement>("[data-campaign-fault]").forEach((node) => node.classList.toggle("active", node.dataset.campaignFault === fault));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-campaign-fault]").forEach((button) => button.addEventListener("click", () => renderCampaign(button.dataset.campaignFault ?? "clean")));
+  renderCampaign("clean");
 }

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateRecoveryDrill, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateRecoveryDrill, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -52,3 +52,10 @@ for (const [scenario, gate] of [["tamper", "proof"], ["replay", "replay"], ["spl
     assert.equal(drill.gates.find((item) => item.id === gate)?.passed, false);
   });
 }
+
+test("resilience timeline blocks every stage after the detected fault", () => {
+  const timeline = simulateResilienceTimeline("lease");
+  assert.equal(timeline[3].state, "detected");
+  assert.equal(timeline.slice(4).every((step) => step.state === "blocked"), true);
+  assert.equal(simulateResilienceTimeline("clean").every((step) => step.state === "passed"), true);
+});
