@@ -41,6 +41,7 @@ pub mod recovery_retention;
 pub mod recovery_revocation;
 pub mod recovery_showcase;
 pub mod recovery_simulator;
+pub mod recovery_slo;
 pub mod recovery_telemetry;
 pub mod recovery_telemetry_budget;
 pub mod recovery_telemetry_oracle;
