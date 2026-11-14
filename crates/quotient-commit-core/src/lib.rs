@@ -44,6 +44,7 @@ pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
 pub mod recovery_provenance;
 pub mod recovery_readiness;
+pub mod recovery_redaction;
 pub mod recovery_release_attestation;
 pub mod recovery_resilience_campaign;
 pub mod recovery_retention;
