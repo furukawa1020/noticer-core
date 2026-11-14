@@ -27,6 +27,7 @@ pub mod recovery_audit_transcript;
 pub mod recovery_bootstrap_capsule;
 pub mod recovery_ceremony;
 pub mod recovery_checkpoint_quorum;
+pub mod recovery_cross_region;
 pub mod recovery_drill;
 pub mod recovery_epoch_transition;
 pub mod recovery_equivocation_ledger;
