@@ -50,6 +50,7 @@ pub mod recovery_release_attestation;
 pub mod recovery_resilience_campaign;
 pub mod recovery_retention;
 pub mod recovery_revocation;
+pub mod recovery_rollback_controller;
 pub mod recovery_showcase;
 pub mod recovery_simulator;
 pub mod recovery_slo;
