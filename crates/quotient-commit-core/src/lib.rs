@@ -35,6 +35,7 @@ pub mod recovery_incident_capsule;
 pub mod recovery_key_rotation;
 pub mod recovery_lease;
 pub mod recovery_nonce_ledger;
+pub mod recovery_operator_quorum;
 pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
 pub mod recovery_provenance;
