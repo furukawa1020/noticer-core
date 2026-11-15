@@ -57,6 +57,7 @@ pub mod recovery_region_quorum;
 pub mod recovery_release_attestation;
 pub mod recovery_replication_manifest;
 pub mod recovery_resilience_campaign;
+pub mod recovery_restore_plan;
 pub mod recovery_retention;
 pub mod recovery_revocation;
 pub mod recovery_rollback_controller;
