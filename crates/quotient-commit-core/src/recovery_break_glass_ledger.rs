@@ -1,7 +1,4 @@
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
-
-type HmacSha256 = Hmac<Sha256>;
+use crate::receipt::hmac_sha256;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BreakGlassAuditEntry {
@@ -20,17 +17,17 @@ pub enum LedgerError {
 }
 
 pub struct BreakGlassLedger {
-    key: Vec<u8>,
+    key: [u8; 32],
     entries: Vec<BreakGlassAuditEntry>,
 }
 
 impl BreakGlassLedger {
-    pub fn new(key: &[u8]) -> Result<Self, LedgerError> {
-        if key.is_empty() {
+    pub fn new(key: [u8; 32]) -> Result<Self, LedgerError> {
+        if key == [0; 32] {
             return Err(LedgerError::EmptyKey);
         }
         Ok(Self {
-            key: key.to_vec(),
+            key,
             entries: Vec::new(),
         })
     }
@@ -49,7 +46,7 @@ impl BreakGlassLedger {
             .last()
             .map_or([0; 32], |entry| entry.authenticator);
         let authenticator = authenticate(
-            &self.key,
+            self.key,
             sequence,
             permit_id,
             operation_digest,
@@ -73,7 +70,7 @@ impl BreakGlassLedger {
         let mut previous = [0; 32];
         for (sequence, entry) in self.entries.iter().enumerate() {
             let expected = authenticate(
-                &self.key,
+                self.key,
                 sequence as u64,
                 entry.permit_id,
                 entry.operation_digest,
@@ -92,18 +89,18 @@ impl BreakGlassLedger {
 }
 
 fn authenticate(
-    key: &[u8],
+    key: [u8; 32],
     sequence: u64,
     permit_id: [u8; 16],
     operation_digest: [u8; 32],
     previous: [u8; 32],
 ) -> [u8; 32] {
-    let mut mac = HmacSha256::new_from_slice(key).expect("HMAC accepts any key length");
-    mac.update(&sequence.to_be_bytes());
-    mac.update(&permit_id);
-    mac.update(&operation_digest);
-    mac.update(&previous);
-    mac.finalize().into_bytes().into()
+    let mut bytes = Vec::with_capacity(88);
+    bytes.extend_from_slice(&sequence.to_be_bytes());
+    bytes.extend_from_slice(&permit_id);
+    bytes.extend_from_slice(&operation_digest);
+    bytes.extend_from_slice(&previous);
+    hmac_sha256(key, &bytes)
 }
 
 #[cfg(test)]
@@ -112,7 +109,7 @@ mod tests {
 
     #[test]
     fn verifies_an_append_only_chain() {
-        let mut ledger = BreakGlassLedger::new(b"audit-key").unwrap();
+        let mut ledger = BreakGlassLedger::new([7; 32]).unwrap();
         ledger.append([1; 16], [2; 32]).unwrap();
         ledger.append([3; 16], [4; 32]).unwrap();
         assert_eq!(
@@ -124,7 +121,7 @@ mod tests {
 
     #[test]
     fn detects_entry_tampering() {
-        let mut ledger = BreakGlassLedger::new(b"audit-key").unwrap();
+        let mut ledger = BreakGlassLedger::new([7; 32]).unwrap();
         ledger.append([1; 16], [2; 32]).unwrap();
         ledger.entries[0].operation_digest = [9; 32];
         assert_eq!(ledger.verify(), Err(LedgerError::InvalidChain));
