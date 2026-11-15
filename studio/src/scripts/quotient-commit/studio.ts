@@ -53,6 +53,25 @@ export function simulateMissionControl(threat: string): MissionStage[] {
   return labels.map((label, index) => ({ label, status: stop < 0 || index < stop ? "verified" : index === stop ? "intercepted" : "withheld" }));
 }
 
+export type FlightThreat = "clean" | "rollback" | "custody" | "fork" | "restore" | "liveness" | "export";
+export interface FlightStage { label: string; status: "verified" | "intercepted" | "withheld"; evidence: string }
+export function simulateRecoveryFlightDeck(threat: FlightThreat): FlightStage[] {
+  const stages = [
+    ["POLICY", "epoch monotonic"], ["CUSTODY", "share quorum"], ["BREAK-GLASS", "bounded permit"],
+    ["REGIONS", "checkpoint gossip"], ["RESTORE", "ordered execution"], ["WATCHDOG", "heartbeat fresh"],
+    ["SAFE MODE", "reauthorization"], ["WAVES", "progress chain"], ["EXPORT", "field permit"],
+  ];
+  const intercept: Record<Exclude<FlightThreat, "clean">, number> = {
+    rollback: 0, custody: 1, fork: 3, restore: 4, liveness: 5, export: 8,
+  };
+  const stop = threat === "clean" ? -1 : intercept[threat];
+  return stages.map(([label, evidence], index) => ({
+    label,
+    evidence,
+    status: stop < 0 || index < stop ? "verified" : index === stop ? "intercepted" : "withheld",
+  }));
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -276,4 +295,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-mission-threat]").forEach((button) => button.addEventListener("click", () => renderMission(button.dataset.missionThreat ?? "clean")));
   renderMission("clean");
+
+  const renderFlightDeck = (threat: FlightThreat): void => {
+    const stages = simulateRecoveryFlightDeck(threat);
+    get("qc-flight-grid").innerHTML = stages.map((stage, index) => `<div class="${stage.status}" style="--flight-delay:${index * 45}ms"><small>${String(index + 1).padStart(2, "0")}</small><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span><code>${stage.evidence}</code></div>`).join("");
+    const stopped = stages.find((stage) => stage.status === "intercepted");
+    get("qc-flight-verdict").textContent = stopped ? `${stopped.label} CONTAINED THE ATTACK` : "RECOVERY CLEARED FOR CONTROLLED RELEASE";
+    get("qc-flight-proof").textContent = `FLIGHT:${digest(stages.map((stage) => `${stage.label}:${stage.status}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-flight-threat]").forEach((node) => node.classList.toggle("active", node.dataset.flightThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-flight-threat]").forEach((button) => button.addEventListener("click", () => renderFlightDeck((button.dataset.flightThreat ?? "clean") as FlightThreat)));
+  renderFlightDeck("clean");
 }

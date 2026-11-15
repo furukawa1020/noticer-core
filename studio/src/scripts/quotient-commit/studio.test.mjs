@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateMissionControl, simulateRecoveryDrill, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateMissionControl, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -66,3 +66,15 @@ test("mission control withholds every downstream stage after interception", () =
   assert.equal(mission.slice(5).every((stage) => stage.status === "withheld"), true);
   assert.equal(simulateMissionControl("clean").every((stage) => stage.status === "verified"), true);
 });
+
+test("recovery flight deck verifies every stage on a clean run", () => {
+  assert.equal(simulateRecoveryFlightDeck("clean").every((stage) => stage.status === "verified"), true);
+});
+
+for (const [threat, index] of [["rollback", 0], ["custody", 1], ["fork", 3], ["restore", 4], ["liveness", 5], ["export", 8]]) {
+  test(`${threat} is intercepted and withholds every downstream recovery stage`, () => {
+    const stages = simulateRecoveryFlightDeck(threat);
+    assert.equal(stages[index].status, "intercepted");
+    assert.equal(stages.slice(index + 1).every((stage) => stage.status === "withheld"), true);
+  });
+}
