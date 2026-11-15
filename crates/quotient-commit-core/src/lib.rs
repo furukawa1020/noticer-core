@@ -61,6 +61,7 @@ pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
 pub mod recovery_provenance;
 pub mod recovery_quorum_policy;
+pub mod recovery_quorum_witness;
 pub mod recovery_readiness;
 pub mod recovery_redaction;
 pub mod recovery_region_quorum;
