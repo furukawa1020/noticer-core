@@ -64,6 +64,7 @@ pub mod recovery_restore_plan;
 pub mod recovery_retention;
 pub mod recovery_revocation;
 pub mod recovery_rollback_controller;
+pub mod recovery_safe_mode;
 pub mod recovery_showcase;
 pub mod recovery_simulator;
 pub mod recovery_slo;
