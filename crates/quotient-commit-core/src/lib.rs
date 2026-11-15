@@ -36,6 +36,7 @@ pub mod recovery_cross_region;
 pub mod recovery_drill;
 pub mod recovery_epoch_transition;
 pub mod recovery_equivocation_ledger;
+pub mod recovery_fault_budget;
 pub mod recovery_fault_schedule;
 pub mod recovery_freshness;
 pub mod recovery_handoff;
