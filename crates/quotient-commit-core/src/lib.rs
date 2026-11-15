@@ -25,6 +25,7 @@ pub mod recovery_admission;
 pub mod recovery_artifact_envelope;
 pub mod recovery_audit_transcript;
 pub mod recovery_bootstrap_capsule;
+pub mod recovery_break_glass;
 pub mod recovery_campaign_diff;
 pub mod recovery_canary_gate;
 pub mod recovery_ceremony;
