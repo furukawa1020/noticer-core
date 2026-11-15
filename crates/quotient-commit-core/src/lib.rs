@@ -68,6 +68,7 @@ pub mod recovery_telemetry_oracle;
 pub mod recovery_time_consensus;
 pub mod recovery_transparency_log;
 pub mod recovery_witness;
+pub mod recovery_witness_freshness;
 pub mod recovery_witness_worker;
 pub mod recovery_worker;
 pub mod retired_epoch_manifest;
