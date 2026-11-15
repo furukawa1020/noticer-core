@@ -47,6 +47,7 @@ pub mod recovery_lease;
 pub mod recovery_liveness_watchdog;
 pub mod recovery_nonce_ledger;
 pub mod recovery_operator_quorum;
+pub mod recovery_operator_session;
 pub mod recovery_policy_bundle;
 pub mod recovery_policy_guard;
 pub mod recovery_privacy_accountant;
