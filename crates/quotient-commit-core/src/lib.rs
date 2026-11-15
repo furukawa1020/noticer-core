@@ -37,6 +37,7 @@ pub mod recovery_fault_schedule;
 pub mod recovery_freshness;
 pub mod recovery_handoff;
 pub mod recovery_incident_capsule;
+pub mod recovery_key_custody;
 pub mod recovery_key_rotation;
 pub mod recovery_lease;
 pub mod recovery_nonce_ledger;
