@@ -15,6 +15,7 @@ pub mod file_sink;
 pub mod file_store;
 pub mod keyring;
 pub mod ledger;
+pub mod oracle_adversarial_matrix;
 pub mod oracle_artifact;
 pub mod oracle_artifact_auth;
 pub mod oracle_bfs;
