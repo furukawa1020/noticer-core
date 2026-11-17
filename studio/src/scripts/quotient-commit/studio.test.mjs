@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateMissionControl, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateMissionControl, simulateProofControlPlane, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -74,6 +74,18 @@ test("recovery flight deck verifies every stage on a clean run", () => {
 for (const [threat, index] of [["rollback", 0], ["custody", 1], ["fork", 3], ["restore", 4], ["liveness", 5], ["export", 8]]) {
   test(`${threat} is intercepted and withholds every downstream recovery stage`, () => {
     const stages = simulateRecoveryFlightDeck(threat);
+    assert.equal(stages[index].status, "intercepted");
+    assert.equal(stages.slice(index + 1).every((stage) => stage.status === "withheld"), true);
+  });
+}
+
+test("proof control plane proves every stage on a clean run", () => {
+  assert.equal(simulateProofControlPlane("clean").every((stage) => stage.status === "proven"), true);
+});
+
+for (const [threat, index] of [["escalation", 0], ["delegation", 1], ["monoculture", 2], ["evidence", 3], ["fork", 4], ["rollback", 5], ["replay", 6]]) {
+  test(`${threat} is intercepted by the proof control plane`, () => {
+    const stages = simulateProofControlPlane(threat);
     assert.equal(stages[index].status, "intercepted");
     assert.equal(stages.slice(index + 1).every((stage) => stage.status === "withheld"), true);
   });
