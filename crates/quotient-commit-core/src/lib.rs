@@ -20,6 +20,7 @@ pub mod proof_aggregate_manifest;
 pub mod proof_aggregate_verifier;
 pub mod proof_availability_vector;
 pub mod proof_clock_interval;
+pub mod proof_contradiction_detector;
 pub mod proof_degraded_quorum;
 pub mod proof_fault_domain_label;
 pub mod proof_fault_domain_quorum;
