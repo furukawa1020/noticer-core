@@ -25,6 +25,7 @@ pub mod proof_audit_consistency;
 pub mod proof_audit_inclusion;
 pub mod proof_availability_vector;
 pub mod proof_cache_binding;
+pub mod proof_cache_invalidation;
 pub mod proof_clock_interval;
 pub mod proof_contradiction_detector;
 pub mod proof_degraded_quorum;
