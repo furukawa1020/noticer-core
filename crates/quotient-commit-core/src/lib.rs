@@ -29,6 +29,7 @@ pub mod proof_cache_invalidation;
 pub mod proof_clock_interval;
 pub mod proof_contradiction_detector;
 pub mod proof_degraded_quorum;
+pub mod proof_fabric_campaign;
 pub mod proof_fault_domain_label;
 pub mod proof_fault_domain_quorum;
 pub mod proof_fragment_envelope;
