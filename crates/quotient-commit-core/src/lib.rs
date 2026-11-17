@@ -16,6 +16,7 @@ pub mod file_store;
 pub mod keyring;
 pub mod ledger;
 pub mod oracle_artifact;
+pub mod oracle_artifact_auth;
 pub mod oracle_bfs;
 pub mod oracle_counterexample_selector;
 pub mod oracle_dual_replay;
