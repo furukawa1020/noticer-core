@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateMissionControl, simulateProofControlPlane, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateMissionControl, simulateProofControlPlane, simulateProofFabric, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -88,5 +88,17 @@ for (const [threat, index] of [["escalation", 0], ["delegation", 1], ["monocultu
     const stages = simulateProofControlPlane(threat);
     assert.equal(stages[index].status, "intercepted");
     assert.equal(stages.slice(index + 1).every((stage) => stage.status === "withheld"), true);
+  });
+}
+
+test("proof fabric verifies all stages when independent evidence agrees", () => {
+  assert.equal(simulateProofFabric("clean").every((stage) => stage.status === "verified"), true);
+});
+
+for (const [threat, index] of [["collusion", 0], ["clock", 1], ["domain", 2], ["fragment", 3], ["cache", 8]]) {
+  test(`${threat} is detected by the proof fabric`, () => {
+    const stages = simulateProofFabric(threat);
+    assert.equal(stages[index].status, "detected");
+    assert.equal(stages.slice(index + 1).every((stage) => stage.status === "blocked"), true);
   });
 }
