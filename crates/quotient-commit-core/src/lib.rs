@@ -22,6 +22,7 @@ pub mod proof_degraded_quorum;
 pub mod proof_fault_domain_label;
 pub mod proof_fault_domain_quorum;
 pub mod proof_fragment_envelope;
+pub mod proof_fragment_recovery;
 pub mod proof_independence_policy;
 pub mod proof_producer_identity;
 pub mod proof_producer_key_rotation;
