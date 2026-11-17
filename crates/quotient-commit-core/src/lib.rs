@@ -19,6 +19,7 @@ pub mod oracle_bfs;
 pub mod oracle_counterexample_selector;
 pub mod oracle_exploration_budget;
 pub mod oracle_frontier_order;
+pub mod oracle_inconclusive_taxonomy;
 pub mod oracle_input;
 pub mod oracle_invalid_classifier;
 pub mod oracle_predecessor_graph;
