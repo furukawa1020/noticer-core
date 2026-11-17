@@ -19,6 +19,7 @@ pub mod pending_recovery;
 pub mod proof_independence_policy;
 pub mod proof_producer_identity;
 pub mod proof_producer_key_rotation;
+pub mod proof_producer_quorum;
 pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
