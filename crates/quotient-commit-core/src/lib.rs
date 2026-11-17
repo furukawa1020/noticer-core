@@ -32,6 +32,7 @@ pub mod proof_lease_renewal;
 pub mod proof_producer_identity;
 pub mod proof_producer_key_rotation;
 pub mod proof_producer_quorum;
+pub mod proof_quarantine_controller;
 pub mod proof_temporal_ordering;
 pub mod proof_temporal_overlap;
 pub mod proof_timestamp_envelope;
