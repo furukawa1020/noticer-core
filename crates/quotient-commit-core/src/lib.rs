@@ -27,6 +27,7 @@ pub mod oracle_promotion_gate;
 pub mod oracle_state_digest;
 pub mod oracle_state_pair;
 pub mod oracle_symmetry_reduction;
+pub mod oracle_symmetry_witness;
 pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
 pub mod oracle_trace_validator;
