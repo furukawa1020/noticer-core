@@ -60,6 +60,7 @@ pub mod recovery_invariant_monitor;
 pub mod recovery_key_custody;
 pub mod recovery_key_rotation;
 pub mod recovery_lease;
+pub mod recovery_lease_handoff_proof;
 pub mod recovery_liveness_watchdog;
 pub mod recovery_nonce_ledger;
 pub mod recovery_operator_challenge;
