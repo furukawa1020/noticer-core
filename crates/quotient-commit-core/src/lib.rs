@@ -31,6 +31,7 @@ pub mod oracle_predecessor_graph;
 pub mod oracle_promotion_gate;
 pub mod oracle_replay;
 pub mod oracle_replay_disagreement;
+pub mod oracle_repro_manifest;
 pub mod oracle_state_digest;
 pub mod oracle_state_pair;
 pub mod oracle_symmetry_reduction;
