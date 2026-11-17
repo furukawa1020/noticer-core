@@ -16,6 +16,7 @@ pub mod file_store;
 pub mod keyring;
 pub mod ledger;
 pub mod pending_recovery;
+pub mod proof_availability_vector;
 pub mod proof_clock_interval;
 pub mod proof_independence_policy;
 pub mod proof_producer_identity;
