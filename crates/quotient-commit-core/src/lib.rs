@@ -23,6 +23,7 @@ pub mod oracle_predecessor_graph;
 pub mod oracle_state_pair;
 pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
+pub mod oracle_trace_validator;
 pub mod oracle_verdict;
 pub mod pending_recovery;
 pub mod proof_aggregate_manifest;
