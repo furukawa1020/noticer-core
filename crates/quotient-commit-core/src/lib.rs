@@ -16,6 +16,7 @@ pub mod file_store;
 pub mod keyring;
 pub mod ledger;
 pub mod oracle_bfs;
+pub mod oracle_frontier_order;
 pub mod oracle_input;
 pub mod oracle_predecessor_graph;
 pub mod oracle_state_pair;
