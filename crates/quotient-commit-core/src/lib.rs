@@ -18,6 +18,7 @@ pub mod ledger;
 pub mod pending_recovery;
 pub mod proof_aggregate_manifest;
 pub mod proof_aggregate_verifier;
+pub mod proof_audit_checkpoint;
 pub mod proof_availability_vector;
 pub mod proof_clock_interval;
 pub mod proof_contradiction_detector;
