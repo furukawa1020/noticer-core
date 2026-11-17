@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateMissionControl, simulateProofControlPlane, simulateProofFabric, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCommit, simulateMinimalOracleLab, simulateMissionControl, simulateProofControlPlane, simulateProofFabric, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -100,5 +100,18 @@ for (const [threat, index] of [["collusion", 0], ["clock", 1], ["domain", 2], ["
     const stages = simulateProofFabric(threat);
     assert.equal(stages[index].status, "detected");
     assert.equal(stages.slice(index + 1).every((stage) => stage.status === "blocked"), true);
+  });
+}
+
+test("minimal counterexample lab verifies every stage on a clean run", () => {
+  assert.equal(simulateMinimalOracleLab("clean").every((stage) => stage.status === "verified"), true);
+});
+
+for (const [threat, index, status] of [["invalid-input", 0, "invalid"], ["node-limit", 1, "inconclusive"], ["depth-limit", 1, "inconclusive"], ["replay-disagreement", 5, "inconclusive"], ["state-mutation", 7, "invalid"]]) {
+  test(`${threat} never promotes to verified`, () => {
+    const stages = simulateMinimalOracleLab(threat);
+    assert.equal(stages[index].status, status);
+    assert.equal(stages.slice(index + 1).every((stage) => stage.status === "blocked"), true);
+    assert.equal(stages.at(-1)?.status === "verified", false);
   });
 }
