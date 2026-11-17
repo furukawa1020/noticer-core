@@ -23,6 +23,7 @@ pub mod oracle_inconclusive_taxonomy;
 pub mod oracle_input;
 pub mod oracle_invalid_classifier;
 pub mod oracle_predecessor_graph;
+pub mod oracle_promotion_gate;
 pub mod oracle_state_pair;
 pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
