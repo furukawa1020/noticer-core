@@ -25,6 +25,7 @@ pub mod recovery_admission;
 pub mod recovery_artifact_envelope;
 pub mod recovery_audit_transcript;
 pub mod recovery_authority_attenuation;
+pub mod recovery_authority_decay;
 pub mod recovery_authority_lattice;
 pub mod recovery_bootstrap_capsule;
 pub mod recovery_break_glass;
