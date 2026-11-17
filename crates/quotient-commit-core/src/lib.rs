@@ -33,6 +33,7 @@ pub mod recovery_campaign_diff;
 pub mod recovery_canary_gate;
 pub mod recovery_causal_cut;
 pub mod recovery_ceremony;
+pub mod recovery_challenge_ledger;
 pub mod recovery_checkpoint_gossip;
 pub mod recovery_checkpoint_quorum;
 pub mod recovery_cross_region;
