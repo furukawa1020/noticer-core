@@ -16,6 +16,7 @@ pub mod file_store;
 pub mod keyring;
 pub mod ledger;
 pub mod pending_recovery;
+pub mod proof_producer_identity;
 pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
