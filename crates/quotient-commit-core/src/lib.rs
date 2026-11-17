@@ -21,6 +21,7 @@ pub mod oracle_frontier_order;
 pub mod oracle_input;
 pub mod oracle_predecessor_graph;
 pub mod oracle_state_pair;
+pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
 pub mod oracle_verdict;
 pub mod pending_recovery;
