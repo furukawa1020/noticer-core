@@ -29,6 +29,7 @@ pub mod oracle_state_pair;
 pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
 pub mod oracle_trace_validator;
+pub mod oracle_transition_memo;
 pub mod oracle_verdict;
 pub mod oracle_visited_set;
 pub mod pending_recovery;
