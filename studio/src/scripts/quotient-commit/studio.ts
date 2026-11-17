@@ -72,6 +72,15 @@ export function simulateRecoveryFlightDeck(threat: FlightThreat): FlightStage[] 
   }));
 }
 
+export type ControlThreat = "clean" | "escalation" | "delegation" | "monoculture" | "evidence" | "fork" | "rollback" | "replay";
+export interface ControlStage { label: string; status: "proven" | "intercepted" | "withheld"; proof: string }
+export function simulateProofControlPlane(threat: ControlThreat): ControlStage[] {
+  const definitions = [["AUTHORITY", "lattice"], ["DELEGATION", "chain"], ["QUORUM", "diversity"], ["CLOSURE", "evidence DAG"], ["CAUSAL CUT", "region frontier"], ["ROLLBACK", "witness"], ["CHALLENGE", "nonce ledger"], ["COMMITMENT", "bounded view"], ["PROOF CHAIN", "continuous"]];
+  const intercept: Record<Exclude<ControlThreat, "clean">, number> = { escalation: 0, delegation: 1, monoculture: 2, evidence: 3, fork: 4, rollback: 5, replay: 6 };
+  const stop = threat === "clean" ? -1 : intercept[threat];
+  return definitions.map(([label, proof], index) => ({ label, proof, status: stop < 0 || index < stop ? "proven" : index === stop ? "intercepted" : "withheld" }));
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -306,4 +315,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-flight-threat]").forEach((button) => button.addEventListener("click", () => renderFlightDeck((button.dataset.flightThreat ?? "clean") as FlightThreat)));
   renderFlightDeck("clean");
+
+  const renderControlPlane = (threat: ControlThreat): void => {
+    const stages = simulateProofControlPlane(threat);
+    get("qc-control-rail").innerHTML = stages.map((stage, index) => `<div class="${stage.status}" style="--control-delay:${index * 45}ms"><small>${String(index + 1).padStart(2, "0")}</small><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span><code>${stage.proof}</code></div>`).join("");
+    const stopped = stages.find((stage) => stage.status === "intercepted");
+    get("qc-control-verdict").textContent = stopped ? `${stopped.label} REJECTED / AUTHORITY WITHHELD` : "PROOF CHAIN COMPLETE / RELEASE REPRODUCIBLE";
+    get("qc-control-proof").textContent = `CONTROL:${digest(stages.map((stage) => `${stage.label}:${stage.status}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-control-threat]").forEach((node) => node.classList.toggle("active", node.dataset.controlThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-control-threat]").forEach((button) => button.addEventListener("click", () => renderControlPlane((button.dataset.controlThreat ?? "clean") as ControlThreat)));
+  renderControlPlane("clean");
 }
