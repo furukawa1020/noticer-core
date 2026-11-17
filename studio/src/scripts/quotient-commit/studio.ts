@@ -205,6 +205,28 @@ export function validateCommitRun(run: CommitRun): boolean {
   return released.length === (committed ? 1 : 0) && run.releasePermit === committed;
 }
 
+export type OracleThreat = "clean" | "invalid-input" | "node-limit" | "depth-limit" | "replay-disagreement" | "state-mutation";
+export type OracleStageStatus = "verified" | "invalid" | "inconclusive" | "blocked";
+export type OracleStage = { label: string; status: OracleStageStatus; evidence: string };
+
+export function simulateMinimalOracleLab(threat: OracleThreat): OracleStage[] {
+  const labels = ["INPUT", "BFS", "PREDECESSOR", "TRACE", "REPLAY A", "REPLAY B", "MINIMALITY", "ARTIFACT", "VERDICT"];
+  const evidence = ["canonical symbols", "ordered frontier", "first parent only", "slot + input + L/R", "independent engine A", "independent engine B", "1-minimal fixed point", "authenticated schema", "promotion gate"];
+  const failures: Partial<Record<OracleThreat, { index: number; status: Exclude<OracleStageStatus, "verified" | "blocked">; detail: string }>> = {
+    "invalid-input": { index: 0, status: "invalid", detail: "invalid / domain" },
+    "node-limit": { index: 1, status: "inconclusive", detail: "inconclusive / node-limit" },
+    "depth-limit": { index: 1, status: "inconclusive", detail: "inconclusive / depth-limit" },
+    "replay-disagreement": { index: 5, status: "inconclusive", detail: "inconclusive / replay-disagreement" },
+    "state-mutation": { index: 7, status: "invalid", detail: "invalid / authentication" },
+  };
+  const failure = failures[threat];
+  return labels.map((label, index) => {
+    if (!failure || index < failure.index) return { label, status: "verified", evidence: evidence[index] };
+    if (index === failure.index) return { label, status: failure.status, evidence: failure.detail };
+    return { label, status: "blocked", evidence: "no verified promotion" };
+  });
+}
+
 export function bootstrapCommitStudio(root: HTMLElement): void {
   const get = <T extends HTMLElement>(id: string): T => {
     const node = root.querySelector<T>(`#${id}`);
@@ -346,4 +368,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-fabric-threat]").forEach((button) => button.addEventListener("click", () => renderFabric((button.dataset.fabricThreat ?? "clean") as FabricThreat)));
   renderFabric("clean");
+
+  const renderOracleLab = (threat: OracleThreat): void => {
+    const stages = simulateMinimalOracleLab(threat);
+    get("qc-oracle-rail").innerHTML = stages.map((stage, index) => `<div class="${stage.status}" style="--oracle-delay:${index * 45}ms"><small>${String(index + 1).padStart(2, "0")}</small><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span><code>${stage.evidence}</code></div>`).join("");
+    const terminal = stages.find((stage) => stage.status === "invalid" || stage.status === "inconclusive");
+    get("qc-oracle-verdict").textContent = terminal ? `${terminal.status.toUpperCase()} / VERIFIED PROMOTION BLOCKED` : "VERIFIED / MINIMAL TRACE CERTIFIED";
+    get("qc-oracle-artifact").textContent = `ORACLE:${digest(stages.map((stage) => `${stage.label}:${stage.status}:${stage.evidence}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-oracle-threat]").forEach((node) => node.classList.toggle("active", node.dataset.oracleThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-oracle-threat]").forEach((button) => button.addEventListener("click", () => renderOracleLab((button.dataset.oracleThreat ?? "clean") as OracleThreat)));
+  renderOracleLab("clean");
 }
