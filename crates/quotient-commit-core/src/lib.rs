@@ -30,6 +30,7 @@ pub mod oracle_trace_reconstruction;
 pub mod oracle_trace_step;
 pub mod oracle_trace_validator;
 pub mod oracle_verdict;
+pub mod oracle_visited_set;
 pub mod pending_recovery;
 pub mod proof_aggregate_manifest;
 pub mod proof_aggregate_verifier;
