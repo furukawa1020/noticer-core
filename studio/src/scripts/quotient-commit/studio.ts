@@ -81,6 +81,15 @@ export function simulateProofControlPlane(threat: ControlThreat): ControlStage[]
   return definitions.map(([label, proof], index) => ({ label, proof, status: stop < 0 || index < stop ? "proven" : index === stop ? "intercepted" : "withheld" }));
 }
 
+export type FabricThreat = "clean" | "collusion" | "clock" | "domain" | "fragment" | "cache";
+export interface FabricStage { label: string; status: "verified" | "detected" | "blocked"; evidence: string }
+export function simulateProofFabric(threat: FabricThreat): FabricStage[] {
+  const definitions = [["PRODUCERS", "independent quorum"], ["TIME", "uncertainty cut"], ["DOMAINS", "fault diversity"], ["FRAGMENTS", "root-bound recovery"], ["AGGREGATE", "manifest complete"], ["LEASE", "fresh proof"], ["QUARANTINE", "contradictions zero"], ["AUDIT", "append-only"], ["CACHE", "context bound"]];
+  const intercept: Record<Exclude<FabricThreat, "clean">, number> = { collusion: 0, clock: 1, domain: 2, fragment: 3, cache: 8 };
+  const stop = threat === "clean" ? -1 : intercept[threat];
+  return definitions.map(([label, evidence], index) => ({ label, evidence, status: stop < 0 || index < stop ? "verified" : index === stop ? "detected" : "blocked" }));
+}
+
 function digest(value: string): string {
   let hash = 2166136261;
   for (const char of value) {
@@ -326,4 +335,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-control-threat]").forEach((button) => button.addEventListener("click", () => renderControlPlane((button.dataset.controlThreat ?? "clean") as ControlThreat)));
   renderControlPlane("clean");
+
+  const renderFabric = (threat: FabricThreat): void => {
+    const stages = simulateProofFabric(threat);
+    get("qc-fabric-rail").innerHTML = stages.map((stage, index) => `<div class="${stage.status}" style="--fabric-delay:${index * 45}ms"><small>${String(index + 1).padStart(2, "0")}</small><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span><code>${stage.evidence}</code></div>`).join("");
+    const stopped = stages.find((stage) => stage.status === "detected");
+    get("qc-fabric-verdict").textContent = stopped ? `${stopped.label} DETECTED / FABRIC SEALED` : "DIVERSE PROOFS AGREE / RELEASE ELIGIBLE";
+    get("qc-fabric-proof").textContent = `FABRIC:${digest(stages.map((stage) => `${stage.label}:${stage.status}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-fabric-threat]").forEach((node) => node.classList.toggle("active", node.dataset.fabricThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-fabric-threat]").forEach((button) => button.addEventListener("click", () => renderFabric((button.dataset.fabricThreat ?? "clean") as FabricThreat)));
+  renderFabric("clean");
 }
