@@ -15,6 +15,7 @@ pub mod file_sink;
 pub mod file_store;
 pub mod keyring;
 pub mod ledger;
+pub mod oracle_input;
 pub mod oracle_verdict;
 pub mod pending_recovery;
 pub mod proof_aggregate_manifest;
