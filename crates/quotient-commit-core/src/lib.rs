@@ -19,6 +19,7 @@ pub mod pending_recovery;
 pub mod proof_availability_vector;
 pub mod proof_clock_interval;
 pub mod proof_degraded_quorum;
+pub mod proof_fault_domain_label;
 pub mod proof_independence_policy;
 pub mod proof_producer_identity;
 pub mod proof_producer_key_rotation;
