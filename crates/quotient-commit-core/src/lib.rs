@@ -85,6 +85,7 @@ pub mod recovery_telemetry;
 pub mod recovery_telemetry_budget;
 pub mod recovery_telemetry_oracle;
 pub mod recovery_time_consensus;
+pub mod recovery_transcript_merge;
 pub mod recovery_transparency_log;
 pub mod recovery_wave_certificate;
 pub mod recovery_wave_plan;
