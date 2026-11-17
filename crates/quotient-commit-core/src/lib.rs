@@ -19,6 +19,7 @@ pub mod oracle_bfs;
 pub mod oracle_counterexample_selector;
 pub mod oracle_frontier_order;
 pub mod oracle_input;
+pub mod oracle_invalid_classifier;
 pub mod oracle_predecessor_graph;
 pub mod oracle_state_pair;
 pub mod oracle_trace_reconstruction;
