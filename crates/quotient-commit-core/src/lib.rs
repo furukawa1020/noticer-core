@@ -68,6 +68,7 @@ pub mod recovery_operator_quorum;
 pub mod recovery_operator_session;
 pub mod recovery_policy_bundle;
 pub mod recovery_policy_guard;
+pub mod recovery_policy_migration;
 pub mod recovery_privacy_accountant;
 pub mod recovery_proof_bundle;
 pub mod recovery_proof_verifier;
