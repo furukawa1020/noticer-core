@@ -9,6 +9,7 @@ pub mod cause_atom;
 pub mod cause_boundary;
 pub mod cause_budget;
 pub mod cause_but_for;
+pub mod cause_cone;
 pub mod cause_contingency;
 pub mod cause_counterfactual_world;
 pub mod cause_equation;
