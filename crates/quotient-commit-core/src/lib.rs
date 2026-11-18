@@ -17,6 +17,7 @@ pub mod cause_hp_dependence;
 pub mod cause_hp_minimality;
 pub mod cause_intervention;
 pub mod cause_intervention_set;
+pub mod cause_normality;
 pub mod cause_outcome;
 pub mod cause_state;
 pub mod cause_trace_projection;
