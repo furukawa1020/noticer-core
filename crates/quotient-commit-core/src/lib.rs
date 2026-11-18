@@ -22,6 +22,7 @@ pub mod cause_intervention_set;
 pub mod cause_normality;
 pub mod cause_observer_coalition;
 pub mod cause_outcome;
+pub mod cause_pruning;
 pub mod cause_state;
 pub mod cause_temporal_precedence;
 pub mod cause_trace_projection;
