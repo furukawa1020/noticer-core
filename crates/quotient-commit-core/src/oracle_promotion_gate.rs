@@ -59,12 +59,9 @@ mod tests {
     fn verified_requires_complete_evidence() {
         let candidate = OracleVerdict::Verified { explored: 7 };
         assert_eq!(
-            PromotionGate::new(candidate.clone()).confirm(false),
+            PromotionGate::new(candidate).confirm(false),
             Err(PromotionError::EvidenceIncomplete)
         );
-        assert_eq!(
-            PromotionGate::new(candidate.clone()).confirm(true),
-            Ok(candidate)
-        );
+        assert_eq!(PromotionGate::new(candidate).confirm(true), Ok(candidate));
     }
 }

@@ -56,7 +56,7 @@ mod tests {
     fn first_difference_keeps_complete_trace_step() {
         let expected = step();
         assert_eq!(
-            replay_with(&FirstStepEngine, &[expected.clone()]),
+            replay_with(&FirstStepEngine, std::slice::from_ref(&expected)),
             ReplayOutcome::FirstDifference(expected)
         );
     }
