@@ -4,6 +4,7 @@ pub mod audited_delivery;
 pub mod authenticated_compaction;
 pub mod authenticated_compaction_file;
 pub mod cause_actual_binding;
+pub mod cause_admissibility;
 pub mod cause_atom;
 pub mod cause_boundary;
 pub mod cause_budget;
