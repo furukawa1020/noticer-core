@@ -6,6 +6,7 @@ pub mod authenticated_compaction_file;
 pub mod cause_atom;
 pub mod cause_intervention;
 pub mod cause_intervention_set;
+pub mod cause_outcome;
 pub mod cause_state;
 pub mod cause_trace_projection;
 pub mod cause_verdict;
