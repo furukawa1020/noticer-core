@@ -13,6 +13,7 @@ pub mod cause_counterfactual_world;
 pub mod cause_equation;
 pub mod cause_evaluator;
 pub mod cause_hp_actuality;
+pub mod cause_hp_dependence;
 pub mod cause_intervention;
 pub mod cause_intervention_set;
 pub mod cause_outcome;
