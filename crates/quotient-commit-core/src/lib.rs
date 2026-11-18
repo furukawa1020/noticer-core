@@ -6,6 +6,7 @@ pub mod authenticated_compaction_file;
 pub mod cause_atom;
 pub mod cause_intervention;
 pub mod cause_intervention_set;
+pub mod cause_state;
 pub mod cause_verdict;
 pub mod ceremony_checkpoint_store;
 pub mod chaos_campaign;
