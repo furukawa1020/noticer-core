@@ -227,6 +227,30 @@ export function simulateMinimalOracleLab(threat: OracleThreat): OracleStage[] {
   });
 }
 
+export type CauseThreat = "clean" | "non-cause" | "actual-mismatch" | "node-limit" | "replay-split" | "certificate-mutation" | "inadmissible";
+export type CauseStageStatus = "verified" | "causal" | "non-causal" | "invalid" | "inconclusive" | "blocked";
+export type CauseStage = { label: string; status: CauseStageStatus; evidence: string };
+
+export function simulateCausalityLab(threat: CauseThreat): CauseStage[] {
+  const labels = ["MODEL", "ACTUAL", "CONE", "INTERVENTION", "COUNTERFACTUAL", "ACTUALITY", "DEPENDENCE", "MINIMALITY", "DUAL REPLAY", "PUBLIC CAPSULE"];
+  const evidence = ["equation DAG bound", "actual world authenticated", "irrelevant atoms pruned", "policy admissible", "do-world evaluated", "AC1 holds", "AC2 holds", "AC3 holds", "independent engines agree", "redacted cause only"];
+  const failures: Partial<Record<CauseThreat, { index: number; status: Exclude<CauseStageStatus, "verified" | "causal" | "blocked">; detail: string }>> = {
+    "non-cause": { index: 6, status: "non-causal", detail: "outcome does not depend on candidate" },
+    "actual-mismatch": { index: 1, status: "invalid", detail: "actual world binding mismatch" },
+    "node-limit": { index: 2, status: "inconclusive", detail: "causal cone node limit" },
+    "replay-split": { index: 8, status: "inconclusive", detail: "independent replay disagreement" },
+    "certificate-mutation": { index: 9, status: "invalid", detail: "certificate authentication failed" },
+    inadmissible: { index: 3, status: "invalid", detail: "intervention outside policy" },
+  };
+  const failure = failures[threat];
+  return labels.map((label, index) => {
+    if (!failure) return { label, status: index === labels.length - 1 ? "causal" : "verified", evidence: evidence[index] };
+    if (index < failure.index) return { label, status: "verified", evidence: evidence[index] };
+    if (index === failure.index) return { label, status: failure.status, evidence: failure.detail };
+    return { label, status: "blocked", evidence: "causal promotion withheld" };
+  });
+}
+
 export function bootstrapCommitStudio(root: HTMLElement): void {
   const get = <T extends HTMLElement>(id: string): T => {
     const node = root.querySelector<T>(`#${id}`);
@@ -379,4 +403,15 @@ export function bootstrapCommitStudio(root: HTMLElement): void {
   };
   root.querySelectorAll<HTMLButtonElement>("[data-oracle-threat]").forEach((button) => button.addEventListener("click", () => renderOracleLab((button.dataset.oracleThreat ?? "clean") as OracleThreat)));
   renderOracleLab("clean");
+
+  const renderCauseLab = (threat: CauseThreat): void => {
+    const stages = simulateCausalityLab(threat);
+    get("qc-cause-rail").innerHTML = stages.map((stage, index) => `<div class="${stage.status}" style="--cause-delay:${index * 45}ms"><small>${String(index + 1).padStart(2, "0")}</small><b>${stage.label}</b><span>${stage.status.toUpperCase()}</span><code>${stage.evidence}</code></div>`).join("");
+    const terminal = stages.find((stage) => ["non-causal", "invalid", "inconclusive"].includes(stage.status));
+    get("qc-cause-verdict").textContent = terminal ? `${terminal.status.toUpperCase()} / CAUSAL CLAIM WITHHELD` : "CAUSAL / PROOF-CARRYING EXPLANATION";
+    get("qc-cause-capsule").textContent = `CAUSE:${digest(stages.map((stage) => `${stage.label}:${stage.status}:${stage.evidence}`).join("|"))}`;
+    root.querySelectorAll<HTMLElement>("[data-cause-threat]").forEach((node) => node.classList.toggle("active", node.dataset.causeThreat === threat));
+  };
+  root.querySelectorAll<HTMLButtonElement>("[data-cause-threat]").forEach((button) => button.addEventListener("click", () => renderCauseLab((button.dataset.causeThreat ?? "clean") as CauseThreat)));
+  renderCauseLab("clean");
 }
