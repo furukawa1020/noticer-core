@@ -29,6 +29,7 @@ pub mod cause_normality;
 pub mod cause_observer_coalition;
 pub mod cause_outcome;
 pub mod cause_pruning;
+pub mod cause_public_capsule;
 pub mod cause_redaction;
 pub mod cause_replay;
 pub mod cause_replay_disagreement;
