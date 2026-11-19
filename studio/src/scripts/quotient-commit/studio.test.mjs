@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { simulateCommit, simulateMinimalOracleLab, simulateMissionControl, simulateProofControlPlane, simulateProofFabric, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
+import { simulateCausalityLab, simulateCommit, simulateMinimalOracleLab, simulateMissionControl, simulateProofControlPlane, simulateProofFabric, simulateRecoveryDrill, simulateRecoveryFlightDeck, simulateResilienceTimeline, validateCommitRun } from "./studio.ts";
 
 test("nominal transaction releases exactly once after commit", () => {
   const run = simulateCommit("nominal");
@@ -113,5 +113,20 @@ for (const [threat, index, status] of [["invalid-input", 0, "invalid"], ["node-l
     assert.equal(stages[index].status, status);
     assert.equal(stages.slice(index + 1).every((stage) => stage.status === "blocked"), true);
     assert.equal(stages.at(-1)?.status === "verified", false);
+  });
+}
+
+test("counterfactual causality lab certifies a clean minimal cause", () => {
+  const stages = simulateCausalityLab("clean");
+  assert.equal(stages.slice(0, -1).every((stage) => stage.status === "verified"), true);
+  assert.equal(stages.at(-1)?.status, "causal");
+});
+
+for (const [threat, index, status] of [["non-cause", 6, "non-causal"], ["actual-mismatch", 1, "invalid"], ["node-limit", 2, "inconclusive"], ["replay-split", 8, "inconclusive"], ["certificate-mutation", 9, "invalid"], ["inadmissible", 3, "invalid"]]) {
+  test(`${threat} withholds the causal claim`, () => {
+    const stages = simulateCausalityLab(threat);
+    assert.equal(stages[index].status, status);
+    assert.equal(stages.slice(index + 1).every((stage) => stage.status === "blocked"), true);
+    assert.equal(stages.at(-1)?.status === "causal", false);
   });
 }
