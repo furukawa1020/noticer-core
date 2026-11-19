@@ -29,6 +29,7 @@ pub mod cause_outcome;
 pub mod cause_pruning;
 pub mod cause_replay;
 pub mod cause_replay_disagreement;
+pub mod cause_repro_manifest;
 pub mod cause_selector;
 pub mod cause_state;
 pub mod cause_temporal_precedence;
