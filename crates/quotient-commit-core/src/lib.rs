@@ -112,6 +112,7 @@ pub mod proof_release_audit_bridge;
 pub mod proof_temporal_ordering;
 pub mod proof_temporal_overlap;
 pub mod proof_timestamp_envelope;
+pub mod quotient_cause_engine;
 pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
