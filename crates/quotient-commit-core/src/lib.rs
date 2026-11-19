@@ -23,6 +23,7 @@ pub mod cause_hp_minimality;
 pub mod cause_intervention;
 pub mod cause_intervention_set;
 pub mod cause_model_digest;
+pub mod cause_mutation_detector;
 pub mod cause_normality;
 pub mod cause_observer_coalition;
 pub mod cause_outcome;
