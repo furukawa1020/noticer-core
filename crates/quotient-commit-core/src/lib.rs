@@ -29,6 +29,7 @@ pub mod cause_temporal_precedence;
 pub mod cause_trace_projection;
 pub mod cause_verdict;
 pub mod cause_witness_graph;
+pub mod cause_witness_validator;
 pub mod ceremony_checkpoint_store;
 pub mod chaos_campaign;
 pub mod checkpoint;
