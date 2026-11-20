@@ -222,6 +222,7 @@ pub mod remedy_input_classifier;
 pub mod remedy_liveness_verifier;
 pub mod remedy_minimality;
 pub mod remedy_model_digest;
+pub mod remedy_mutation_detector;
 pub mod remedy_objective;
 pub mod remedy_order;
 pub mod remedy_patch_operation;
