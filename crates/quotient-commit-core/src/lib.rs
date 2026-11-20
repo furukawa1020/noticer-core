@@ -204,6 +204,7 @@ pub mod recovery_witness;
 pub mod recovery_witness_freshness;
 pub mod recovery_witness_worker;
 pub mod recovery_worker;
+pub mod remedy_action_semantics;
 pub mod remedy_atom;
 pub mod remedy_constraint;
 pub mod remedy_objective;
