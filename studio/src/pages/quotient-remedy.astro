@@ -1,0 +1,170 @@
+---
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>QuotientRemedy Lab | Noticer Core</title>
+</head>
+<body>
+  <main class="remedy-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">K17 / PROOF-CARRYING COUNTERFACTUAL REMEDIATION</p>
+        <h1>CAUSE IS NOT<br /><em>A CURE.</em></h1>
+      </div>
+      <div class="hero-note">
+        <span>QUOTIENT<br />REMEDY</span>
+        <p>Find the smallest patch that removes a release failure without changing the action the system is allowed to express.</p>
+      </div>
+    </header>
+
+    <section class="control">
+      <p>INJECT A FAILURE MODE</p>
+      <div id="scenario-buttons" class="scenario-buttons"></div>
+    </section>
+
+    <section class="readout">
+      <div class="verdict-panel">
+        <small>REMEDY VERDICT</small>
+        <strong id="verdict">REPAIRED</strong>
+        <p id="verdict-copy">A minimal patch survived every independent gate.</p>
+      </div>
+      <div class="patch-panel">
+        <small>SELECTED PATCH</small>
+        <div id="patches"></div>
+      </div>
+      <div class="permit-panel">
+        <small>DEPLOYMENT</small>
+        <strong id="permit">PERMIT ISSUED</strong>
+        <div class="pulse" id="pulse"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">EXECUTABLE PROOF RAIL</p>
+          <h2>Counterfactual pipeline</h2>
+        </div>
+        <p>Every downstream stage is withheld after the first failed proof. No red stage can be promoted into a repair.</p>
+      </div>
+      <div id="rail" class="rail"></div>
+    </section>
+
+    <section class="comparison">
+      <article>
+        <p class="eyebrow">ACTUAL WORLD</p>
+        <h3>Failure trace</h3>
+        <div class="trace bad">
+          <span>SLOT 04</span><b>INPUT 7</b><code>LEFT 10 → RIGHT 11</code>
+        </div>
+        <p>Action remains allowed, but the release trace exposes a forbidden distinction.</p>
+      </article>
+      <div class="arrow">→</div>
+      <article>
+        <p class="eyebrow">REPAIRED WORLD</p>
+        <h3>Action-equivalent trace</h3>
+        <div class="trace good">
+          <span>SLOT 04</span><b>INPUT 7</b><code>LEFT 10 → RIGHT 10</code>
+        </div>
+        <p>The same permitted action survives while the distinguishing transition disappears.</p>
+      </article>
+    </section>
+
+    <section class="capsule">
+      <div>
+        <p class="eyebrow">PUBLIC-SAFE ARTIFACT</p>
+        <h2>Repair capsule</h2>
+        <p>Private evidence and internal state never cross this boundary.</p>
+      </div>
+      <dl>
+        <div><dt>VERDICT</dt><dd id="cap-verdict"></dd></div>
+        <div><dt>PATCH</dt><dd id="cap-patch"></dd></div>
+        <div><dt>CAUSE</dt><dd id="cap-cause"></dd></div>
+        <div><dt>MODEL</dt><dd id="cap-model"></dd></div>
+        <div><dt>CERTIFICATE</dt><dd id="cap-cert"></dd></div>
+        <div><dt>CHECKS</dt><dd id="cap-checks"></dd></div>
+      </dl>
+    </section>
+  </main>
+</body>
+</html>
+
+<script>
+  import { REMEDY_SCENARIOS, runRemedyScenario } from "../scripts/quotient-commit/remedy-lab";
+
+  function must<T extends Element>(selector: string): T {
+    const node = document.querySelector<T>(selector);
+    if (!node) throw new Error(`missing Remedy Lab node: ${selector}`);
+    return node;
+  }
+
+  const buttons = must<HTMLDivElement>("#scenario-buttons");
+  const verdict = must<HTMLElement>("#verdict");
+  const verdictCopy = must<HTMLParagraphElement>("#verdict-copy");
+  const patches = must<HTMLDivElement>("#patches");
+  const permit = must<HTMLElement>("#permit");
+  const pulse = must<HTMLDivElement>("#pulse");
+  const rail = must<HTMLDivElement>("#rail");
+
+  const capsuleNodes = {
+    verdict: must<HTMLElement>("#cap-verdict"),
+    patchLabel: must<HTMLElement>("#cap-patch"),
+    causeDigest: must<HTMLElement>("#cap-cause"),
+    modelDigest: must<HTMLElement>("#cap-model"),
+    certificateDigest: must<HTMLElement>("#cap-cert"),
+    checks: must<HTMLElement>("#cap-checks"),
+  };
+
+  function render(id: string) {
+    const result = runRemedyScenario(id);
+    document.querySelectorAll<HTMLElement>("[data-scenario]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.scenario === id);
+    });
+    verdict.textContent = result.verdict.toUpperCase();
+    verdict.dataset.state = result.verdict;
+    verdictCopy.textContent = result.deployable
+      ? "A minimal patch survived every independent gate."
+      : result.verdict === "inconclusive"
+        ? "Search stopped at its declared bound. No claim was promoted."
+        : "The candidate was rejected before deployment.";
+    patches.innerHTML = result.patches.length
+      ? result.patches.map((patch) => `<code>${patch}</code>`).join("")
+      : "<code>NO PATCH SELECTED</code>";
+    permit.textContent = result.deployable ? "PERMIT ISSUED" : "WITHHELD";
+    pulse.classList.toggle("live", result.deployable);
+    rail.innerHTML = result.stages.map((stage, index) => `
+      <article class="${stage.status}" style="--delay:${index * 28}ms">
+        <small>${String(index + 1).padStart(2, "0")}</small>
+        <b>${stage.name}</b>
+        <span>${stage.status}</span>
+        <p>${stage.detail}</p>
+      </article>
+    `).join("");
+    capsuleNodes.verdict.textContent = result.capsule.verdict;
+    capsuleNodes.patchLabel.textContent = result.capsule.patchLabel;
+    capsuleNodes.causeDigest.textContent = result.capsule.causeDigest;
+    capsuleNodes.modelDigest.textContent = result.capsule.modelDigest;
+    capsuleNodes.certificateDigest.textContent = result.capsule.certificateDigest;
+    capsuleNodes.checks.textContent = result.capsule.checks;
+  }
+
+  buttons.innerHTML = REMEDY_SCENARIOS.map((scenario) =>
+    `<button data-scenario="${scenario.id}">${scenario.label}</button>`
+  ).join("");
+  buttons.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest("[data-scenario]");
+    if (button instanceof HTMLElement && button.dataset.scenario) {
+      render(button.dataset.scenario);
+    }
+  });
+  render("clean");
+</script>
+
+<style>
+  :global(body){margin:0;background:#e9e1d2;color:#13231f;font-family:"Courier New",monospace}.remedy-shell{--ink:#13231f;--paper:#f5efe4;--acid:#c9ff38;--signal:#ff4d22;max-width:1440px;margin:auto;padding:30px}.hero{display:grid;grid-template-columns:1.35fr .65fr;border:2px solid var(--ink);background:var(--paper);box-shadow:12px 12px 0 var(--ink)}.hero>div{padding:42px}.hero h1{margin:18px 0 0;font:900 clamp(3.4rem,8vw,8rem)/.82 Impact,sans-serif;letter-spacing:-.04em}.hero h1 em{color:var(--signal);font-style:normal}.eyebrow{margin:0;font-size:.68rem;font-weight:900;letter-spacing:.16em}.hero-note{display:flex;flex-direction:column;justify-content:space-between;background:var(--ink);color:var(--paper)}.hero-note span{color:var(--acid);font:900 4rem/.8 Impact,sans-serif}.hero-note p{max-width:35ch;line-height:1.6}.control{margin-top:42px}.scenario-buttons{display:flex;flex-wrap:wrap;gap:6px}.scenario-buttons button{border:1px solid var(--ink);padding:12px 15px;background:transparent;font:700 .66rem "Courier New",monospace;cursor:pointer}.scenario-buttons button.active{background:var(--signal);color:white}.readout{display:grid;grid-template-columns:1fr 1.3fr .7fr;margin:14px 0 48px;border:2px solid var(--ink)}.readout>div{min-height:135px;padding:24px;border-right:2px solid var(--ink)}.readout>div:last-child{border:0}.readout small{font-weight:900}.readout strong{display:block;margin:15px 0;font:900 2.3rem Impact,sans-serif}.verdict-panel strong[data-state="repaired"]{color:#277351}.verdict-panel strong[data-state="unrepairable"]{color:var(--signal)}.verdict-panel strong[data-state="inconclusive"]{color:#b27a00}.patch-panel code{display:block;margin:8px 0;padding:7px;background:var(--ink);color:var(--acid)}.pulse{width:18px;height:18px;border-radius:50%;background:#777}.pulse.live{background:var(--acid);box-shadow:0 0 0 8px #c9ff3840;animation:pulse 1.2s infinite}@keyframes pulse{50%{box-shadow:0 0 0 16px transparent}}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.section-head h2,.capsule h2{margin:.3rem 0;font:900 2.6rem Impact,sans-serif}.section-head>p{max-width:52ch}.rail{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.rail article{min-height:145px;padding:14px;background:var(--ink);color:white;border-top:6px solid var(--acid);animation:arrive .35s both;animation-delay:var(--delay)}.rail small,.rail b,.rail span{display:block}.rail b{min-height:38px;margin:10px 0;font-size:.72rem}.rail span{color:var(--acid);font-size:.58rem;text-transform:uppercase}.rail p{font-size:.6rem;line-height:1.45;color:#aebcb7}.rail .blocked{background:var(--signal);border-color:white}.rail .inconclusive{background:#d59a1d;color:var(--ink);border-color:white}.rail .withheld{opacity:.22;border-color:#777}.rail .blocked span,.rail .blocked p{color:white}.rail .inconclusive span,.rail .inconclusive p{color:var(--ink)}@keyframes arrive{from{opacity:.1;transform:translateY(12px)}to{opacity:1;transform:none}}.comparison{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin:48px 0}.comparison article{padding:28px;border:2px solid var(--ink);background:var(--paper)}.comparison h3{font:900 2rem Impact,sans-serif}.arrow{font-size:4rem}.trace{display:grid;grid-template-columns:1fr 1fr;padding:18px;color:white}.trace code{grid-column:1/-1;margin-top:18px}.trace.bad{background:var(--signal)}.trace.good{background:#277351}.capsule{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px;padding:38px;background:var(--ink);color:var(--paper)}.capsule dl{margin:0}.capsule dl div{display:grid;grid-template-columns:140px 1fr;padding:11px;border-bottom:1px solid #52625d}.capsule dt{color:var(--acid);font-size:.65rem}.capsule dd{margin:0;text-align:right}@media(max-width:900px){.hero,.readout,.capsule{grid-template-columns:1fr}.hero-note{min-height:330px}.readout>div{border-right:0;border-bottom:2px solid var(--ink)}.rail{grid-template-columns:repeat(3,1fr)}.comparison{grid-template-columns:1fr}.arrow{transform:rotate(90deg);text-align:center}}@media(max-width:540px){.remedy-shell{padding:14px}.hero>div{padding:25px}.rail{grid-template-columns:1fr 1fr}.section-head{display:block}.capsule dl div{grid-template-columns:1fr}.capsule dd{text-align:left;margin-top:5px}}
+</style>
+
