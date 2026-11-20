@@ -212,6 +212,7 @@ pub mod remedy_budget;
 pub mod remedy_budget_verdict;
 pub mod remedy_candidate_generator;
 pub mod remedy_cause_bridge;
+pub mod remedy_certificate;
 pub mod remedy_constraint;
 pub mod remedy_cost;
 pub mod remedy_dominance;
