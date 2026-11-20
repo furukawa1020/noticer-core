@@ -253,6 +253,7 @@ pub mod sentinel_invariant_evaluator;
 pub mod sentinel_invariant_spec;
 pub mod sentinel_liveness_monitor;
 pub mod sentinel_model_drift;
+pub mod sentinel_novelty;
 pub mod sentinel_observation_atom;
 pub mod sentinel_privacy_monitor;
 pub mod sentinel_safety_monitor;
