@@ -230,6 +230,7 @@ pub mod remedy_privacy_verifier;
 pub mod remedy_regression_oracle;
 pub mod remedy_replay;
 pub mod remedy_replay_disagreement;
+pub mod remedy_repro_manifest;
 pub mod remedy_safety_verifier;
 pub mod remedy_selector;
 pub mod remedy_set;
