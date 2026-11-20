@@ -248,6 +248,7 @@ pub mod rollback_anchor;
 pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
 pub mod sentinel_change_point;
+pub mod sentinel_confidence_sequence;
 pub mod sentinel_deployment_identity;
 pub mod sentinel_environment_drift;
 pub mod sentinel_invariant_evaluator;
