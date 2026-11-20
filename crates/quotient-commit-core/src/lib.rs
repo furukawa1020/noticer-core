@@ -206,6 +206,7 @@ pub mod recovery_witness_worker;
 pub mod recovery_worker;
 pub mod remedy_atom;
 pub mod remedy_patch_operation;
+pub mod remedy_set;
 pub mod remedy_verdict;
 pub mod retired_epoch_manifest;
 pub mod rollback_anchor;
