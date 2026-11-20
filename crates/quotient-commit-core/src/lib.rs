@@ -247,6 +247,7 @@ pub mod retired_epoch_manifest;
 pub mod rollback_anchor;
 pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
+pub mod sentinel_verdict;
 mod sha256;
 pub mod startup_admission_gate;
 pub mod startup_fault_oracle;
