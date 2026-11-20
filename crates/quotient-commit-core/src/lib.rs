@@ -206,6 +206,7 @@ pub mod recovery_witness_worker;
 pub mod recovery_worker;
 pub mod remedy_action_semantics;
 pub mod remedy_action_verifier;
+pub mod remedy_adversarial_matrix;
 pub mod remedy_atom;
 pub mod remedy_branch_bound;
 pub mod remedy_budget;
