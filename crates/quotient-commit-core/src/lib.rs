@@ -212,6 +212,7 @@ pub mod remedy_cause_bridge;
 pub mod remedy_constraint;
 pub mod remedy_cost;
 pub mod remedy_dominance;
+pub mod remedy_hitting_set;
 pub mod remedy_liveness_verifier;
 pub mod remedy_minimality;
 pub mod remedy_objective;
