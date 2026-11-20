@@ -251,6 +251,7 @@ pub mod sentinel_deployment_identity;
 pub mod sentinel_observation_atom;
 pub mod sentinel_sample;
 pub mod sentinel_verdict;
+pub mod sentinel_window;
 mod sha256;
 pub mod startup_admission_gate;
 pub mod startup_fault_oracle;
