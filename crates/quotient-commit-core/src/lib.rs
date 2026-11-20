@@ -229,6 +229,7 @@ pub mod remedy_order;
 pub mod remedy_patch_operation;
 pub mod remedy_policy_boundary;
 pub mod remedy_privacy_verifier;
+pub mod remedy_redaction;
 pub mod remedy_regression_oracle;
 pub mod remedy_replay;
 pub mod remedy_replay_disagreement;
