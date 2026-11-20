@@ -209,6 +209,7 @@ pub mod remedy_atom;
 pub mod remedy_constraint;
 pub mod remedy_objective;
 pub mod remedy_patch_operation;
+pub mod remedy_policy_boundary;
 pub mod remedy_set;
 pub mod remedy_verdict;
 pub mod retired_epoch_manifest;
