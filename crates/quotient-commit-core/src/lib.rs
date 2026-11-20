@@ -217,6 +217,7 @@ pub mod remedy_certificate;
 pub mod remedy_certificate_auth;
 pub mod remedy_constraint;
 pub mod remedy_cost;
+pub mod remedy_deployment_gate;
 pub mod remedy_dominance;
 pub mod remedy_hitting_set;
 pub mod remedy_input_classifier;
