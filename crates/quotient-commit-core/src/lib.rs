@@ -230,6 +230,7 @@ pub mod remedy_selector;
 pub mod remedy_set;
 pub mod remedy_simulator;
 pub mod remedy_verdict;
+pub mod remedy_witness;
 pub mod retired_epoch_manifest;
 pub mod rollback_anchor;
 pub mod rollback_anchor_file;
