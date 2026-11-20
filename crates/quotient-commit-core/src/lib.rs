@@ -258,6 +258,7 @@ pub mod sentinel_privacy_monitor;
 pub mod sentinel_safety_monitor;
 pub mod sentinel_sample;
 pub mod sentinel_semantics_monitor;
+pub mod sentinel_support;
 pub mod sentinel_verdict;
 pub mod sentinel_window;
 mod sha256;
