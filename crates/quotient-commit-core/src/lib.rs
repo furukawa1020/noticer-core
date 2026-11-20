@@ -207,6 +207,7 @@ pub mod recovery_worker;
 pub mod remedy_action_semantics;
 pub mod remedy_action_verifier;
 pub mod remedy_atom;
+pub mod remedy_branch_bound;
 pub mod remedy_candidate_generator;
 pub mod remedy_cause_bridge;
 pub mod remedy_constraint;
