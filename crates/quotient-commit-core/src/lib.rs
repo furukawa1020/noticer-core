@@ -208,6 +208,7 @@ pub mod remedy_action_semantics;
 pub mod remedy_atom;
 pub mod remedy_candidate_generator;
 pub mod remedy_constraint;
+pub mod remedy_cost;
 pub mod remedy_dominance;
 pub mod remedy_objective;
 pub mod remedy_patch_operation;
