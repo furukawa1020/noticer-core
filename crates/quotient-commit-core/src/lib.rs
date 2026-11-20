@@ -211,6 +211,7 @@ pub mod remedy_constraint;
 pub mod remedy_cost;
 pub mod remedy_dominance;
 pub mod remedy_objective;
+pub mod remedy_order;
 pub mod remedy_patch_operation;
 pub mod remedy_policy_boundary;
 pub mod remedy_set;
