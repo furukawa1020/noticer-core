@@ -216,6 +216,7 @@ pub mod remedy_order;
 pub mod remedy_patch_operation;
 pub mod remedy_policy_boundary;
 pub mod remedy_set;
+pub mod remedy_simulator;
 pub mod remedy_verdict;
 pub mod retired_epoch_manifest;
 pub mod rollback_anchor;
