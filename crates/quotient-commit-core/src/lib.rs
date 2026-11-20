@@ -218,6 +218,7 @@ pub mod remedy_order;
 pub mod remedy_patch_operation;
 pub mod remedy_policy_boundary;
 pub mod remedy_privacy_verifier;
+pub mod remedy_regression_oracle;
 pub mod remedy_safety_verifier;
 pub mod remedy_set;
 pub mod remedy_simulator;
