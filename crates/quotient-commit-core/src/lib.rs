@@ -247,6 +247,7 @@ pub mod retired_epoch_manifest;
 pub mod rollback_anchor;
 pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
+pub mod sentinel_alarm_fusion;
 pub mod sentinel_budget;
 pub mod sentinel_change_point;
 pub mod sentinel_confidence_sequence;
