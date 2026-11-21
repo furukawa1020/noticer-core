@@ -257,6 +257,7 @@ pub mod sentinel_crash_recovery;
 pub mod sentinel_debounce;
 pub mod sentinel_deployment_identity;
 pub mod sentinel_environment_drift;
+pub mod sentinel_escalation;
 pub mod sentinel_freshness_lease;
 pub mod sentinel_hysteresis;
 pub mod sentinel_invariant_evaluator;
