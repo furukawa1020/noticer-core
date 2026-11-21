@@ -1,0 +1,184 @@
+---
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>QuotientSentinel | Runtime Assurance Lab</title>
+</head>
+<body>
+<main class="shell">
+  <header class="hero">
+    <div class="radar"><i></i><i></i><i></i><span>LIVE</span></div>
+    <div>
+      <p class="kicker">K18 / RUNTIME ASSURANCE FOR CERTIFIED REPAIRS</p>
+      <h1>TRUST,<br /><em>BUT EXPIRE.</em></h1>
+    </div>
+    <aside>
+      <b>QUOTIENT<br />SENTINEL</b>
+      <p>A deployment permit is not permanent. Evidence must stay fresh, action-equivalent, live, private, and inside support.</p>
+    </aside>
+  </header>
+
+  <section class="injector">
+    <p>RUNTIME FAULT INJECTION</p>
+    <div id="scenario-buttons"></div>
+  </section>
+
+  <section class="status-grid">
+    <article class="verdict-card">
+      <small>ASSURANCE VERDICT</small>
+      <strong id="verdict">HEALTHY</strong>
+      <p id="verdict-note">All runtime evidence remains valid.</p>
+    </article>
+    <article>
+      <small>DEPLOYMENT PERMIT</small>
+      <strong id="permit">ACTIVE</strong>
+      <div class="lease"><span id="lease-bar"></span></div>
+    </article>
+    <article>
+      <small>RESPONSE</small>
+      <strong id="response">MONITOR</strong>
+      <p id="response-note">No intervention required.</p>
+    </article>
+  </section>
+
+  <section class="proof-section">
+    <div class="section-head">
+      <div><p class="kicker">CONTINUOUS PROOF RAIL</p><h2>Evidence has a half-life.</h2></div>
+      <p>The first unavailable or contradictory stage invalidates everything downstream. A missing monitor is not a healthy monitor.</p>
+    </div>
+    <div id="rail" class="rail"></div>
+  </section>
+
+  <section class="timeline-section">
+    <div class="section-head">
+      <div><p class="kicker">RESPONSE CHOREOGRAPHY</p><h2>Detect. Quarantine. Recover.</h2></div>
+      <p id="timeline-summary">The permit remains active under continuously renewed evidence.</p>
+    </div>
+    <div id="timeline" class="timeline"></div>
+  </section>
+
+  <section class="observatory">
+    <div class="scope">
+      <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div>
+      <span>REPAIR<br />#284</span>
+      <b id="scope-state">VALID</b>
+    </div>
+    <div class="metrics">
+      <article><small>SEMANTICS</small><b>1 / 1</b><span>action classes preserved</span></article>
+      <article><small>PRIVACY</small><b id="privacy-count">1 / 1</b><span>public distinctions</span></article>
+      <article><small>FRESHNESS</small><b id="freshness">1.8s</b><span>lease remaining</span></article>
+      <article><small>SUPPORT</small><b id="support">100%</b><span>inside certified model</span></article>
+    </div>
+  </section>
+
+  <section class="capsule">
+    <div><p class="kicker">PUBLIC INCIDENT CAPSULE</p><h2>Proof without private evidence.</h2></div>
+    <dl>
+      <div><dt>VERDICT</dt><dd id="cap-verdict"></dd></div>
+      <div><dt>RESPONSE</dt><dd id="cap-response"></dd></div>
+      <div><dt>DEPLOYMENT</dt><dd id="cap-deployment"></dd></div>
+      <div><dt>EVIDENCE</dt><dd id="cap-evidence"></dd></div>
+      <div><dt>SEQUENCE</dt><dd id="cap-sequence"></dd></div>
+      <div><dt>DISCLOSURE</dt><dd id="cap-disclosure"></dd></div>
+    </dl>
+  </section>
+</main>
+</body>
+</html>
+
+<script>
+  import { SENTINEL_SCENARIOS, runSentinelScenario } from "../scripts/quotient-commit/sentinel-lab";
+
+  function must<T extends Element>(selector: string): T {
+    const node = document.querySelector<T>(selector);
+    if (!node) throw new Error(`missing Sentinel node: ${selector}`);
+    return node;
+  }
+
+  const buttons = must<HTMLDivElement>("#scenario-buttons");
+  const verdict = must<HTMLElement>("#verdict");
+  const verdictNote = must<HTMLParagraphElement>("#verdict-note");
+  const permit = must<HTMLElement>("#permit");
+  const response = must<HTMLElement>("#response");
+  const responseNote = must<HTMLParagraphElement>("#response-note");
+  const leaseBar = must<HTMLSpanElement>("#lease-bar");
+  const rail = must<HTMLDivElement>("#rail");
+  const timeline = must<HTMLDivElement>("#timeline");
+  const timelineSummary = must<HTMLParagraphElement>("#timeline-summary");
+  const scopeState = must<HTMLElement>("#scope-state");
+  const privacyCount = must<HTMLElement>("#privacy-count");
+  const freshness = must<HTMLElement>("#freshness");
+  const support = must<HTMLElement>("#support");
+  const capsule = {
+    verdict: must<HTMLElement>("#cap-verdict"),
+    response: must<HTMLElement>("#cap-response"),
+    deployment: must<HTMLElement>("#cap-deployment"),
+    evidence: must<HTMLElement>("#cap-evidence"),
+    sequence: must<HTMLElement>("#cap-sequence"),
+    disclosure: must<HTMLElement>("#cap-disclosure"),
+  };
+
+  function render(id: string) {
+    const result = runSentinelScenario(id);
+    document.querySelectorAll<HTMLElement>("[data-scenario]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.scenario === id);
+    });
+    verdict.textContent = result.scenario.verdict.toUpperCase();
+    verdict.dataset.state = result.scenario.verdict;
+    verdictNote.textContent = result.permitActive
+      ? "All runtime evidence remains valid."
+      : result.revocationIssued
+        ? "A certified invariant failed. The permit is revoked."
+        : "Evidence is unavailable or invalid. The permit is suspended.";
+    permit.textContent = result.permitActive ? "ACTIVE" : "WITHHELD";
+    response.textContent = result.scenario.response.toUpperCase();
+    responseNote.textContent = result.scenario.response === "rollback"
+      ? "Authenticated rollback path selected."
+      : result.quarantine ? "Release isolated pending evidence." : "No intervention required.";
+    leaseBar.style.width = result.permitActive ? "72%" : "0";
+    scopeState.textContent = result.permitActive ? "VALID" : "EXPIRED";
+    privacyCount.textContent = id === "privacy-drift" ? "2 / 1" : "1 / 1";
+    freshness.textContent = id === "lease-expired" ? "0.0s" : "1.8s";
+    support.textContent = id === "monitor-suppressed" ? "UNKNOWN" : "100%";
+    rail.innerHTML = result.stages.map((stage, index) => `
+      <article class="${stage.status}" style="--delay:${index * 25}ms">
+        <small>${String(index + 1).padStart(2, "0")}</small>
+        <b>${stage.name}</b>
+        <span>${stage.status}</span>
+        <p>${stage.detail}</p>
+      </article>`
+    ).join("");
+    timeline.innerHTML = result.timeline.map((item, index) => `
+      <article class="${item.state.toLowerCase()}" style="--delay:${index * 55}ms">
+        <small>SLOT ${item.slot}</small><b>${item.state}</b><span>${item.note}</span>
+      </article>`
+    ).join("");
+    timelineSummary.textContent = result.permitActive
+      ? "The permit remains active under continuously renewed evidence."
+      : "The first failed proof triggers an explicit, auditable response.";
+    capsule.verdict.textContent = result.capsule.verdict;
+    capsule.response.textContent = result.capsule.response;
+    capsule.deployment.textContent = result.capsule.deployment;
+    capsule.evidence.textContent = result.capsule.evidence;
+    capsule.sequence.textContent = result.capsule.sequence;
+    capsule.disclosure.textContent = result.capsule.disclosure;
+  }
+
+  buttons.innerHTML = SENTINEL_SCENARIOS.map((scenario) =>
+    `<button data-scenario="${scenario.id}">${scenario.label}</button>`
+  ).join("");
+  buttons.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest("[data-scenario]");
+    if (button instanceof HTMLElement && button.dataset.scenario) render(button.dataset.scenario);
+  });
+  render("healthy");
+</script>
+
+<style>
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:#071813;color:#e9f2e9;font-family:"Courier New",monospace}.shell{--ink:#071813;--panel:#102a22;--line:#2e5648;--acid:#c8ff42;--signal:#ff5a36;max-width:1480px;margin:auto;padding:28px}.hero{display:grid;grid-template-columns:180px 1fr 380px;min-height:430px;border:1px solid var(--line);background:radial-gradient(circle at 12% 30%,#1f5a45 0,transparent 28%),linear-gradient(120deg,#0b211a,#071813)}.hero>div,.hero>aside{padding:42px}.kicker{margin:0;color:#76a994;font-size:.66rem;font-weight:900;letter-spacing:.17em}.hero h1{margin:38px 0 0;font:900 clamp(4rem,8vw,8rem)/.8 Impact,sans-serif;letter-spacing:-.04em}.hero h1 em{color:var(--acid);font-style:normal}.hero aside{display:flex;flex-direction:column;justify-content:space-between;border-left:1px solid var(--line);background:#0e241d}.hero aside b{color:var(--acid);font:900 3.8rem/.82 Impact,sans-serif}.hero aside p{line-height:1.7;color:#a5c0b5}.radar{position:relative;display:grid;place-items:center;border-right:1px solid var(--line);overflow:hidden}.radar:before{content:"";width:110px;height:110px;border:1px solid var(--acid);border-radius:50%}.radar:after{content:"";position:absolute;width:220px;height:2px;background:linear-gradient(90deg,transparent,var(--acid));transform-origin:left;animation:sweep 3s linear infinite}.radar i{position:absolute;border:1px solid #2e5648;border-radius:50%}.radar i:nth-child(1){width:55px;height:55px}.radar i:nth-child(2){width:165px;height:165px}.radar i:nth-child(3){width:260px;height:260px}.radar span{position:absolute;bottom:25px;color:var(--acid);font-weight:900}@keyframes sweep{to{transform:rotate(360deg)}}.injector{margin:38px 0 12px}.injector>div{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.injector button{padding:11px 13px;border:1px solid var(--line);background:transparent;color:#b8cdc4;font:700 .58rem "Courier New",monospace;cursor:pointer}.injector button.active{background:var(--acid);color:var(--ink)}.status-grid{display:grid;grid-template-columns:1fr 1fr 1fr;border:1px solid var(--line)}.status-grid article{min-height:150px;padding:25px;border-right:1px solid var(--line)}.status-grid article:last-child{border:0}.status-grid small{color:#76a994}.status-grid strong{display:block;margin:16px 0;font:900 2.8rem Impact,sans-serif}.verdict-card strong[data-state=healthy]{color:var(--acid)}.verdict-card strong[data-state=violated]{color:var(--signal)}.verdict-card strong[data-state=inconclusive],.verdict-card strong[data-state=invalid]{color:#ffc857}.status-grid p{font-size:.7rem;color:#9eb7ac}.lease{height:8px;background:#243c33}.lease span{display:block;height:100%;width:72%;background:var(--acid);transition:width .4s}.proof-section,.timeline-section{margin-top:50px}.section-head{display:flex;align-items:end;justify-content:space-between}.section-head h2,.capsule h2{margin:.3rem 0;font:900 3rem Impact,sans-serif}.section-head>p{max-width:54ch;color:#8da99d;line-height:1.6}.rail{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:20px}.rail article{min-height:142px;padding:13px;background:var(--panel);border-top:5px solid var(--acid);animation:rise .35s both;animation-delay:var(--delay)}.rail small,.rail b,.rail span{display:block}.rail b{min-height:38px;margin:10px 0;font-size:.7rem}.rail span{color:var(--acid);font-size:.55rem;text-transform:uppercase}.rail p{font-size:.57rem;color:#789287;line-height:1.45}.rail .violated{background:#7f2618;border-color:white}.rail .invalid,.rail .inconclusive{background:#6b5012;border-color:#ffc857}.rail .withheld{opacity:.2;border-color:#53645e}.rail .violated span,.rail .violated p{color:white}@keyframes rise{from{opacity:.1;transform:translateY(10px)}to{opacity:1;transform:none}}.timeline{display:flex;gap:4px;margin-top:20px}.timeline article{flex:1;min-height:115px;padding:16px;background:#132d24;border-left:5px solid var(--acid);animation:rise .35s both;animation-delay:var(--delay)}.timeline small,.timeline b,.timeline span{display:block}.timeline b{margin:16px 0;font:900 1.25rem Impact,sans-serif}.timeline span{font-size:.62rem;color:#8da99d}.timeline .detected{background:#74301e;border-color:var(--signal)}.timeline .quarantined{background:#574415;border-color:#ffc857}.timeline .rollback{background:#4d1831;border-color:#ff5aa5}.observatory{display:grid;grid-template-columns:360px 1fr;gap:30px;margin:52px 0;padding:35px;border:1px solid var(--line);background:linear-gradient(135deg,#102a22,#071813)}.scope{position:relative;display:grid;place-items:center;min-height:290px}.scope span{text-align:center;color:var(--acid);font:900 2.8rem/.85 Impact,sans-serif}.scope b{position:absolute;bottom:22px}.orbit{position:absolute;border:1px solid #3c6c59;border-radius:50%}.orbit-a{width:220px;height:220px}.orbit-b{width:290px;height:290px;border-style:dashed;animation:sweep 16s linear infinite}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:4px}.metrics article{padding:24px;background:#0d211a}.metrics small,.metrics b,.metrics span{display:block}.metrics b{margin:13px 0;color:var(--acid);font:900 2rem Impact,sans-serif}.metrics span{color:#789287;font-size:.63rem}.capsule{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;padding:38px;background:var(--acid);color:var(--ink)}.capsule dl{margin:0}.capsule dl div{display:grid;grid-template-columns:150px 1fr;padding:11px;border-bottom:1px solid #66841b}.capsule dt{font-size:.62rem;font-weight:900}.capsule dd{margin:0;text-align:right;font-weight:700}@media(max-width:950px){.hero{grid-template-columns:120px 1fr}.hero aside{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);min-height:300px}.status-grid,.capsule{grid-template-columns:1fr}.status-grid article{border-right:0;border-bottom:1px solid var(--line)}.rail{grid-template-columns:repeat(3,1fr)}.observatory{grid-template-columns:1fr}.timeline{display:grid;grid-template-columns:1fr 1fr}}@media(max-width:560px){.shell{padding:12px}.hero{grid-template-columns:1fr}.radar{display:none}.hero>div,.hero>aside{padding:25px}.rail{grid-template-columns:1fr 1fr}.section-head{display:block}.metrics{grid-template-columns:1fr}.timeline{grid-template-columns:1fr}.capsule dl div{grid-template-columns:1fr}.capsule dd{text-align:left;margin-top:5px}}
+</style>
+
