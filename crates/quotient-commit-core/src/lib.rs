@@ -265,6 +265,7 @@ pub mod sentinel_model_drift;
 pub mod sentinel_novelty;
 pub mod sentinel_observation_atom;
 pub mod sentinel_privacy_monitor;
+pub mod sentinel_quarantine;
 pub mod sentinel_repair_binding;
 pub mod sentinel_replay_protection;
 pub mod sentinel_retention;
