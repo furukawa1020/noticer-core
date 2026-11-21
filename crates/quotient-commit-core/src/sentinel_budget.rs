@@ -48,6 +48,14 @@ impl RuntimeMonitoringBudget {
     pub const fn usage(self) -> (u64, u32) {
         (self.samples, self.alarms)
     }
+
+    #[must_use]
+    pub const fn remaining(self) -> (u64, u32) {
+        (
+            self.sample_limit.saturating_sub(self.samples),
+            self.alarm_limit.saturating_sub(self.alarms),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -67,5 +75,6 @@ mod tests {
             budget.consume_alarm(),
             Err(MonitoringBudgetError::AlarmLimit)
         );
+        assert_eq!(budget.remaining(), (0, 0));
     }
 }
