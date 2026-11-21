@@ -250,6 +250,7 @@ pub mod sealed_receipt_vault;
 pub mod sentinel_alarm_fusion;
 pub mod sentinel_budget;
 pub mod sentinel_change_point;
+pub mod sentinel_checkpoint;
 pub mod sentinel_confidence_sequence;
 pub mod sentinel_debounce;
 pub mod sentinel_deployment_identity;
