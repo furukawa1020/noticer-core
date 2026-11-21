@@ -262,6 +262,7 @@ pub mod sentinel_model_drift;
 pub mod sentinel_novelty;
 pub mod sentinel_observation_atom;
 pub mod sentinel_privacy_monitor;
+pub mod sentinel_retention;
 pub mod sentinel_safety_monitor;
 pub mod sentinel_sample;
 pub mod sentinel_scheduler;
