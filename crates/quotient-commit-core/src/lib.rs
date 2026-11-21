@@ -252,6 +252,7 @@ pub mod sentinel_budget;
 pub mod sentinel_change_point;
 pub mod sentinel_checkpoint;
 pub mod sentinel_confidence_sequence;
+pub mod sentinel_crash_recovery;
 pub mod sentinel_debounce;
 pub mod sentinel_deployment_identity;
 pub mod sentinel_environment_drift;
