@@ -260,6 +260,7 @@ pub mod sentinel_environment_drift;
 pub mod sentinel_escalation;
 pub mod sentinel_freshness_lease;
 pub mod sentinel_hysteresis;
+pub mod sentinel_incident_capsule;
 pub mod sentinel_invariant_evaluator;
 pub mod sentinel_invariant_spec;
 pub mod sentinel_liveness_monitor;
