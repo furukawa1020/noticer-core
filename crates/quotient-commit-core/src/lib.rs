@@ -248,6 +248,7 @@ pub mod rollback_anchor;
 pub mod rollback_anchor_file;
 pub mod sealed_receipt_vault;
 pub mod sentinel_alarm_fusion;
+pub mod sentinel_artifact_auth;
 pub mod sentinel_budget;
 pub mod sentinel_canary;
 pub mod sentinel_change_point;
