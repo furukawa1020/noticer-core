@@ -270,6 +270,7 @@ pub mod sentinel_repair_binding;
 pub mod sentinel_replay_protection;
 pub mod sentinel_retention;
 pub mod sentinel_revocation;
+pub mod sentinel_rollback_gate;
 pub mod sentinel_rollback_plan;
 pub mod sentinel_safety_monitor;
 pub mod sentinel_sample;
