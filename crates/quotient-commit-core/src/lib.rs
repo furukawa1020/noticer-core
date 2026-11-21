@@ -251,6 +251,7 @@ pub mod sentinel_alarm_fusion;
 pub mod sentinel_budget;
 pub mod sentinel_change_point;
 pub mod sentinel_confidence_sequence;
+pub mod sentinel_debounce;
 pub mod sentinel_deployment_identity;
 pub mod sentinel_environment_drift;
 pub mod sentinel_hysteresis;
