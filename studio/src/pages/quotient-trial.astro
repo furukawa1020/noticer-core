@@ -1,0 +1,155 @@
+---
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>QuotientTrial | Comparative Evaluation Lab</title></head>
+<body>
+<main class="shell">
+  <header class="hero">
+    <div>
+      <p class="kicker">K19 / REPRODUCIBLE COMPARATIVE EVALUATION</p>
+      <h1>MEASURE<br /><em>THE CLAIM.</em></h1>
+    </div>
+    <aside>
+      <b>QUOTIENT<br />TRIAL</b>
+      <p>Security, utility, latency, and uncertainty share one pre-registered experiment contract.</p>
+      <span>DEMO FIXTURES — NOT SCIENTIFIC RESULTS</span>
+    </aside>
+  </header>
+
+  <section class="controls">
+    <div><small>ATTACK FAMILY</small><nav id="attack-buttons"></nav></div>
+    <div><small>METRIC</small><nav id="metric-buttons"></nav></div>
+    <div><small>ABLATION</small><nav id="ablation-buttons"></nav></div>
+  </section>
+
+  <section class="scoreboard">
+    <div class="score-head">
+      <div><p class="kicker">PAIRED COMPARISON</p><h2 id="metric-title">ATTACK ADVANTAGE</h2></div>
+      <div class="claim"><small>CLAIM GATE</small><strong id="claim">AUTHORIZED</strong></div>
+    </div>
+    <div id="bars" class="bars"></div>
+  </section>
+
+  <section class="inference">
+    <article>
+      <small>PAIRED EFFECT</small>
+      <strong id="effect">−78,000</strong>
+      <span id="effect-unit">ppm</span>
+    </article>
+    <article>
+      <small>95% FIXTURE INTERVAL</small>
+      <strong id="interval">[−90,480, −65,520]</strong>
+      <span>fixed-seed paired bootstrap</span>
+    </article>
+    <article>
+      <small>TRIAL IDENTITY</small>
+      <strong>7f2c…a901</strong>
+      <span>workload + seed + commit + environment</span>
+    </article>
+  </section>
+
+  <section class="gates-section">
+    <div class="section-head">
+      <div><p class="kicker">PUBLICATION FIREWALL</p><h2>No evidence, no sentence.</h2></div>
+      <p>Incomplete matrices, hidden censoring, trivial effects, failed non-inferiority, or uncorrected multiplicity block the claim without deleting the result.</p>
+    </div>
+    <div id="gates" class="gates"></div>
+  </section>
+
+  <section class="paper-map">
+    <article><span>RQ1</span><h3>Does action-equivalent privacy reduce inference?</h3><p>Attack advantage conditioned on allowed action semantics.</p></article>
+    <article><span>RQ2</span><h3>What does proof-carrying repair cost?</h3><p>Latency, verifier effort, artifact bytes, and utility.</p></article>
+    <article><span>RQ3</span><h3>Can runtime assurance contain drift?</h3><p>Detection delay, false alarms, quarantine, and rollback cost.</p></article>
+    <article><span>RQ4</span><h3>Which component creates each benefit?</h3><p>Cause, Remedy, Sentinel, replay, and auth ablations.</p></article>
+  </section>
+
+  <section class="capsule">
+    <div><p class="kicker">PUBLIC TRIAL CAPSULE</p><h2>Result + uncertainty + boundary.</h2><p>Private histories and raw biosignals are excluded.</p></div>
+    <dl>
+      <div><dt>STATUS</dt><dd id="cap-status">PASS</dd></div>
+      <div><dt>ATTACK</dt><dd id="cap-attack"></dd></div>
+      <div><dt>METRIC</dt><dd id="cap-metric"></dd></div>
+      <div><dt>ABLATION</dt><dd id="cap-ablation"></dd></div>
+      <div><dt>CENSORING</dt><dd>0 / disclosed</dd></div>
+      <div><dt>MANIFEST</dt><dd>trial:4c81…2e0f</dd></div>
+    </dl>
+  </section>
+</main>
+</body>
+</html>
+
+<script>
+  import { ABLATIONS, ATTACKS, METRICS, runTrialFixture } from "../scripts/quotient-commit/trial-lab";
+
+  function must<T extends Element>(selector: string): T {
+    const node = document.querySelector<T>(selector);
+    if (!node) throw new Error(`missing Trial Lab node: ${selector}`);
+    return node;
+  }
+  const attackButtons = must<HTMLElement>("#attack-buttons");
+  const metricButtons = must<HTMLElement>("#metric-buttons");
+  const ablationButtons = must<HTMLElement>("#ablation-buttons");
+  const bars = must<HTMLDivElement>("#bars");
+  const gates = must<HTMLDivElement>("#gates");
+  const claim = must<HTMLElement>("#claim");
+  const metricTitle = must<HTMLElement>("#metric-title");
+  const effect = must<HTMLElement>("#effect");
+  const effectUnit = must<HTMLElement>("#effect-unit");
+  const interval = must<HTMLElement>("#interval");
+  const capStatus = must<HTMLElement>("#cap-status");
+  const capAttack = must<HTMLElement>("#cap-attack");
+  const capMetric = must<HTMLElement>("#cap-metric");
+  const capAblation = must<HTMLElement>("#cap-ablation");
+  let attack = "identity";
+  let metric = "leakage";
+  let ablation = "full";
+
+  function render() {
+    const result = runTrialFixture(attack, metric, ablation);
+    document.querySelectorAll<HTMLElement>("[data-control]").forEach((button) => {
+      const group = button.dataset.control;
+      const active = group === "attack" ? attack : group === "metric" ? metric : ablation;
+      button.classList.toggle("active", button.dataset.value === active);
+    });
+    metricTitle.textContent = result.metric.label;
+    const maximum = Math.max(...result.systems.map((item) => item.value), 1);
+    bars.innerHTML = result.systems.map((item, index) => `
+      <article class="${index === 3 ? "candidate" : ""}">
+        <div><b>${item.name}</b><span>${item.value.toLocaleString()} ${result.metric.unit}</span></div>
+        <i style="--width:${Math.max(2, item.value / maximum * 100)}%"></i>
+      </article>`
+    ).join("");
+    claim.textContent = result.claimPass ? "AUTHORIZED" : "WITHHELD";
+    claim.dataset.state = result.claimPass ? "pass" : "fail";
+    effect.textContent = result.effect.toLocaleString();
+    effectUnit.textContent = result.metric.unit;
+    interval.textContent = `[${result.interval.lower.toLocaleString()}, ${result.interval.upper.toLocaleString()}]`;
+    gates.innerHTML = result.gates.map((gate, index) => `
+      <article class="${gate.pass ? "pass" : "fail"}" style="--delay:${index * 45}ms">
+        <small>0${index + 1}</small><b>${gate.name}</b><span>${gate.pass ? "PASS" : "BLOCK"}</span>
+      </article>`
+    ).join("");
+    capStatus.textContent = result.claimPass ? "PASS" : "FAIL / RESULT RETAINED";
+    capAttack.textContent = attack;
+    capMetric.textContent = metric;
+    capAblation.textContent = ablation;
+  }
+
+  attackButtons.innerHTML = ATTACKS.map((item) => `<button data-control="attack" data-value="${item.id}">${item.label}</button>`).join("");
+  metricButtons.innerHTML = METRICS.map((item) => `<button data-control="metric" data-value="${item.id}">${item.label}</button>`).join("");
+  ablationButtons.innerHTML = ABLATIONS.map((item) => `<button data-control="ablation" data-value="${item.id}">${item.label}</button>`).join("");
+  document.querySelector(".controls")?.addEventListener("click", (event) => {
+    if (!(event.target instanceof HTMLElement) || !event.target.dataset.control || !event.target.dataset.value) return;
+    if (event.target.dataset.control === "attack") attack = event.target.dataset.value;
+    if (event.target.dataset.control === "metric") metric = event.target.dataset.value;
+    if (event.target.dataset.control === "ablation") ablation = event.target.dataset.value;
+    render();
+  });
+  render();
+</script>
+
+<style>
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:#f1eadb;color:#17201d;font-family:"Courier New",monospace}.shell{--ink:#17201d;--paper:#f8f3e9;--blue:#1264a3;--acid:#d5ff3f;--signal:#ff4f25;max-width:1480px;margin:auto;padding:28px}.hero{display:grid;grid-template-columns:1.4fr .6fr;border:2px solid var(--ink);background:linear-gradient(125deg,#f8f3e9 50%,#d8eaff)}.hero>div,.hero>aside{padding:44px}.kicker{margin:0;font-size:.66rem;font-weight:900;letter-spacing:.16em}.hero h1{margin:35px 0 0;font:900 clamp(4rem,9vw,8.5rem)/.8 Impact,sans-serif;letter-spacing:-.04em}.hero h1 em{color:var(--blue);font-style:normal}.hero aside{display:flex;flex-direction:column;justify-content:space-between;background:var(--ink);color:white}.hero aside b{color:var(--acid);font:900 3.5rem/.83 Impact,sans-serif}.hero aside p{line-height:1.7}.hero aside span{padding:10px;background:var(--signal);font-size:.62rem;font-weight:900}.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;margin:38px 0;background:var(--ink);border:2px solid var(--ink)}.controls>div{padding:18px;background:var(--paper)}.controls small{font-weight:900}.controls nav{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}.controls button{padding:9px;border:1px solid var(--ink);background:transparent;font:700 .55rem "Courier New",monospace;cursor:pointer}.controls button.active{background:var(--blue);color:white}.scoreboard{padding:34px;border:2px solid var(--ink);background:var(--paper);box-shadow:9px 9px 0 var(--ink)}.score-head,.section-head{display:flex;justify-content:space-between;align-items:end}.score-head h2,.section-head h2,.capsule h2{margin:.3rem 0;font:900 3rem Impact,sans-serif}.claim{text-align:right}.claim strong{display:block;margin-top:8px;color:#23724d;font:900 2rem Impact,sans-serif}.claim strong[data-state=fail]{color:var(--signal)}.bars{margin-top:32px}.bars article{margin:18px 0}.bars article>div{display:flex;justify-content:space-between}.bars i{display:block;width:var(--width);height:25px;margin-top:7px;background:#9ab9d1;transition:width .45s}.bars .candidate i{background:var(--blue)}.bars .candidate b{color:var(--blue)}.inference{display:grid;grid-template-columns:1fr 1fr 1fr;margin:48px 0;border:2px solid var(--ink)}.inference article{min-height:150px;padding:25px;border-right:2px solid var(--ink)}.inference article:last-child{border:0}.inference small,.inference strong,.inference span{display:block}.inference strong{margin:17px 0;font:900 2rem Impact,sans-serif}.inference span{font-size:.62rem;color:#57635e}.gates-section{margin:60px 0}.section-head>p{max-width:58ch;line-height:1.6}.gates{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:20px}.gates article{min-height:135px;padding:17px;background:var(--ink);color:white;border-top:6px solid var(--acid);animation:rise .35s both;animation-delay:var(--delay)}.gates small,.gates b,.gates span{display:block}.gates b{min-height:38px;margin:13px 0;font-size:.72rem}.gates span{color:var(--acid)}.gates .fail{background:var(--signal);border-color:white}.gates .fail span{color:white}@keyframes rise{from{opacity:.1;transform:translateY(10px)}to{opacity:1;transform:none}}.paper-map{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:60px 0}.paper-map article{padding:28px;border:2px solid var(--ink);background:linear-gradient(135deg,#fff,#e5eff6)}.paper-map span{display:inline-block;padding:5px;background:var(--blue);color:white}.paper-map h3{font:900 1.6rem Impact,sans-serif}.paper-map p{line-height:1.55}.capsule{display:grid;grid-template-columns:1fr 1.2fr;gap:40px;padding:38px;background:var(--ink);color:white}.capsule dl{margin:0}.capsule dl div{display:grid;grid-template-columns:150px 1fr;padding:11px;border-bottom:1px solid #4a5651}.capsule dt{color:var(--acid);font-size:.62rem}.capsule dd{margin:0;text-align:right}@media(max-width:900px){.hero,.controls,.inference,.capsule{grid-template-columns:1fr}.inference article{border-right:0;border-bottom:2px solid var(--ink)}.gates{grid-template-columns:1fr 1fr}.section-head{display:block}}@media(max-width:540px){.shell{padding:12px}.hero>div,.hero>aside{padding:25px}.paper-map,.gates{grid-template-columns:1fr}.capsule dl div{grid-template-columns:1fr}.capsule dd{text-align:left;margin-top:5px}}
+</style>
+
