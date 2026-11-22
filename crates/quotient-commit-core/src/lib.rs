@@ -299,6 +299,7 @@ pub mod trial_false_alarm;
 pub mod trial_identity;
 pub mod trial_latency;
 pub mod trial_memory;
+pub mod trial_outlier_policy;
 pub mod trial_paired_design;
 pub mod trial_privacy_leakage;
 pub mod trial_randomized_block;
