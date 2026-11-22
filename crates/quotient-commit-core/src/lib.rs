@@ -316,6 +316,7 @@ pub mod trial_rollback_cost;
 pub mod trial_sample;
 pub mod trial_scenario;
 pub mod trial_seed_plan;
+pub mod trial_sensitivity;
 pub mod trial_system_descriptor;
 pub mod trial_throughput;
 pub mod trial_utility;
