@@ -312,6 +312,7 @@ pub mod trial_privacy_leakage;
 pub mod trial_randomized_block;
 pub mod trial_repair_cost;
 pub mod trial_repetition;
+pub mod trial_repro_manifest;
 pub mod trial_rollback_cost;
 pub mod trial_sample;
 pub mod trial_scenario;
