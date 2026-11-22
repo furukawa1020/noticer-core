@@ -115,6 +115,7 @@ pub mod proof_timestamp_envelope;
 pub mod quotient_cause_engine;
 pub mod quotient_remedy_engine;
 pub mod quotient_sentinel_engine;
+pub mod quotient_trial_engine;
 pub mod receipt;
 pub mod receipt_coordinator;
 pub mod receipt_file;
