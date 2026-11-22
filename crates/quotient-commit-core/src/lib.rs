@@ -294,6 +294,7 @@ pub mod startup_security_gate;
 pub mod trial_identity;
 pub mod trial_system_descriptor;
 pub mod trial_verdict;
+pub mod trial_workload;
 pub mod vaulted_delivery;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";
