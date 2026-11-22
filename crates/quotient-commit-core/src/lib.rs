@@ -292,6 +292,7 @@ pub mod startup_fault_oracle;
 pub mod startup_recovery;
 pub mod startup_security_gate;
 pub mod trial_ablation;
+pub mod trial_artifact_auth;
 pub mod trial_artifact_size;
 pub mod trial_baseline_registry;
 pub mod trial_bootstrap;
