@@ -301,6 +301,7 @@ pub mod trial_latency;
 pub mod trial_memory;
 pub mod trial_paired_design;
 pub mod trial_privacy_leakage;
+pub mod trial_randomized_block;
 pub mod trial_repair_cost;
 pub mod trial_rollback_cost;
 pub mod trial_sample;
