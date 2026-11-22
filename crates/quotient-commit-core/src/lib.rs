@@ -293,6 +293,7 @@ pub mod startup_recovery;
 pub mod startup_security_gate;
 pub mod trial_identity;
 pub mod trial_scenario;
+pub mod trial_seed_plan;
 pub mod trial_system_descriptor;
 pub mod trial_verdict;
 pub mod trial_workload;
