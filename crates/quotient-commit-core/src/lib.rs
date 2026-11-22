@@ -312,6 +312,7 @@ pub mod trial_noninferiority;
 pub mod trial_outlier_policy;
 pub mod trial_paired_design;
 pub mod trial_privacy_leakage;
+pub mod trial_public_capsule;
 pub mod trial_randomized_block;
 pub mod trial_repair_cost;
 pub mod trial_repetition;
