@@ -295,6 +295,7 @@ pub mod trial_ablation;
 pub mod trial_artifact_auth;
 pub mod trial_artifact_size;
 pub mod trial_baseline_registry;
+pub mod trial_benchmark_matrix;
 pub mod trial_bootstrap;
 pub mod trial_censoring;
 pub mod trial_confidence_interval;
