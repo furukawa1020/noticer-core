@@ -295,6 +295,7 @@ pub mod trial_artifact_size;
 pub mod trial_identity;
 pub mod trial_latency;
 pub mod trial_memory;
+pub mod trial_privacy_leakage;
 pub mod trial_sample;
 pub mod trial_scenario;
 pub mod trial_seed_plan;
