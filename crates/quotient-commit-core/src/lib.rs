@@ -291,6 +291,7 @@ pub mod startup_admission_gate;
 pub mod startup_fault_oracle;
 pub mod startup_recovery;
 pub mod startup_security_gate;
+pub mod trial_verdict;
 pub mod vaulted_delivery;
 
 const TRANSACTION_DOMAIN: &[u8] = b"noticer.quotient-commit.transaction.v1\0";
