@@ -293,6 +293,7 @@ pub mod startup_recovery;
 pub mod startup_security_gate;
 pub mod trial_artifact_size;
 pub mod trial_detection_delay;
+pub mod trial_false_alarm;
 pub mod trial_identity;
 pub mod trial_latency;
 pub mod trial_memory;
