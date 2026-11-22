@@ -296,6 +296,7 @@ pub mod trial_scenario;
 pub mod trial_seed_plan;
 pub mod trial_system_descriptor;
 pub mod trial_verdict;
+pub mod trial_warmup;
 pub mod trial_workload;
 pub mod vaulted_delivery;
 
