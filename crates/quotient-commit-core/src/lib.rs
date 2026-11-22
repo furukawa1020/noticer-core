@@ -292,6 +292,7 @@ pub mod startup_fault_oracle;
 pub mod startup_recovery;
 pub mod startup_security_gate;
 pub mod trial_identity;
+pub mod trial_sample;
 pub mod trial_scenario;
 pub mod trial_seed_plan;
 pub mod trial_system_descriptor;
