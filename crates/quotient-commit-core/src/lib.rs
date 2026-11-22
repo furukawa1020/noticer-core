@@ -303,6 +303,7 @@ pub mod trial_false_alarm;
 pub mod trial_identity;
 pub mod trial_latency;
 pub mod trial_memory;
+pub mod trial_multiple_comparison;
 pub mod trial_noninferiority;
 pub mod trial_outlier_policy;
 pub mod trial_paired_design;
