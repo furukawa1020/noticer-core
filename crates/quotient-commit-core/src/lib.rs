@@ -297,6 +297,7 @@ pub mod trial_bootstrap;
 pub mod trial_censoring;
 pub mod trial_confidence_interval;
 pub mod trial_detection_delay;
+pub mod trial_effect_size;
 pub mod trial_energy_proxy;
 pub mod trial_false_alarm;
 pub mod trial_identity;
