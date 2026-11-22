@@ -298,6 +298,7 @@ pub mod trial_baseline_registry;
 pub mod trial_benchmark_matrix;
 pub mod trial_bootstrap;
 pub mod trial_censoring;
+pub mod trial_claim_gate;
 pub mod trial_confidence_interval;
 pub mod trial_detection_delay;
 pub mod trial_effect_size;
