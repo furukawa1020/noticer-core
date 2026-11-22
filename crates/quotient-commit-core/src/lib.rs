@@ -299,6 +299,7 @@ pub mod trial_latency;
 pub mod trial_memory;
 pub mod trial_privacy_leakage;
 pub mod trial_repair_cost;
+pub mod trial_rollback_cost;
 pub mod trial_sample;
 pub mod trial_scenario;
 pub mod trial_seed_plan;
