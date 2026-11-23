@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 _OPAQUE_ID = re.compile(r"^[a-z][a-z0-9_-]{7,63}$")
 _DIRECT_IDENTIFIER_MARKERS = ("@", ".com", "mailto:", "phone:", "name:")
@@ -62,7 +62,9 @@ def validate_identity_rows(rows: Iterable[WindowIdentity]) -> IdentityInventory:
         time_keys.add(time_key)
         subject_sessions.setdefault(row.subject_id, set()).add(row.session_id)
 
-    counts = tuple(sorted((subject, len(sessions)) for subject, sessions in subject_sessions.items()))
+    counts = tuple(
+        sorted((subject, len(sessions)) for subject, sessions in subject_sessions.items())
+    )
     return IdentityInventory(
         subject_count=len(subject_sessions),
         session_count=len(session_owner),
