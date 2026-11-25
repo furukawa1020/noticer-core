@@ -1,0 +1,114 @@
+---
+const base = import.meta.env.BASE_URL;
+const rows = [
+  { mechanism: "Encryption only", observer: "Wire metadata", endpoint: "Timing", verdict: "fixture-reported" },
+  { mechanism: "Fixed rate", observer: "Wire metadata", endpoint: "Deadline", verdict: "inconclusive" },
+  { mechanism: "Padding only", observer: "Wire metadata", endpoint: "Volume", verdict: "missing" },
+  { mechanism: "AETP", observer: "Action only", endpoint: "Utility", verdict: "fixture-reported" },
+  { mechanism: "AETP", observer: "Wire metadata", endpoint: "Identity", verdict: "invalid" },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AETP Evidence Observatory | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav><a href={base}>QuotientForge Studio</a> <a href={`${base}aetp-evidence/`}>Chance-equivalence lab</a></nav>
+      <header>
+        <span class="tag">SYNTHETIC DEMO ONLY</span>
+        <h1>Evidence<br /><em>Observatory.</em></h1>
+        <p>Inspect what the comparison can support, and which cells still block a claim.</p>
+      </header>
+      <section aria-labelledby="matrix-heading">
+        <div class="section-head">
+          <div>
+            <h2 id="matrix-heading">Comparison matrix</h2>
+            <p id="count" role="status">5 cells shown. 3 cells unresolved.</p>
+          </div>
+          <label><input id="unresolved" type="checkbox" /> Show only unresolved cells</label>
+        </div>
+        <div class="table-frame" tabindex="0" role="region" aria-label="Scrollable evidence matrix">
+          <table>
+            <caption>Illustrative cell states, not experimental observations</caption>
+            <thead><tr><th scope="col">Mechanism</th><th scope="col">Observer</th><th scope="col">Endpoint</th><th scope="col">State</th></tr></thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr data-verdict={row.verdict}>
+                  <th scope="row">{row.mechanism}</th>
+                  <td>{row.observer}</td>
+                  <td>{row.endpoint}</td>
+                  <td><span class="state">{row.verdict}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="decision">
+          <strong>Claim withheld</strong>
+          <p>Missing data, invalid input, and insufficient evidence remain distinct. Nothing on this page is a measured privacy gain.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
+
+<script>
+  const rows = Array.from(document.querySelectorAll<HTMLTableRowElement>("tr[data-verdict]"));
+  const control = document.querySelector<HTMLInputElement>("#unresolved");
+  const count = document.querySelector<HTMLElement>("#count");
+  function update() {
+    if (!control || !count) return;
+    let unresolved = 0;
+    let visible = 0;
+    for (const row of rows) {
+      const needsEvidence = row.dataset.verdict !== "fixture-reported";
+      if (needsEvidence) unresolved += 1;
+      row.hidden = control.checked && !needsEvidence;
+      if (!row.hidden) visible += 1;
+    }
+    count.textContent = `${visible} cells shown. ${unresolved} cells unresolved.`;
+  }
+  control?.addEventListener("change", update);
+  update();
+</script>
+
+<style>
+  :root {
+    --ink: #18373a;
+    --teal: #006b63;
+    --line: #a8beb5;
+    --paper: #f4f7ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--ink); font-family: Georgia, serif; min-height: 100vh;
+    background: radial-gradient(ellipse at top right, #c9eee0, transparent 60%), var(--paper);
+  }
+  main { width: min(62rem, calc(100% - 2.5rem)); margin: auto; padding: 1.5rem 0 3rem; }
+  nav, .tag, label, #count, .state { font-family: ui-monospace, monospace; }
+  nav { display: flex; flex-wrap: wrap; gap: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+  a, h1 em { color: var(--teal); }
+  header { padding: 3rem 0 2rem; }
+  .tag { background: #ffd78a; padding: .25rem .5rem; }
+  h1 { font-size: clamp(3rem, 10vw, 6.4rem); line-height: .9; letter-spacing: -.04em; margin: 1rem 0; }
+  h1 em { font-weight: 400; }
+  h2, #count, .decision p { margin: 0; }
+  #count { margin-top: .45rem; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  input { accent-color: var(--teal); }
+  .table-frame { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--line); background: #fcfdf8; }
+  table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+  caption, th, td { padding: .8rem; text-align: left; }
+  th, td { border-top: 1px solid var(--line); }
+  .state { display: inline-block; padding: .25rem .45rem; background: #ebece3; }
+  [data-verdict="inconclusive"] .state { background: #ffe0a5; }
+  [data-verdict="invalid"] .state { background: #ffd7ca; }
+  [data-verdict="fixture-reported"] .state { background: #c7e8db; }
+  .decision { margin-top: 1rem; padding: .9rem 1rem; border-left: .25rem solid var(--teal); }
+  .decision p { margin-top: .3rem; }
+</style>

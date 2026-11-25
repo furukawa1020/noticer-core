@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 export const publicRoutes = Object.freeze([
   { file: "index.html", markers: ["AETP Evidence Lab", "aetp-evidence/"] },
   { file: "aetp-evidence/index.html", markers: ["SYNTHETIC DEMO ONLY", "not an empirical result"] },
+  { file: "aetp-observatory/index.html", markers: ["SYNTHETIC DEMO ONLY", "Claim withheld"] },
   {
     file: "quotient-trial/index.html",
     markers: ["QuotientTrial | Comparative Evaluation Lab", "NOT SCIENTIFIC RESULTS"],
