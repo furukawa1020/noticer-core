@@ -17,8 +17,9 @@ class LinkabilityMetrics:
     roc_auc: float
     average_precision: float
     equal_error_rate: float
-    tpr_at_fpr: float
+    tpr_at_fpr: float | None
     fpr_limit: float
+    fpr_resolution: float
     advantage: float
     pair_count: int
     positive_count: int
@@ -31,11 +32,11 @@ def cross_session_linkability_metrics(
     fpr_limit: float = 0.01,
 ) -> LinkabilityMetrics:
     """Evaluate same-subject pair scores without selecting a test threshold."""
-    labels = np.asarray(truth, dtype=int)
+    labels = np.asarray(truth)
     values = np.asarray(scores, dtype=float)
     if labels.ndim != 1 or values.shape != labels.shape or not len(labels):
         raise LinkabilityMetricError("truth and scores must be aligned non-empty vectors")
-    if set(np.unique(labels)) != {0, 1}:
+    if labels.dtype.kind not in "biu" or set(np.unique(labels)) != {0, 1}:
         raise LinkabilityMetricError("linkability truth must contain zero and one")
     if not np.isfinite(values).all():
         raise LinkabilityMetricError("linkability scores must be finite")
@@ -45,8 +46,10 @@ def cross_session_linkability_metrics(
     fpr, tpr, _ = roc_curve(labels, values)
     false_negative_rate = 1.0 - tpr
     eer_index = int(np.argmin(np.abs(fpr - false_negative_rate)))
+    positives = int(labels.sum())
+    resolution = 1.0 / (len(labels) - positives)
     allowed = np.flatnonzero(fpr <= fpr_limit)
-    constrained_tpr = float(np.max(tpr[allowed])) if len(allowed) else 0.0
+    constrained_tpr = None if 0 < fpr_limit < resolution else float(np.max(tpr[allowed]))
     auc = float(roc_auc_score(labels, values))
     return LinkabilityMetrics(
         roc_auc=auc,
@@ -54,8 +57,9 @@ def cross_session_linkability_metrics(
         equal_error_rate=float((fpr[eer_index] + false_negative_rate[eer_index]) / 2.0),
         tpr_at_fpr=constrained_tpr,
         fpr_limit=fpr_limit,
+        fpr_resolution=resolution,
         advantage=2.0 * abs(auc - 0.5),
         pair_count=len(labels),
-        positive_count=int(labels.sum()),
+        positive_count=positives,
     )
 
