@@ -35,6 +35,11 @@ jobs:
         working-directory: studio
       - run: npm run build
         working-directory: studio
+      - name: Check public routes and evidence labels
+        run: |
+          node --test scripts/check-public-routes.test.mjs
+          node scripts/check-public-routes.mjs
+        working-directory: studio
       - uses: actions/upload-pages-artifact@v3
         with:
           path: studio/dist
