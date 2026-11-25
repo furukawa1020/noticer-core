@@ -1,0 +1,77 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recovery Verifier | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav><a href={`${base}aetp-observatory/`}>Evidence Observatory</a></nav>
+      <header>
+        <p class="badge">SYNTHETIC DEMO ONLY</p>
+        <h1>Same action.<br /><em>Different recovery.</em></h1>
+        <p>Compare a compact synthesized machine with a hand-written scheduler that sends as soon as it can.</p>
+      </header>
+      <section aria-labelledby="experiment">
+        <h2 id="experiment">Choose the public condition</h2>
+        <fieldset>
+          <legend>First transmission opportunity</legend>
+          <label><input type="radio" name="availability" value="available" checked /> Available</label>
+          <label><input type="radio" name="availability" value="loss" /> Unavailable</label>
+        </fieldset>
+        <div class="comparison">
+          <article><p>HAND-WRITTEN</p><h3>Send as soon as possible</h3><dl><dt>States</dt><dd>2</dd><dt>Delivery</dt><dd id="handwritten">Slot 0</dd></dl></article>
+          <article><p>SYNTHESIZED</p><h3>Minimize machine state</h3><dl><dt>States</dt><dd>1</dd><dt>Delivery</dt><dd id="synthetic">Slot 1</dd></dl></article>
+        </div>
+        <p id="summary" role="status">Both deliver the same authorized action. The hand-written machine uses the first opportunity.</p>
+      </section>
+      <footer>
+        These values are from a bounded synthetic model; slots show logical time. Real protocol recovery is unverified.
+      </footer>
+    </main>
+  </body>
+</html>
+<script>
+  const handwritten = document.querySelector<HTMLElement>("#handwritten");
+  const summary = document.querySelector<HTMLElement>("#summary");
+  for (const input of document.querySelectorAll<HTMLInputElement>("input[name=availability]")) {
+    input.addEventListener("change", () => {
+      if (!handwritten || !summary || !input.checked) return;
+      const loss = input.value === "loss";
+      handwritten.textContent = loss ? "Slot 1" : "Slot 0";
+      summary.textContent = loss
+        ? "Both machines deliver in the recovery slot. The first opportunity was unavailable."
+        : "Both deliver the same authorized action. The hand-written machine uses the first opportunity.";
+    });
+  }
+</script>
+<style>
+  :root { --ink: #173334; --accent: #0c6a5c; --rule: #a6bab2; --paper: #f0f5ee; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: Georgia, serif; min-height: 100vh;
+    background: radial-gradient(ellipse at top right, #cce7dc, transparent 65%), var(--paper); }
+  main { width: min(65rem, calc(100% - 2rem)); margin: auto; padding: 1.5rem 0 3rem; }
+  nav { border-bottom: 1px solid var(--rule); padding-bottom: .8rem; }
+  nav, label, article p, .badge, dt, footer { font-family: ui-monospace, monospace; }
+  a, em { color: var(--accent); }
+  header { margin: 3rem 0 1.7rem; }
+  .badge { display: inline-block; background: #f5d69e; padding: .36rem .58rem; }
+  h1 { font-size: clamp(3rem, 8vw, 6.5rem); line-height: .94; margin: .6rem 0; }
+  h1 em { font-weight: 400; }
+  header p:last-child { max-width: 41rem; font-size: 1.12rem; }
+  fieldset { border: 1px solid var(--rule); padding: .55rem .8rem .8rem; }
+  label { display: inline-block; margin-right: 1rem; padding: .22rem; }
+  input { accent-color: var(--accent); }
+  .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: .9rem 0; }
+  article { border: 1px solid var(--rule); background: #fcfdf7; padding: 1rem; }
+  article p { color: var(--accent); font-size: .8rem; }
+  article h3 { font-size: 1.45rem; }
+  dl { display: grid; grid-template-columns: 1fr 1fr; row-gap: .5rem; }
+  dd { margin: 0; font-weight: bold; }
+  footer { border-top: 1px solid var(--rule); padding-top: 1rem; margin-top: 1.5rem; }
+  @media (max-width: 34rem) { .comparison { grid-template-columns: 1fr; } }
+</style>
