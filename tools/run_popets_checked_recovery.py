@@ -210,6 +210,8 @@ def main() -> None:
         print(f"Synthesis {synthesis_status}; no qualified receiver runs")
         raise SystemExit(3)
     results = {}
+    if artifact.get("scope", {"services": 2, "horizon": 2}) != {"services": 2, "horizon": 2}:
+        raise ValueError("the two-recipient socket replay only supports the original fixture")
     for name, candidate in artifact["cases"].items():
         file = args.out / f"{name}.model.json"
         with file.open("xb") as stream:
