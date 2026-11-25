@@ -45,16 +45,12 @@ def run_temporal_linkability_attack(
     candidates = tuple(sorted(set(regularization_candidates)))
     if not candidates or any(not np.isfinite(value) or value <= 0 for value in candidates):
         raise TemporalLinkabilityError("regularization candidates must be finite and positive")
-    partitions = [
-        set(values)
-        for values in (
-            split.train_sessions,
-            split.validation_sessions,
-            split.test_sessions,
-        )
-    ]
+    groups = (split.train_sessions, split.validation_sessions, split.test_sessions)
+    partitions = [set(values) for values in groups]
     if any(not values for values in partitions):
         raise TemporalLinkabilityError("all session partitions must be non-empty")
+    if any(len(group) != len(unique) for group, unique in zip(groups, partitions, strict=True)):
+        raise TemporalLinkabilityError("duplicate session within a linkability partition")
     overlaps = (
         partitions[0] & partitions[1]
         or partitions[0] & partitions[2]
@@ -93,9 +89,14 @@ def run_temporal_linkability_attack(
 def _session_embeddings(dataset: WindowDataset) -> tuple[dict[str, np.ndarray], dict[str, str]]:
     embeddings: dict[str, np.ndarray] = {}
     owners: dict[str, str] = {}
-    for session_value in np.unique(dataset.session_ids):
-        session = str(session_value)
-        indices = np.flatnonzero(dataset.session_ids.astype(str) == session)
+    sessions = dataset.session_ids.astype(str)
+    for session in np.unique(sessions):
+        indices = np.flatnonzero(sessions == session)
+        times = dataset.time_indices[indices]
+        if times.dtype.kind not in "iu" or np.any(times < 0):
+            raise TemporalLinkabilityError("time indices must be nonnegative integers")
+        if len(np.unique(times)) != len(times):
+            raise TemporalLinkabilityError("duplicate time index within a session")
         indices = indices[np.argsort(dataset.time_indices[indices], kind="stable")]
         values = dataset.features[indices]
         subjects = np.unique(dataset.subject_ids[indices].astype(str))

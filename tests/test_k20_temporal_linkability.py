@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -8,13 +10,14 @@ from noticer_core.attacks.k20_temporal_linkability import (
     TemporalLinkabilityError,
     run_temporal_linkability_attack,
 )
+from noticer_core.data.contracts import WindowDataset
 from noticer_core.data.k20_positive_control import (
     PositiveControlConfig,
     generate_positive_control,
 )
 
 
-def inputs() -> tuple[object, LinkabilitySplit]:
+def inputs() -> tuple[WindowDataset, LinkabilitySplit]:
     dataset = generate_positive_control(
         PositiveControlConfig(subjects=4, sessions_per_subject=6, windows_per_session=12), seed=4
     )
@@ -68,3 +71,20 @@ def test_incomplete_session_coverage_is_rejected() -> None:
     )
     with pytest.raises(TemporalLinkabilityError, match="cover every"):
         run_temporal_linkability_attack(dataset, invalid, regularization_candidates=(1.0,), seed=9)
+
+
+def test_duplicate_session_cannot_create_a_self_pair() -> None:
+    dataset, split = inputs()
+    invalid = replace(split, test_sessions=split.test_sessions + split.test_sessions[:1])
+    with pytest.raises(TemporalLinkabilityError, match="duplicate session"):
+        run_temporal_linkability_attack(dataset, invalid, regularization_candidates=(1.0,), seed=9)
+
+
+def test_repeated_time_index_is_rejected() -> None:
+    dataset, split = inputs()
+    times = dataset.time_indices.copy()
+    times[1] = times[0]
+    with pytest.raises(TemporalLinkabilityError, match="duplicate time"):
+        run_temporal_linkability_attack(
+            replace(dataset, time_indices=times), split, regularization_candidates=(1.0,), seed=9
+        )
