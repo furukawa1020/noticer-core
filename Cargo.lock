@@ -1944,6 +1944,7 @@ dependencies = [
  "quotient-forge-repair",
  "quotient-forge-solver",
  "quotient-forge-synth",
+ "serde_json",
 ]
 
 [[package]]

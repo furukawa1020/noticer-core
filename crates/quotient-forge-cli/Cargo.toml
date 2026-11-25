@@ -1,5 +1,6 @@
 [package]
 name = "quotient-forge-cli"
+default-run = "quotient-forge"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -20,3 +21,4 @@ quotient-forge-noticer.workspace = true
 quotient-forge-repair.workspace = true
 quotient-forge-solver.workspace = true
 quotient-forge-synth.workspace = true
+serde_json.workspace = true
