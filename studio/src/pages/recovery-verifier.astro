@@ -22,10 +22,15 @@ const base = import.meta.env.BASE_URL;
           <legend>First transmission opportunity</legend>
           <label><input type="radio" name="availability" value="available" checked /> Available</label>
           <label><input type="radio" name="availability" value="loss" /> Unavailable</label>
+          <label><input type="radio" name="availability" value="outside" /> No recovery slot</label>
+        </fieldset>
+        <fieldset>
+          <legend>Deadline contract</legend>
+          <label><input id="strict-deadline" type="checkbox" /> Require first-slot delivery when available</label>
         </fieldset>
         <div class="comparison">
           <article><p>HAND-WRITTEN</p><h3>Send as soon as possible</h3><dl><dt>States</dt><dd>2</dd><dt>Delivery</dt><dd id="handwritten">Slot 0</dd></dl></article>
-          <article><p>SYNTHESIZED</p><h3>Minimize machine state</h3><dl><dt>States</dt><dd>1</dd><dt>Delivery</dt><dd id="synthetic">Slot 1</dd></dl></article>
+          <article><p>SYNTHESIZED</p><h3>Meet the declared contract</h3><dl><dt>States</dt><dd id="synthetic-states">1</dd><dt>Delivery</dt><dd id="synthetic">Slot 1</dd></dl></article>
         </div>
         <p id="summary" role="status">Both deliver the same authorized action. The hand-written machine uses the first opportunity.</p>
       </section>
@@ -37,17 +42,34 @@ const base = import.meta.env.BASE_URL;
 </html>
 <script>
   const handwritten = document.querySelector<HTMLElement>("#handwritten");
+  const synthesized = document.querySelector<HTMLElement>("#synthetic");
+  const states = document.querySelector<HTMLElement>("#synthetic-states");
+  const strict = document.querySelector<HTMLInputElement>("#strict-deadline");
   const summary = document.querySelector<HTMLElement>("#summary");
-  for (const input of document.querySelectorAll<HTMLInputElement>("input[name=availability]")) {
-    input.addEventListener("change", () => {
-      if (!handwritten || !summary || !input.checked) return;
-      const loss = input.value === "loss";
-      handwritten.textContent = loss ? "Slot 1" : "Slot 0";
-      summary.textContent = loss
-        ? "Both machines deliver in the recovery slot. The first opportunity was unavailable."
-        : "Both deliver the same authorized action. The hand-written machine uses the first opportunity.";
-    });
+  function update() {
+    const current = document.querySelector<HTMLInputElement>("input[name=availability]:checked");
+    if (!current || !handwritten || !synthesized || !states || !strict || !summary) return;
+    states.textContent = strict.checked ? "2" : "1";
+    if (current.value === "outside") {
+      handwritten.textContent = synthesized.textContent = "Not evaluated";
+      summary.textContent = "Outside the verified model: availability of the recovery slot is required.";
+      return;
+    }
+    const loss = current.value === "loss";
+    handwritten.textContent = loss ? "Slot 1" : "Slot 0";
+    synthesized.textContent = loss || !strict.checked ? "Slot 1" : "Slot 0";
+    if (loss) {
+      summary.textContent = "Both machines deliver in the recovery slot.";
+    } else if (strict.checked) {
+      summary.textContent = "The strict contract rejects waiting. Both two-state machines deliver in slot 0.";
+    } else {
+      summary.textContent = "Both deliver. The smaller machine waits one slot.";
+    }
   }
+  for (const input of document.querySelectorAll<HTMLInputElement>("input[name=availability]")) {
+    input.addEventListener("change", update);
+  }
+  strict?.addEventListener("change", update);
 </script>
 <style>
   :root { --ink: #173334; --accent: #0c6a5c; --rule: #a6bab2; --paper: #f0f5ee; }
@@ -63,7 +85,7 @@ const base = import.meta.env.BASE_URL;
   h1 { font-size: clamp(3rem, 8vw, 6.5rem); line-height: .94; margin: .6rem 0; }
   h1 em { font-weight: 400; }
   header p:last-child { max-width: 41rem; font-size: 1.12rem; }
-  fieldset { border: 1px solid var(--rule); padding: .55rem .8rem .8rem; }
+  fieldset { border: 1px solid var(--rule); padding: .55rem .8rem .8rem; margin-bottom: .65rem; }
   label { display: inline-block; margin-right: 1rem; padding: .22rem; }
   input { accent-color: var(--accent); }
   .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: .9rem 0; }
