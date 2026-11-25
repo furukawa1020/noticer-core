@@ -1,0 +1,55 @@
+name: K22 Checked Recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/quotient-forge-cli/src/bin/compare-recovery.rs"
+      - "crates/quotient-forge-check/**"
+      - "crates/quotient-forge-synth/**"
+      - "src/noticer_core/recovery_*.py"
+      - "tools/run_popets_checked_recovery.py"
+      - "tools/assert_popets_recovery_fixture.py"
+      - ".github/workflows/k22-checked-recovery.yml"
+  pull_request:
+    paths:
+      - "crates/quotient-forge-cli/src/bin/compare-recovery.rs"
+      - "crates/quotient-forge-check/**"
+      - "crates/quotient-forge-synth/**"
+      - "src/noticer_core/recovery_*.py"
+      - "tools/run_popets_checked_recovery.py"
+      - "tools/assert_popets_recovery_fixture.py"
+      - ".github/workflows/k22-checked-recovery.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-synthetic-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -e ".[dev]"
+      - run: cargo build --locked -p quotient-forge-cli --bin compare-recovery
+      - run: cargo build --locked -p quotient-forge-check --bin aqrs-check-json
+      - name: Check native synthesis, local receipt replay and cutoff
+        run: |
+          result="$RUNNER_TEMP/checked-recovery"
+          mkdir -p "$result/strict" "$result/cutoff"
+          target/debug/compare-recovery --strict-deadline > "$result/strict/native.json"
+          python tools/run_popets_checked_recovery.py "$result/strict/native.json" \
+            target/debug/aqrs-check-json "$result/strict"
+          target/debug/compare-recovery --strict-deadline --max-candidates 1 \
+            > "$result/cutoff/native.json"
+          status=0
+          python tools/run_popets_checked_recovery.py "$result/cutoff/native.json" \
+            target/debug/aqrs-check-json "$result/cutoff" || status="$?"
+          test "$status" -eq 3
+          python tools/assert_popets_recovery_fixture.py \
+            "$result/strict/summary.json" "$result/cutoff/summary.json"
