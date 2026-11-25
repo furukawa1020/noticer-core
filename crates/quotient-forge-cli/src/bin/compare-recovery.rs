@@ -250,11 +250,29 @@ fn model_entry(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let strict = std::env::args().nth(1).as_deref() == Some("--strict-deadline");
+    let mut arguments = std::env::args().skip(1);
+    let mut strict = false;
+    let mut candidate_limit = None;
+    while let Some(argument) = arguments.next() {
+        match argument.as_str() {
+            "--strict-deadline" if !strict => strict = true,
+            "--max-candidates" if candidate_limit.is_none() => {
+                let count = arguments
+                    .next()
+                    .ok_or("missing candidate limit")?
+                    .parse::<u64>()?;
+                if count == 0 {
+                    return Err("candidate limit must be positive".into());
+                }
+                candidate_limit = Some(count);
+            }
+            _ => return Err(format!("unsupported argument: {argument}").into()),
+        }
+    }
     let problem = failure_fixture(strict);
     let limits = SynthesisLimits {
         max_states: 2,
-        max_candidates: if strict { 100_000 } else { 10_000 },
+        max_candidates: candidate_limit.unwrap_or(if strict { 100_000 } else { 10_000 }),
         time_limit: Duration::from_secs(15),
         ..SynthesisLimits::default()
     };
@@ -265,7 +283,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let report = match outcome {
         SynthesisOutcome::Realizable(report) => report,
-        failure => return Err(format!("no bounded synthesized machine: {failure:?}").into()),
+        SynthesisOutcome::Unrealizable(report) => {
+            println!(
+                "{}",
+                json!({
+                    "schema": "noticer.popets.recovery-synthesis-pilot.v1",
+                    "synthesis_status": "unrealizable-at-bound",
+                    "searched_through_states": report.searched_through_states,
+                    "candidates": report.stats.generated_candidates,
+                    "cases": {},
+                })
+            );
+            return Ok(());
+        }
+        SynthesisOutcome::Inconclusive { reason, stats } => {
+            println!(
+                "{}",
+                json!({
+                    "schema": "noticer.popets.recovery-synthesis-pilot.v1",
+                    "synthesis_status": "inconclusive",
+                    "reason": format!("{reason:?}"),
+                    "max_candidates": limits.max_candidates,
+                    "candidates": stats.generated_candidates,
+                    "cases": {},
+                })
+            );
+            return Ok(());
+        }
     };
     let mut cases = json!({
         "synthesized": model_entry(&problem, &report.machine)?,
@@ -289,6 +333,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let product = json!({
         "schema": "noticer.popets.recovery-synthesis-pilot.v1",
+        "synthesis_status": "realizable",
         "evidence": "synthetic public loss/recovery, not deployment evidence",
         "deadline_contract": if strict { "context-specific" } else { "common-final-slot" },
         "synthesis": {
