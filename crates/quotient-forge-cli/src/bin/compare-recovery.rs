@@ -9,8 +9,8 @@ use quotient_forge_check::{
     Observer, Release, SemanticContract,
 };
 use quotient_forge_synth::{
-    optimize_cost, MachineCell, PlantPair, PlantState, PlantTransition, ReleaseMachine,
-    SynthesisLimits, SynthesisOutcome, SynthesisProblem,
+    find_feasible, optimize_cost, MachineCell, PlantPair, PlantState, PlantTransition,
+    ReleaseMachine, SynthesisLimits, SynthesisOutcome, SynthesisProblem,
 };
 use serde_json::{json, Value};
 
@@ -19,7 +19,7 @@ const EARLY: u32 = 1;
 const FINAL_LEFT: u32 = 2;
 const FINAL_RIGHT: u32 = 3;
 
-fn failure_fixture() -> SynthesisProblem {
+fn failure_fixture(strict: bool) -> SynthesisProblem {
     let obligations: Vec<ActionObligation> = ["a", "b"]
         .into_iter()
         .map(|service| ActionObligation {
@@ -42,27 +42,34 @@ fn failure_fixture() -> SynthesisProblem {
     };
     let mut plant_states = Vec::new();
     let mut plant_transitions = Vec::new();
-    for group in 0..4 {
-        // Each adjacent first-slot/last-slot pair is one world.
-        // The last two groups are idle negative authorization controls.
-        let is_idle = group >= 2;
+    for group in 0..if strict { 6 } else { 4 } {
+        let is_idle = (2..4).contains(&group);
+        let semantics = if is_idle {
+            "idle"
+        } else if !strict {
+            "notify-both"
+        } else if group < 2 {
+            "normal"
+        } else {
+            "recovered"
+        };
         for stage in 0..2 {
             let id = 2 * group + stage;
             plant_states.push(PlantState {
                 id,
-                action_semantics: if is_idle { "idle" } else { "notify-both" }.into(),
+                action_semantics: semantics.into(),
                 private_history: format!("synthetic-world-{group}").into(),
             });
-            for input in 0..2 {
+            for input in 0..if strict { 1 } else { 2 } {
                 let symbol = if is_idle {
                     RESERVED
                 } else if stage == 0 {
-                    if input == 0 {
+                    if (!strict && input == 0) || (strict && group < 2) {
                         EARLY
                     } else {
                         RESERVED
                     }
-                } else if group == 0 {
+                } else if group % 2 == 0 {
                     FINAL_LEFT
                 } else {
                     FINAL_RIGHT
@@ -80,7 +87,7 @@ fn failure_fixture() -> SynthesisProblem {
     diag_left.fields.insert("receipt-b".into(), "0".to_owned());
     let mut diag_right = deliver.clone();
     diag_right.fields.insert("receipt-b".into(), "1".to_owned());
-    SynthesisProblem {
+    let mut problem = SynthesisProblem {
         horizon: 2,
         machine_symbol_count: 4,
         plant_states,
@@ -121,7 +128,31 @@ fn failure_fixture() -> SynthesisProblem {
             PlantPair { left: 4, right: 6 },
         ],
         outputs: vec![Release::silent(), deliver, diag_left, diag_right],
+    };
+    if strict {
+        // The scenario is declared in trusted public context before the
+        // clock starts. One clock symbol drives both fixed availability tapes.
+        problem.inputs = vec![EnvironmentInput {
+            id: "public-tick".into(),
+            public_symbol: "public-tick".to_owned(),
+            fault: None,
+        }];
+        problem.faults.clear();
+        problem.semantics[0].id = "normal".into();
+        for action in &mut problem.semantics[0].obligations {
+            action.deadline_slot = 0;
+        }
+        let mut recovered = problem.semantics[0].clone();
+        recovered.id = "recovered".into();
+        for action in &mut recovered.obligations {
+            action.trigger_slot = 1;
+            action.deadline_slot = 1;
+        }
+        problem.semantics.push(recovered);
+        problem.initial_pairs.push(PlantPair { left: 8, right: 10 });
+        problem.outputs.truncate(2);
     }
+    problem
 }
 
 fn hand_written(mutant: bool) -> ReleaseMachine {
@@ -219,20 +250,47 @@ fn model_entry(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let problem = failure_fixture();
+    let strict = std::env::args().nth(1).as_deref() == Some("--strict-deadline");
+    let problem = failure_fixture(strict);
     let limits = SynthesisLimits {
         max_states: 2,
-        max_candidates: 10_000,
+        max_candidates: if strict { 100_000 } else { 10_000 },
         time_limit: Duration::from_secs(15),
         ..SynthesisLimits::default()
     };
-    let report = match optimize_cost(&problem, limits)? {
+    let outcome = if strict {
+        find_feasible(&problem, limits)?
+    } else {
+        optimize_cost(&problem, limits)?
+    };
+    let report = match outcome {
         SynthesisOutcome::Realizable(report) => report,
         failure => return Err(format!("no bounded synthesized machine: {failure:?}").into()),
     };
+    let mut cases = json!({
+        "synthesized": model_entry(&problem, &report.machine)?,
+        "handwritten": model_entry(&problem, &hand_written(false))?,
+    });
+    if strict {
+        let always_wait = ReleaseMachine {
+            state_count: 1,
+            symbol_count: 4,
+            cells: [0, 0, 1, 1]
+                .into_iter()
+                .map(|output| MachineCell {
+                    next_state: 0,
+                    output,
+                })
+                .collect(),
+        };
+        cases["always_wait"] = model_entry(&problem, &always_wait)?;
+    } else {
+        cases["synthetic_mutant"] = model_entry(&problem, &hand_written(true))?;
+    }
     let product = json!({
         "schema": "noticer.popets.recovery-synthesis-pilot.v1",
         "evidence": "synthetic public loss/recovery, not deployment evidence",
+        "deadline_contract": if strict { "context-specific" } else { "common-final-slot" },
         "synthesis": {
             "cost_optimized": report.cost_optimized,
             "minimal_state_count": report.minimal_state_count,
@@ -246,11 +304,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "action_emissions": report.cost.action_emissions,
             },
         },
-        "cases": {
-            "synthesized": model_entry(&problem, &report.machine)?,
-            "handwritten": model_entry(&problem, &hand_written(false))?,
-            "synthetic_mutant": model_entry(&problem, &hand_written(true))?,
-        },
+        "cases": cases,
         "plant": problem.plant_transitions.iter()
             .map(|x| [x.from, x.input, x.to, x.machine_symbol]).collect::<Vec<_>>(),
         "outputs": problem.outputs.iter().map(release_json).collect::<Vec<_>>(),
