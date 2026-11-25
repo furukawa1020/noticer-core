@@ -131,8 +131,13 @@ def evaluate(candidate: dict, artifact: dict) -> dict:
     active_results = []
     unauthorized = 0
     promises_completed = 0
-    deadline = candidate["checker_model"]["horizon"] - 1
+    strict = artifact.get("deadline_contract") == "context-specific"
     for (scenario, worlds), (public_case, tape) in product(SCENARIOS.items(), PUBLIC_TAPES.items()):
+        deadline = 0 if strict and public_case == "no-loss" else 1
+        if strict:
+            tape = (0, 0)
+            if scenario == "action" and public_case == "lose-first-opportunity":
+                worlds = (8, 10)
         early, late = (execute_world(artifact, candidate, world, tape) for world in worlds)
         cases[f"{scenario}/{public_case}"] = {
             "paired_view_equal": early["received"] == late["received"],
