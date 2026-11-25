@@ -7,6 +7,10 @@ export const publicRoutes = Object.freeze([
   { file: "aetp-evidence/index.html", markers: ["SYNTHETIC DEMO ONLY", "not an empirical result"] },
   { file: "aetp-observatory/index.html", markers: ["SYNTHETIC DEMO ONLY", "Claim withheld"] },
   {
+    file: "recovery-verifier/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "logical time", "Real protocol recovery is unverified"],
+  },
+  {
     file: "quotient-trial/index.html",
     markers: ["QuotientTrial | Comparative Evaluation Lab", "NOT SCIENTIFIC RESULTS"],
   },
