@@ -1,0 +1,170 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AETP Evidence Lab | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Studio navigation">
+        <a href={base}>QuotientForge Studio</a>
+        <span>K21 / Evidence methods</span>
+      </nav>
+
+      <header>
+        <p class="tag">SYNTHETIC DEMO ONLY</p>
+        <h1>At chance?<br /><em>Show the interval.</em></h1>
+        <p>Explore how much evidence it takes to call a score equivalent to chance.</p>
+      </header>
+
+      <section class="lab" aria-label="Chance equivalence controls and results">
+        <div class="controls">
+          <h2>Set the scenario</h2>
+          <label for="clusters">Independent clusters <output id="cluster-value">25</output></label>
+          <input id="clusters" type="range" min="2" max="1200" value="25" />
+          <label for="score">Mean score <output id="score-value">0.50</output></label>
+          <input id="score" type="range" min="0" max="1" step="0.01" value="0.50" />
+          <label for="margin">Equivalence margin <output id="margin-value">0.10</output></label>
+          <input id="margin" type="range" min="0.02" max="0.25" step="0.01" value="0.10" />
+          <button type="button" id="compare">Compare with 400 clusters</button>
+        </div>
+        <div class="readout">
+          <h2>95% interval</h2>
+          <div class="plot" aria-hidden="true">
+            <div class="band"></div>
+            <div class="chance"></div>
+            <div class="interval"></div>
+            <div class="point"></div>
+          </div>
+          <div class="axis" aria-hidden="true"><span>0.00</span><span>0.50</span><span>1.00</span></div>
+          <p class="legend"><b>Amber:</b> equivalence band. <b>Teal:</b> interval and mean.</p>
+          <div role="status" id="result"></div>
+          <noscript><p>Enable JavaScript to calculate the interval from the sliders.</p></noscript>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          This is a synthetic illustration, not an empirical result or a guarantee of anonymity.
+          The two-sided Hoeffding bound assumes independent, equally weighted cluster scores in
+          [0, 1]. Windows from the same recording are not independent clusters.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
+
+<script>
+  const input = (id: string) => document.querySelector<HTMLInputElement>(`#${id}`);
+  const clusters = input("clusters");
+  const score = input("score");
+  const margin = input("margin");
+  const plot = document.querySelector<HTMLElement>(".plot");
+  const result = document.querySelector<HTMLElement>("#result");
+  const clusterValue = document.querySelector<HTMLOutputElement>("#cluster-value");
+  const scoreValue = document.querySelector<HTMLOutputElement>("#score-value");
+  const marginValue = document.querySelector<HTMLOutputElement>("#margin-value");
+
+  function render() {
+    if (!clusters || !score || !margin || !plot || !result ||
+        !clusterValue || !scoreValue || !marginValue) return;
+    const n = clusters.valueAsNumber;
+    const estimate = score.valueAsNumber;
+    const delta = margin.valueAsNumber;
+    const bandLower = 0.5 - delta;
+    const bandUpper = 0.5 + delta;
+    const radius = Math.sqrt(Math.log(40) / (2 * n));
+    const lower = Math.max(0, estimate - radius);
+    const upper = Math.min(1, estimate + radius);
+    const verdict = lower >= bandLower && upper <= bandUpper
+      ? "Chance-equivalent in this scenario"
+      : lower > bandUpper || upper < bandLower
+        ? "Outside the chance-equivalence band"
+        : "Inconclusive";
+    clusterValue.value = String(n);
+    scoreValue.value = estimate.toFixed(2);
+    marginValue.value = delta.toFixed(2);
+    for (const [key, value] of Object.entries({
+      bandLower, bandUpper, lower, upper, estimate,
+    })) {
+      plot.style.setProperty(`--${key}`, `${100 * value}%`);
+    }
+    result.textContent =
+      `${verdict}. Interval: [${lower.toFixed(3)}, ${upper.toFixed(3)}]. ` +
+      `Band: [${bandLower.toFixed(3)}, ${bandUpper.toFixed(3)}].`;
+  }
+
+  for (const slider of [clusters, score, margin]) slider?.addEventListener("input", render);
+  document.querySelector("#compare")?.addEventListener("click", () => {
+    if (!clusters) return;
+    clusters.value = "400";
+    render();
+  });
+  render();
+</script>
+
+<style>
+  :root {
+    --ink: #102c30;
+    --muted: #365a5d;
+    --paper: #f2f6ef;
+    --line: #adbfba;
+    --accent: #006b63;
+    --band: #ffd78a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: radial-gradient(ellipse at top right, #d5eee3, transparent 55%), var(--paper);
+    font-family: Georgia, "Times New Roman", serif;
+    min-height: 100vh;
+  }
+  main { width: min(68rem, calc(100% - 2.5rem)); margin: auto; padding: 1.6rem 0 3rem; }
+  nav {
+    display: flex; justify-content: space-between; gap: 1rem; align-items: center;
+    border-bottom: 1px solid var(--line); padding-bottom: 1rem; flex-wrap: wrap;
+  }
+  nav, .tag, label, button, .axis, .legend, #result { font-family: ui-monospace, monospace; }
+  a { color: var(--accent); }
+  header { padding: clamp(2rem, 7vw, 5rem) 0 2rem; }
+  header p:last-child { color: var(--muted); font-size: 1.2rem; margin-bottom: 0; }
+  .tag { display: inline-block; background: var(--band); padding: 0.35rem 0.6rem; margin: 0; }
+  h1 { font-size: clamp(2.9rem, 8vw, 6rem); line-height: 0.97; margin: 1rem 0; }
+  em { color: var(--accent); font-weight: normal; }
+  h2 { margin: 0 0 1rem; }
+  .lab { display: grid; grid-template-columns: 1fr 1.25fr; border: 1px solid var(--line); }
+  .controls, .readout { padding: clamp(1rem, 3vw, 2rem); min-width: 0; }
+  .controls { background: #fbfdf8; border-right: 1px solid var(--line); }
+  label, .axis { display: flex; justify-content: space-between; gap: 0.5rem; }
+  output { font-weight: bold; }
+  input { width: 100%; accent-color: var(--accent); margin: 0.55rem 0 1.2rem; }
+  button {
+    color: white; background: var(--accent); border: 0; padding: 0.75rem;
+    font-size: 0.9rem; cursor: pointer;
+  }
+  .plot { position: relative; height: 3rem; background: #e6eee7; margin-top: 1.5rem; }
+  .plot div { position: absolute; }
+  .band { inset: 0 calc(100% - var(--bandUpper, 60%)) 0 var(--bandLower, 40%); background: var(--band); }
+  .chance { inset: 0 auto 0 50%; border-left: 1px dashed var(--ink); }
+  .interval {
+    left: var(--lower, 0%); right: calc(100% - var(--upper, 100%));
+    top: calc(50% - 2px); height: 4px; background: var(--accent);
+  }
+  .point {
+    left: var(--estimate, 50%); top: 50%; transform: translate(-50%, -50%);
+    width: 0.85rem; height: 0.85rem; background: var(--accent); border-radius: 50%;
+  }
+  .axis, .legend { margin-top: 0.55rem; font-size: 0.85rem; color: var(--muted); }
+  #result { border-top: 1px solid var(--line); padding-top: 0.8rem; line-height: 1.6; }
+  footer { max-width: 52rem; color: var(--muted); line-height: 1.55; }
+  @media (max-width: 42rem) {
+    .lab { grid-template-columns: 1fr; }
+    .controls { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+</style>
