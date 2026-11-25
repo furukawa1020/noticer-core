@@ -169,6 +169,43 @@ pub fn generate_action_equivalent_pairs(
     Ok(pairs)
 }
 
+/// Build a synthetic evaluation pair whose only private difference is readiness.
+///
+/// Offsets are relative to the public start slot. This does not expose a
+/// general-purpose readiness accessor for captured or production histories.
+pub fn synthetic_readiness_pair(
+    seed: u64,
+    context: &PublicContext,
+    early_offset: u64,
+    late_offset: u64,
+) -> Result<ActionEquivalentPair, SimulationError> {
+    let mut pair = generate_action_equivalent_pairs(1, seed, context)?
+        .pop()
+        .ok_or(SimulationError::InvalidPair)?;
+    let start = context.network.start_slot.0;
+    let early = start
+        .checked_add(early_offset)
+        .ok_or(SimulationError::InvalidPair)?;
+    let late = start
+        .checked_add(late_offset)
+        .ok_or(SimulationError::InvalidPair)?;
+    if early >= late
+        || pair
+            .shared_semantics
+            .obligations
+            .iter()
+            .any(|obligation| late > obligation.admission_cutoff.0)
+    {
+        return Err(SimulationError::InvalidPair);
+    }
+    pair.left.evidence_ready_slot = LogicalSlot(early);
+    pair.right = PrivateHistory {
+        evidence_ready_slot: LogicalSlot(late),
+        ..pair.left
+    };
+    Ok(pair)
+}
+
 fn semantics_for_family(
     family: CounterfactualFamily,
     context: &PublicContext,
