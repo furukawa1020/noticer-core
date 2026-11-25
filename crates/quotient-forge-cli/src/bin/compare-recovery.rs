@@ -2,7 +2,7 @@
 
 #![forbid(unsafe_code)]
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use quotient_forge_check::{
     ActionEmission, ActionObligation, CheckerModel, EnvironmentInput, FaultInput, ObligationRef,
@@ -19,14 +19,18 @@ const EARLY: u32 = 1;
 const FINAL_LEFT: u32 = 2;
 const FINAL_RIGHT: u32 = 3;
 
-fn failure_fixture(strict: bool) -> SynthesisProblem {
-    let obligations: Vec<ActionObligation> = ["a", "b"]
-        .into_iter()
+fn failure_fixture(strict: bool, services: u32, horizon: u32) -> SynthesisProblem {
+    let obligations: Vec<ActionObligation> = (0..services)
+        .map(|index| match index {
+            0 => "a".to_owned(),
+            1 => "b".to_owned(),
+            _ => format!("s{index:02}"),
+        })
         .map(|service| ActionObligation {
-            id: service.into(),
             action: format!("notify-{service}").into(),
+            id: service.into(),
             trigger_slot: 0,
-            deadline_slot: 1,
+            deadline_slot: horizon - 1,
         })
         .collect();
     let deliver = Release {
@@ -53,8 +57,8 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
         } else {
             "recovered"
         };
-        for stage in 0..2 {
-            let id = 2 * group + stage;
+        for stage in 0..horizon {
+            let id = horizon * group + stage;
             plant_states.push(PlantState {
                 id,
                 action_semantics: semantics.into(),
@@ -69,6 +73,8 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
                     } else {
                         RESERVED
                     }
+                } else if stage < horizon - 1 {
+                    RESERVED
                 } else if group % 2 == 0 {
                     FINAL_LEFT
                 } else {
@@ -77,7 +83,7 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
                 plant_transitions.push(PlantTransition {
                     from: id,
                     input,
-                    to: 2 * group + 1,
+                    to: horizon * group + (stage + 1).min(horizon - 1),
                     machine_symbol: symbol,
                 });
             }
@@ -88,7 +94,7 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
     let mut diag_right = deliver.clone();
     diag_right.fields.insert("receipt-b".into(), "1".to_owned());
     let mut problem = SynthesisProblem {
-        horizon: 2,
+        horizon,
         machine_symbol_count: 4,
         plant_states,
         plant_transitions,
@@ -124,8 +130,14 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
             observes_actions: true,
         }],
         initial_pairs: vec![
-            PlantPair { left: 0, right: 2 },
-            PlantPair { left: 4, right: 6 },
+            PlantPair {
+                left: 0,
+                right: horizon,
+            },
+            PlantPair {
+                left: 2 * horizon,
+                right: 3 * horizon,
+            },
         ],
         outputs: vec![Release::silent(), deliver, diag_left, diag_right],
     };
@@ -145,11 +157,14 @@ fn failure_fixture(strict: bool) -> SynthesisProblem {
         let mut recovered = problem.semantics[0].clone();
         recovered.id = "recovered".into();
         for action in &mut recovered.obligations {
-            action.trigger_slot = 1;
-            action.deadline_slot = 1;
+            action.trigger_slot = horizon - 1;
+            action.deadline_slot = horizon - 1;
         }
         problem.semantics.push(recovered);
-        problem.initial_pairs.push(PlantPair { left: 8, right: 10 });
+        problem.initial_pairs.push(PlantPair {
+            left: 4 * horizon,
+            right: 5 * horizon,
+        });
         problem.outputs.truncate(2);
     }
     problem
@@ -253,9 +268,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut arguments = std::env::args().skip(1);
     let mut strict = false;
     let mut candidate_limit = None;
+    let mut services = 2;
+    let mut horizon = 2;
+    let mut report_timing = false;
     while let Some(argument) = arguments.next() {
         match argument.as_str() {
             "--strict-deadline" if !strict => strict = true,
+            "--services" => {
+                services = arguments
+                    .next()
+                    .ok_or("missing service count")?
+                    .parse::<u32>()?;
+            }
+            "--horizon" => {
+                horizon = arguments.next().ok_or("missing horizon")?.parse::<u32>()?;
+            }
+            "--timing" if !report_timing => report_timing = true,
             "--max-candidates" if candidate_limit.is_none() => {
                 let count = arguments
                     .next()
@@ -269,18 +297,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => return Err(format!("unsupported argument: {argument}").into()),
         }
     }
-    let problem = failure_fixture(strict);
+    if !(2..=16).contains(&services) || !(2..=16).contains(&horizon) {
+        return Err("service count and horizon must be in [2, 16]".into());
+    }
+    if !strict && (services != 2 || horizon != 2) {
+        return Err("non-default scope requires --strict-deadline".into());
+    }
+    let problem = failure_fixture(strict, services, horizon);
     let limits = SynthesisLimits {
         max_states: 2,
         max_candidates: candidate_limit.unwrap_or(if strict { 100_000 } else { 10_000 }),
         time_limit: Duration::from_secs(15),
         ..SynthesisLimits::default()
     };
+    let started = Instant::now();
     let outcome = if strict {
         find_feasible(&problem, limits)?
     } else {
         optimize_cost(&problem, limits)?
     };
+    let timing = report_timing.then(|| started.elapsed().as_nanos());
     let report = match outcome {
         SynthesisOutcome::Realizable(report) => report,
         SynthesisOutcome::Unrealizable(report) => {
@@ -290,6 +326,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "schema": "noticer.popets.recovery-synthesis-pilot.v1",
                     "synthesis_status": "unrealizable-at-bound",
                     "searched_through_states": report.searched_through_states,
+                    "synthesis_ns": timing,
+                    "scope": {"services": services, "horizon": horizon},
                     "candidates": report.stats.generated_candidates,
                     "cases": {},
                 })
@@ -305,6 +343,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "reason": format!("{reason:?}"),
                     "max_candidates": limits.max_candidates,
                     "candidates": stats.generated_candidates,
+                    "synthesis_ns": timing,
+                    "scope": {"services": services, "horizon": horizon},
                     "cases": {},
                 })
             );
@@ -334,6 +374,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let product = json!({
         "schema": "noticer.popets.recovery-synthesis-pilot.v1",
         "synthesis_status": "realizable",
+        "scope": {"services": services, "horizon": horizon},
+        "synthesis_ns": timing,
         "evidence": "synthetic public loss/recovery, not deployment evidence",
         "deadline_contract": if strict { "context-specific" } else { "common-final-slot" },
         "synthesis": {
