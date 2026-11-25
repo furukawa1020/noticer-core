@@ -8,12 +8,15 @@ import json
 import socket
 import struct
 import subprocess
+from dataclasses import asdict
 from itertools import product
 from pathlib import Path
 from statistics import mean
 
-from noticer_core.evaluation.aqrs_differential import report_signature
 from noticer_core.evaluation.aqrs_oracle import check_path
+from noticer_core.recovery_log_audit import LogAudit, audit_recipient_log
+from noticer_core.recovery_log_binding import bind_recovery_log
+from noticer_core.recovery_verdict import Resolution, resolve_checkers
 
 SERVICES = ("a", "b")
 PUBLIC_TAPES = {"no-loss": (0, 0), "lose-first-opportunity": (1, 0)}
@@ -104,8 +107,16 @@ def execute_world(
             for channel in pair:
                 channel.close()
 
+    audit = audit_recipient_log(model_projection, delivered)
+    machine = {key: candidate[key] for key in ("state_count", "symbols", "cells")}
+    replay_input = {"world": world, "tape": tape, "plant": artifact["plant"]}
+    binding = bind_recovery_log(
+        canonical(machine), canonical(model), canonical(replay_input), canonical(delivered)
+    )
     return {
-        "model_binding": delivered == model_projection,
+        "model_binding": audit is LogAudit.MATCH,
+        "log_audit": audit.value,
+        "replay_binding": asdict(binding) | {"digest": binding.digest},
         "received": delivered,
         "application_bytes": transferred,
     }
@@ -118,8 +129,10 @@ def dual_check(model_file: Path, checker: Path) -> dict:
         check=True, text=True, encoding="utf-8", capture_output=True, timeout=30,
     )
     rust = json.loads(native.stdout)
+    resolution = resolve_checkers(local, rust)
     return {
-        "status": "agree" if report_signature(local) == report_signature(rust) else "unresolved",
+        "status": "unresolved" if resolution is Resolution.UNRESOLVED else "agree",
+        "resolution": resolution.value,
         "model_sha256": hashlib.sha256(model_file.read_bytes()).hexdigest(),
         "python": local,
         "rust": rust,
@@ -181,6 +194,21 @@ def main() -> None:
     artifact = json.loads(native_bytes.decode("utf-8-sig"))
     if artifact["schema"] != "noticer.popets.recovery-synthesis-pilot.v1":
         raise ValueError("wrong native synthesis artifact")
+    synthesis_status = artifact.get("synthesis_status", "realizable")
+    if synthesis_status != "realizable":
+        if synthesis_status not in {"inconclusive", "unrealizable-at-bound"} or artifact["cases"]:
+            raise ValueError("non-realizable synthesis may not include replay cases")
+        report = {
+            "schema": "noticer.popets.checked-recovery-pilot.v1",
+            "synthesis_status": synthesis_status,
+            "native_sha256": hashlib.sha256(native_bytes).hexdigest(),
+            "native_decision": artifact,
+            "results": {},
+        }
+        with (args.out / "summary.json").open("xb") as stream:
+            stream.write(canonical(report))
+        print(f"Synthesis {synthesis_status}; no qualified receiver runs")
+        raise SystemExit(3)
     results = {}
     for name, candidate in artifact["cases"].items():
         file = args.out / f"{name}.model.json"
