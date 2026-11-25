@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 270" role="img" aria-labelledby="title description">
+  <title id="title">A synthetic recovery trace with two authorized recipients</title>
+  <desc id="description">Both worlds have the same authorized action. At reconnect, an intentionally defective finite model emits different receipts for service B. The normalized example retains identical receipts and the same action deadline.</desc>
+  <rect x="0" y="0" width="820" height="270" rx="12" fill="#f5f8f3"/>
+  <g font-family="sans-serif" fill="#183437">
+    <text x="24" y="35" font-size="20" font-weight="700">Same authorized action, different recovery trace</text>
+    <text x="24" y="56" font-size="12">SYNTHETIC FINITE MODEL / NOT AN OBSERVATION OF A DEPLOYED PRODUCT</text>
+    <g font-size="14" text-anchor="middle">
+      <text x="220" y="96">loss</text><text x="338" y="96">loss</text>
+      <text x="456" y="96">retry</text><text x="574" y="96">reconnect</text>
+      <text x="706" y="96">action deadline</text>
+    </g>
+    <path d="M150 130H770 M150 170H770" stroke="#a7bbb0" stroke-width="2"/>
+    <g font-size="14"><text x="24" y="135">Early readiness</text><text x="24" y="175">Late readiness</text></g>
+    <g fill="#006b63"><circle cx="456" cy="130" r="5"/><circle cx="456" cy="170" r="5"/><circle cx="706" cy="130" r="5"/><circle cx="706" cy="170" r="5"/></g>
+    <rect x="517" y="113" width="114" height="34" rx="6" fill="#f4d7a3"/>
+    <rect x="517" y="153" width="114" height="34" rx="6" fill="#f4d7a3"/>
+    <g font-size="13" text-anchor="middle"><text x="574" y="135">B receipt: 0</text><text x="574" y="175">B receipt: 1</text></g>
+    <text x="24" y="218" font-size="14" font-weight="700">Coalition view: combine A's retry receipt with B's reconnect receipt.</text>
+    <text x="24" y="242" font-size="14">Normalized model: the two worlds produce identical views and meet the same deadline.</text>
+  </g>
+</svg>
