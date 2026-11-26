@@ -1,0 +1,23 @@
+---
+import "../styles/slot-mix.css";
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mixed Slot Certificates | QuotientForge Studio</title></head>
+<body><main class="slot-mix">
+<nav><a href={`${base}mixed-slot-lab/`}>Try the four futures</a></nav>
+<header>
+<p class="tag">SYNTHETIC DEMO ONLY</p>
+<h1>Two checks.<br />One exact value.</h1>
+<p>A policy achieves the lower bound. A tape distribution independently limits every admissible policy.</p>
+</header>
+<div class="split">
+<section class="panel"><h2>Achievable lower bound</h2><p class="big">2/5</p>
+<p>Choose among the four plans with masses 1/5, 1/5, 1/5, and 2/5. Replay each plan on each tape. Every tape succeeds with mass 2/5.</p></section>
+<section class="panel"><h2>Independent upper bound</h2><p class="big">2/5</p>
+<p>Give the tapes masses 1/5, 1/5, 1/5, and 2/5. Recompute the best causal response from the public game, without reusing the frontier or simplex.</p></section>
+</div>
+<footer>Exact fractions in a bounded artificial game. No real-network privacy guarantee.</footer>
+</main></body></html>
