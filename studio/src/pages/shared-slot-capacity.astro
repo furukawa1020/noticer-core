@@ -1,0 +1,57 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shared Capacity Cut | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav><a href={`${base}shared-slot-verifier/`}>Shared-Slot Verifier</a></nav>
+      <header>
+        <p class="badge">SYNTHETIC DEMO ONLY</p>
+        <h1>Four places.<br /><em>Only one reachable.</em></h1>
+        <p>Capacity matters where the receivers can use it.</p>
+      </header>
+      <section aria-labelledby="proof">
+        <h2 id="proof">Check the capacity witness</h2>
+        <table>
+          <thead><tr><th scope="col">Logical slot</th><th scope="col">Public capacity</th><th scope="col">Eligible receivers</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">0</th><td>1</td><td>A, B</td></tr>
+            <tr><th scope="row">1</th><td>0</td><td>A, B</td></tr>
+            <tr><th scope="row">2</th><td>3</td><td>Neither: deadline was slot 1</td></tr>
+          </tbody>
+        </table>
+        <dl>
+          <dt>Witness actions</dt><dd>A and B</dd>
+          <dt>Exact neighborhood</dt><dd>Slots 0 and 1</dd>
+          <dt>Needed vs reachable</dt><dd>2 &gt; 1 + 0</dd>
+        </dl>
+        <p><strong>Insufficient reachable capacity.</strong> No schedule, even with foresight, meets both deadlines.</p>
+      </section>
+      <footer>Logical slots only. This is a finite capacity proof, not a real-network measurement.</footer>
+    </main>
+  </body>
+</html>
+<style>
+  :root { --paper: #f3f4e8; --ink: #242d1f; --accent: #405726; --rule: #b6bba0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: Georgia, serif;
+    background: radial-gradient(ellipse at 15% 0%, #d3debd, transparent 65%), var(--paper);
+    min-height: 100vh; }
+  main { width: min(60rem, calc(100% - 2rem)); margin: auto; padding: 1.5rem 0 2rem; }
+  nav, footer, .badge, dt, th { font-family: ui-monospace, monospace; }
+  nav, footer { border-top: 1px solid var(--rule); padding: .65rem 0; }
+  a, em { color: var(--accent); }
+  .badge { border: 1px solid var(--accent); width: fit-content; padding: .3rem .55rem; }
+  h1 { font-size: clamp(3.25rem, 9vw, 7rem); line-height: .91; margin: .5rem 0; }
+  table { width: 100%; border-collapse: collapse; background: #fafaf2; }
+  td, th { padding: .5rem; border: 1px solid var(--rule); text-align: left; overflow-wrap: anywhere; }
+  dl { border-left: .35rem solid var(--accent); padding: .5rem .8rem; background: #e0e4d2; }
+  dd { margin: .12rem 0 .65rem; }
+  footer { margin-top: 1.8rem; }
+</style>
