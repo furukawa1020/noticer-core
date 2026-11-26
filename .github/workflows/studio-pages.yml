@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "studio/**"
+      - "src/noticer_core/slot_mix_*.py"
+      - "tools/*slot_mix_certificate.py"
       - ".github/workflows/studio-pages.yml"
   workflow_dispatch:
 
@@ -35,6 +37,16 @@ jobs:
         working-directory: studio
       - run: npm run build
         working-directory: studio
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Publish an independently checked synthetic certificate
+        env:
+          PYTHONPATH: src
+        run: |
+          proof=studio/dist/mixed-slot-proof/asymmetric.json
+          python tools/write_slot_mix_certificate.py "$proof"
+          python tools/check_slot_mix_certificate.py "$proof"
       - name: Check public routes and evidence labels
         run: |
           node --test scripts/check-public-routes.test.mjs
