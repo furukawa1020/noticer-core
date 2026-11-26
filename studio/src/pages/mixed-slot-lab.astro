@@ -1,0 +1,50 @@
+---
+import { moves, tapes, viewRows } from "../scripts/slot-mix-demo.mjs";
+import "../styles/slot-mix.css";
+const base = import.meta.env.BASE_URL;
+const results = viewRows();
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mixed Slot Lab | QuotientForge Studio</title></head>
+<body><main class="slot-mix">
+<nav><a href={`${base}shared-slot-results/`}>Deterministic results</a></nav>
+<header>
+<p class="tag">SYNTHETIC DEMO ONLY</p>
+<h1>One draw.<br />Four possible futures.</h1>
+<p>Send three actions now. Which one can wait until the last slot depends on a future you cannot see yet.</p>
+</header>
+<section class="panel">
+<h2>Can your first choice cover this future?</h2>
+<div class="selector">
+  <label>Action to delay <select id="move">{moves.map(({ label }, i) => <option value={i}>{label}</option>)}</select></label>
+  <label>Future to inspect <select id="tape">{tapes.map((label, i) => <option value={i}>{label}</option>)}</select></label>
+</div>
+<p id="outcome" role="status">All deadlines met.</p>
+</section>
+<section class="panel">
+<h2>Compare the mixtures across all futures</h2>
+<table>
+<thead><tr><th scope="col">Fixed tape</th><th scope="col">Uniform mixture</th><th scope="col">Certified mixture</th></tr></thead>
+<tbody>{results.map((row) => <tr><th scope="row">{row.label}</th><td>{row.uniform}</td><td>{row.certified}</td></tr>)}</tbody>
+</table>
+</section>
+<footer>Logical slots. The tape is fixed before the draw. No measurement on a real protocol.</footer>
+</main></body></html>
+<script>
+  import { moves } from "../scripts/slot-mix-demo.mjs";
+  const move = document.querySelector<HTMLSelectElement>("#move");
+  const tape = document.querySelector<HTMLSelectElement>("#tape");
+  const status = document.querySelector<HTMLElement>("#outcome");
+  function update() {
+    if (!move || !tape || !status) return;
+    const selected = moves[Number(move.value)];
+    if (!selected) return;
+    const wins = Boolean(selected.mask & (1 << Number(tape.value)));
+    status.textContent = wins ? "All deadlines met." : "At least one action misses its deadline.";
+    status.dataset.wins = String(wins);
+  }
+  move?.addEventListener("change", update);
+  tape?.addEventListener("change", update);
+</script>
