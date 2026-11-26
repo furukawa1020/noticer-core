@@ -1,0 +1,82 @@
+---
+import { gameScenes } from "../scripts/shared-slot-demo-game.mjs";
+const base = import.meta.env.BASE_URL;
+const first = gameScenes.hedge;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Public-Future Strategy | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav>
+        <a href={`${base}shared-slot-verifier/`}>First-send witness</a>
+        <a href={`${base}shared-slot-capacity/`}>Capacity witness</a>
+      </nav>
+      <header>
+        <p class="eyebrow">SYNTHETIC DEMO ONLY</p>
+        <h1>Plan without<br />knowing the future.</h1>
+        <p>Compare the worst admitted future with and without foresight.</p>
+      </header>
+      <section aria-labelledby="case-title">
+        <label for="scene">Public uncertainty case</label>
+        <select id="scene">
+          <option value="hedge">A causal policy exists</option>
+          <option value="late">The shared first send is not enough</option>
+          <option value="cutoff">Search budget exhausted</option>
+        </select>
+        <div class="panel" aria-live="polite">
+          <p id="case-evidence">{first.evidence}</p>
+          <h2 id="case-title">{first.title}</h2>
+          <p id="case-decision">{first.decision}</p>
+          <dl>
+            <div><dt>Offline ceiling</dt><dd id="case-early">{first.early}</dd></div>
+            <div><dt>Checked causal policy</dt><dd id="case-hedge">{first.hedge}</dd></div>
+            <div><dt>Deadline-first baseline</dt><dd id="case-reference">{first.reference}</dd></div>
+          </dl>
+          <p id="case-why">{first.why}</p>
+        </div>
+      </section>
+      <footer>Worst of two declared synthetic tapes, not a measurement on a live protocol.</footer>
+    </main>
+  </body>
+</html>
+<script>
+  import { gameScenes } from "../scripts/shared-slot-demo-game.mjs";
+
+  const select = document.querySelector<HTMLSelectElement>("#scene");
+  const fields = ["title", "evidence", "decision", "early", "hedge", "reference", "why"] as const;
+  select?.addEventListener("change", () => {
+    const key = select.value;
+    if (key !== "hedge" && key !== "late" && key !== "cutoff") return;
+    for (const field of fields) {
+      const node = document.querySelector(`#case-${field}`);
+      if (node) node.textContent = gameScenes[key][field];
+    }
+  });
+</script>
+<style>
+  :root { --paper: #f1eee3; --ink: #242d1f; --rule: #adbaab; --accent: #005447; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: Georgia, serif; min-height: 100vh;
+    background: radial-gradient(ellipse at top right, #c1d9c7, transparent 65%), var(--paper); }
+  main { width: min(66rem, calc(100% - 2rem)); margin: auto; padding: 1.5rem 0 2rem; }
+  nav, label, select, .eyebrow, dt, footer, #case-evidence { font-family: ui-monospace, monospace; }
+  nav { display: flex; gap: 1.15rem; flex-wrap: wrap; }
+  nav, footer { border-top: 1px solid var(--rule); padding: .65rem 0; }
+  a, h1 { color: var(--accent); }
+  header { margin: 2.5rem 0; }
+  .eyebrow { display: inline-block; border: 1px solid currentColor; padding: .35rem .55rem; }
+  h1 { font-size: clamp(2.9rem, 8.8vw, 7rem); line-height: .9; margin: .5rem 0; }
+  select { padding: .5rem; margin: .4rem; max-width: 100%; }
+  .panel { margin: .85rem 0 1.75rem; border: 1px solid var(--rule);
+    background: #faf9f1; padding: 1rem; }
+  #case-evidence { color: var(--accent); font-weight: bold; }
+  dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+  dl > div { border-top: 1px solid var(--rule); padding-top: .55rem; }
+  dd { margin: .35rem 0; font-size: clamp(1.2rem, 3vw, 2rem); }
+  @media (max-width: 30rem) { dl { grid-template-columns: 1fr; } }
+</style>
