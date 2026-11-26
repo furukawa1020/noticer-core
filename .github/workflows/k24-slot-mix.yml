@@ -1,0 +1,57 @@
+name: K24 Exact Slot Mixtures
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/noticer_core/slot_mix_*.py"
+      - "tests/test_slot_mix_*.py"
+      - "tools/*slot_mix*.py"
+      - "studio/src/scripts/slot-mix-demo.mjs"
+      - ".github/workflows/k24-slot-mix.yml"
+  pull_request:
+    paths:
+      - "src/noticer_core/slot_mix_*.py"
+      - "tests/test_slot_mix_*.py"
+      - "tools/*slot_mix*.py"
+      - "studio/src/scripts/slot-mix-demo.mjs"
+      - ".github/workflows/k24-slot-mix.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: k24-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_slot_mix_*.py
+      - name: Replay the portable certificate without the synthesizer
+        run: |
+          mkdir -p "$RUNNER_TEMP/first" "$RUNNER_TEMP/second"
+          for name in first second; do
+            output="$RUNNER_TEMP/$name"
+            python tools/run_slot_mix_evidence.py --grid --output "$output/comparison.json"
+            python tools/write_slot_mix_certificate.py "$output/certificate.json"
+            python tools/check_slot_mix_certificate.py "$output/certificate.json" \
+              > "$output/recheck.json"
+          done
+          diff -r "$RUNNER_TEMP/first" "$RUNNER_TEMP/second"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-slot-mixture-evidence
+          path: ${{ runner.temp }}/first/*.json
