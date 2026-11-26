@@ -3,6 +3,18 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const publicRoutes = Object.freeze([
+  {
+    file: "mixed-slot-lab/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "The tape is fixed before the draw"],
+  },
+  {
+    file: "mixed-slot-proof/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Independent upper bound", "Achievable lower bound"],
+  },
+  {
+    file: "mixed-slot-results/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Tied iterative64", "not empirical rates"],
+  },
   { file: "index.html", markers: ["AETP Evidence Lab", "aetp-evidence/"] },
   { file: "aetp-evidence/index.html", markers: ["SYNTHETIC DEMO ONLY", "not an empirical result"] },
   { file: "aetp-observatory/index.html", markers: ["SYNTHETIC DEMO ONLY", "Claim withheld"] },
