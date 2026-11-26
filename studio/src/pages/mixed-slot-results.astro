@@ -1,0 +1,27 @@
+---
+import "../styles/slot-mix.css";
+const base = import.meta.env.BASE_URL;
+const rows = [
+  { label: "Three futures", cases: 35, uniformTie: 35, iterativeTie: 33, iterativeGain: 2 },
+  { label: "Four futures", cases: 1365, uniformTie: 1153, iterativeTie: 1141, iterativeGain: 224 },
+];
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mixed Slot Comparison | QuotientForge Studio</title></head>
+<body><main class="slot-mix">
+<nav><a href={`${base}mixed-slot-lab/`}>Try one set of futures</a>
+<a href={`${base}mixed-slot-proof/`}>Read the two certificates</a></nav>
+<header>
+<p class="tag">SYNTHETIC DEMO ONLY</p>
+<h1>Report the ties.</h1>
+<p>1,400 finite cases. No advantage over the strong iterative baseline above 1/16. The largest gap is 5/96.</p>
+</header>
+<section class="panel">
+<h2>Every enumerated case</h2>
+<table><thead><tr><th scope="col">Group</th><th scope="col">Cases</th><th scope="col">Tied uniform</th><th scope="col">Tied iterative64</th><th scope="col">Improved iterative64</th></tr></thead>
+<tbody>{rows.map((r) => <tr><th scope="row">{r.label}</th><td>{r.cases}</td><td>{r.uniformTie}</td><td>{r.iterativeTie}</td><td>{r.iterativeGain}</td></tr>)}</tbody></table>
+</section>
+<footer>Complete counts for a declared toy grid, not empirical rates or privacy results.</footer>
+</main></body></html>
