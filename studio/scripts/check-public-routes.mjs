@@ -9,7 +9,10 @@ export const publicRoutes = Object.freeze([
   },
   {
     file: "mixed-slot-proof/index.html",
-    markers: ["SYNTHETIC DEMO ONLY", "Independent upper bound", "Achievable lower bound"],
+    markers: [
+      "SYNTHETIC DEMO ONLY", "Independent upper bound", "Achievable lower bound",
+      "mixed-slot-proof/asymmetric.json",
+    ],
   },
   {
     file: "mixed-slot-results/index.html",

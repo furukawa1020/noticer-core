@@ -19,5 +19,11 @@ const base = import.meta.env.BASE_URL;
 <section class="panel"><h2>Independent upper bound</h2><p class="big">2/5</p>
 <p>Give the tapes masses 1/5, 1/5, 1/5, and 2/5. Recompute the best causal response from the public game, without reusing the frontier or simplex.</p></section>
 </div>
+<section class="panel">
+<h2>Take the proof with you</h2>
+<p><a href={`${base}mixed-slot-proof/asymmetric.json`} download="asymmetric.json">Download the checked JSON certificate</a></p>
+<p>With the repository installed, recheck it using
+  <code>python tools/check_slot_mix_certificate.py asymmetric.json</code>.</p>
+</section>
 <footer>Exact fractions in a bounded artificial game. No real-network privacy guarantee.</footer>
 </main></body></html>
