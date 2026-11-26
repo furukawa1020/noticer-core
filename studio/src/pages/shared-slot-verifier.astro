@@ -1,0 +1,111 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shared-Slot Verifier | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav><a href={`${base}recovery-verifier/`}>Recovery Verifier</a></nav>
+      <header>
+        <p class="eyebrow">SYNTHETIC DEMO ONLY</p>
+        <h1>One slot.<br />Two futures.</h1>
+        <p>Two receivers can accept an action now. Only one will recover before the deadline.</p>
+      </header>
+      <section aria-labelledby="choose">
+        <h2 id="choose">Commit to the first send</h2>
+        <div class="scene">
+          <div>
+            <p class="slot">SLOT 00 / PUBLIC PREFIX</p>
+            <p>A and B are both available. Shared capacity: <strong>one</strong>.</p>
+            <div class="controls" aria-label="First action">
+              <button type="button" data-send="A" aria-pressed="false">Send A</button>
+              <button type="button" data-send="B" aria-pressed="false">Send B</button>
+              <button type="button" data-send="wait" aria-pressed="false">Wait</button>
+            </div>
+          </div>
+          <div>
+            <p class="slot">SLOT 01 / DEADLINE</p>
+            <p>The two futures have exactly the same public prefix.</p>
+            <a href="#future-a">Compare both continuations</a>
+          </div>
+        </div>
+        <div class="futures">
+          <article id="future-a">
+            <p class="slot">FUTURE 01</p><h3>Only A recovers</h3>
+            <p>Feasible first send: B.</p><p id="outcome-a">No decision yet.</p>
+          </article>
+          <article id="future-b">
+            <p class="slot">FUTURE 02</p><h3>Only B recovers</h3>
+            <p>Feasible first send: A.</p><p id="outcome-b">No decision yet.</p>
+          </article>
+        </div>
+        <p class="result" id="decision-summary" role="status">
+          No deterministic first send succeeds in both futures.
+        </p>
+      </section>
+      <footer>
+        With a future fixed before the random decision, the worst-case success is 1/2.
+        Logical slots, not network measurements.
+      </footer>
+    </main>
+  </body>
+</html>
+<script>
+  import { evaluateFirstSend } from "../scripts/shared-slot-demo.mjs";
+
+  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-send]");
+  const a = document.querySelector<HTMLElement>("#outcome-a");
+  const b = document.querySelector<HTMLElement>("#outcome-b");
+  const summary = document.querySelector<HTMLElement>("#decision-summary");
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      if (!a || !b || !summary) return;
+      const result = evaluateFirstSend(button.dataset.send);
+      if (!result) return;
+      for (const choice of buttons) {
+        choice.setAttribute("aria-pressed", String(choice === button));
+      }
+      a.textContent = result.a ? "2 of 2 delivered." : "Missed at least one deadline.";
+      b.textContent = result.b ? "2 of 2 delivered." : "Missed at least one deadline.";
+      a.dataset.pass = String(result.a);
+      b.dataset.pass = String(result.b);
+      summary.textContent = result.a || result.b
+        ? "Your first send succeeds in exactly one future."
+        : "Waiting misses a deadline in both futures.";
+    });
+  }
+</script>
+<style>
+  :root { --ink: #282a21; --paper: #f4f1e6; --accent: #8b2d19; --rule: #c5b9a4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; color: var(--ink); font-family: Georgia, serif;
+    background: radial-gradient(ellipse at 90% 5%, #f3c398, transparent 55%), var(--paper); }
+  main { width: min(66rem, calc(100% - 2rem)); margin: auto; padding: 1.5rem 0 2rem; }
+  nav, .slot, .eyebrow, button, footer { font-family: ui-monospace, monospace; }
+  nav, footer { border-bottom: 1px solid var(--rule); padding: .6rem 0; }
+  footer { border: 0; border-top: 1px solid var(--rule); margin-top: 1.8rem; line-height: 1.5; }
+  a, h1 { color: var(--accent); }
+  header { margin: 2.5rem 0; }
+  h1 { font-size: clamp(3.4rem, 10vw, 8rem); line-height: .88; margin: .8rem 0; }
+  h3 { margin: .25rem 0; }
+  .eyebrow { display: inline-block; border: 1px solid currentColor; padding: .35rem .55rem; }
+  .scene, .futures { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; }
+  .futures { margin-top: .65rem; }
+  .scene > div, article { min-width: 0; border: 1px solid var(--rule); padding: 1rem; }
+  article { background: #fff9ee; }
+  .scene > div:first-child { background: #eae4d6; }
+  .slot { font-size: .82rem; letter-spacing: .05em; margin-top: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: .45rem; }
+  button { background: #fff9ed; color: var(--ink); border: 1px solid var(--ink);
+    padding: .55rem .75rem; cursor: pointer; }
+  button[aria-pressed=true] { background: var(--ink); color: #fff9ed; }
+  [data-pass=true] { color: #17523e; font-weight: bold; }
+  [data-pass=false] { color: var(--accent); font-weight: bold; }
+  .result { border-left: .3rem solid var(--accent); padding-left: .75rem; }
+  @media (max-width: 36rem) { .scene, .futures { grid-template-columns: 1fr; } }
+</style>
