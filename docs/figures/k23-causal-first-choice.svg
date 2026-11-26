@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="240" viewBox="0 0 820 240" role="img" aria-labelledby="title desc">
+  <title id="title">No single first transmission meets two fixed public futures</title>
+  <desc id="desc">The same slot zero view allows sending A or B. If only A returns in slot one, sending B is necessary at zero. If only B returns, sending A is necessary.</desc>
+  <rect width="820" height="240" fill="#f9f5eb"/>
+  <g fill="none" stroke="#403530" stroke-width="2">
+    <path d="M335 118 H385 L425 61 H455 M385 118 L425 167 H455"/>
+    <rect x="28" y="62" width="307" height="112" rx="8" fill="#f2e7d6"/>
+    <rect x="455" y="23" width="335" height="77" rx="8" fill="#ecf0e7"/>
+    <rect x="455" y="129" width="335" height="77" rx="8" fill="#ecf0e7"/>
+  </g>
+  <g font-family="sans-serif" fill="#292622">
+    <text x="49" y="94" font-size="18" font-weight="bold">Slot 0: same public view</text>
+    <text x="49" y="122" font-size="16">A and B available, capacity = 1</text>
+    <text x="49" y="148" font-size="15">Commit before seeing the future.</text>
+    <text x="475" y="54" font-size="18" font-weight="bold">Slot 1: only A recovers</text>
+    <text x="475" y="79" font-size="16">Unique successful first send: B</text>
+    <text x="475" y="160" font-size="18" font-weight="bold">Slot 1: only B recovers</text>
+    <text x="475" y="185" font-size="16">Unique successful first send: A</text>
+    <text x="28" y="219" font-size="14">Finite synthetic witness; slots are not wall-clock measurements.</text>
+  </g>
+</svg>
