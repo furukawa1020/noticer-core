@@ -23,6 +23,10 @@ export const publicRoutes = Object.freeze([
     markers: ["SYNTHETIC DEMO ONLY", "Checked causal policy", "not a measurement on a live protocol"],
   },
   {
+    file: "shared-slot-results/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Least-worst-slack baseline", "not empirical success rates"],
+  },
+  {
     file: "quotient-trial/index.html",
     markers: ["QuotientTrial | Comparative Evaluation Lab", "NOT SCIENTIFIC RESULTS"],
   },

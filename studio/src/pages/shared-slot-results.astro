@@ -1,0 +1,82 @@
+---
+import { grid } from "../scripts/shared-slot-demo-grid.mjs";
+
+const base = import.meta.env.BASE_URL;
+const infeasible = grid.reduce((sum, row) => sum + row.offline - row.verified, 0);
+const series = [
+  { label: "Deadline-first baseline", key: "deadline" },
+  { label: "Least-worst-slack baseline", key: "slack" },
+  { label: "Independently checked policy", key: "verified" },
+  { label: "Offline ceiling", key: "offline" },
+] as const;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shared-Slot Results | QuotientForge Studio</title>
+  </head>
+  <body>
+    <main>
+      <nav><a href={`${base}shared-slot-strategy/`}>Explore a single case</a></nav>
+      <header>
+        <p class="tag">SYNTHETIC DEMO ONLY</p>
+        <h1>Same wins.<br />Different evidence.</h1>
+        <p>
+          The strong baseline and checked synthesis succeed on the same number of pairs.
+          The distinguishing result is a certificate where no causal policy exists.
+        </p>
+      </header>
+      <section class="highlight" aria-label="Key result">
+        <strong>{infeasible}</strong>
+        <p>Pairs doable with foresight, but impossible to guarantee from the public prefix.</p>
+      </section>
+      <div class="panels">
+        {grid.map((row) => (
+          <section aria-label={row.label}>
+            <h2>{row.label}</h2>
+            <dl>
+              {series.map(({ label, key }) => (
+                <div class:list={["row", key === "verified" && "checked"]}>
+                  <dt>{label}</dt>
+                  <dd>
+                    <meter min={0} max={row.total} value={row[key]} aria-label={label}></meter>
+                    <span>{row[key]}/{row.total}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+      <footer>
+        Counts are exact on the listed finite grid, not empirical success rates or live-network measurements.
+      </footer>
+    </main>
+  </body>
+</html>
+<style>
+  :root { --paper: #f5f0e6; --ink: #243130; --accent: #9a3c1b; --rule: #b8b5a6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font-family: Georgia, serif;
+    background: radial-gradient(ellipse at top right, #ebc5a4, transparent 62%), var(--paper); }
+  main { width: min(67rem, calc(100% - 2rem)); margin: auto; padding: 1.5rem 0 2rem; }
+  a, h1, .highlight strong { color: var(--accent); }
+  nav, footer, .tag, .row { font-family: ui-monospace, monospace; }
+  nav, footer { border-top: 1px solid var(--rule); padding: .55rem 0; }
+  header { margin: 2.25rem 0; }
+  h1 { font-size: clamp(3rem, 9.25vw, 7rem); line-height: .86; margin: .45rem 0; }
+  .tag { border: 1px solid var(--ink); display: inline-block; padding: .35rem .55rem; }
+  .highlight { display: flex; align-items: center; gap: .8rem; padding: .65rem 1rem;
+    background: #efe2ca; border-left: .4rem solid var(--accent); }
+  .highlight strong { font-size: clamp(2rem, 5.5vw, 4.5rem); }
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; margin: 1.25rem 0; }
+  .panels section { padding: 0 1rem .6rem; background: #fdfaf2; border: 1px solid var(--rule); }
+  .row { margin: .65rem 0; }
+  .row dd { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .45rem;
+    align-items: center; margin: .25rem 0; }
+  .checked { font-weight: 700; }
+  meter { width: 100%; }
+  @media (max-width: 40rem) { .panels { grid-template-columns: 1fr; } }
+</style>
