@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="175" viewBox="0 0 760 175" role="img" aria-labelledby="title desc">
+<title id="title">Public tape fixed before the random draw</title>
+<desc id="desc">Fix an admitted future, draw a policy independently, reveal the current public slot, and act causally. No feedback can change the chosen tape.</desc>
+<rect width="760" height="175" fill="#f3eee3"/>
+<path d="M148 76h29m155 0h29m174 0h28" fill="none" stroke="#237371" stroke-width="3"/>
+<g fill="#dee9dd" stroke="#237371"><rect x="20" y="49" width="128" height="54" rx="7"/>
+<rect x="177" y="49" width="155" height="54" rx="7"/><rect x="361" y="49" width="174" height="54" rx="7"/>
+<rect x="563" y="49" width="172" height="54" rx="7"/></g>
+<g font-family="sans-serif" fill="#163436" font-size="15">
+<text x="37" y="81">Fix one tape</text><text x="194" y="81">Draw policy</text>
+<text x="379" y="81">Reveal current slot</text><text x="581" y="81">Act from prefix</text>
+<text x="20" y="144">Finite synthetic game; the tape cannot be changed after seeing a send or the private draw.</text>
+</g></svg>
