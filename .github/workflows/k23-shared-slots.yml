@@ -1,0 +1,48 @@
+name: K23 Shared Slot Evidence
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/noticer_core/shared_slot_*.py"
+      - "tests/test_shared_slot_*.py"
+      - "tools/run_shared_slot_evidence.py"
+      - "studio/src/scripts/shared-slot-demo*"
+      - ".github/workflows/k23-shared-slots.yml"
+  pull_request:
+    paths:
+      - "src/noticer_core/shared_slot_*.py"
+      - "tests/test_shared_slot_*.py"
+      - "tools/run_shared_slot_evidence.py"
+      - "studio/src/scripts/shared-slot-demo*"
+      - ".github/workflows/k23-shared-slots.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest -q tests/test_shared_slot_*.py
+      - run: node --test studio/src/scripts/shared-slot-demo.test.mjs
+      - name: Produce identical independent evidence files
+        run: |
+          python tools/run_shared_slot_evidence.py --output "$RUNNER_TEMP/first/shared-slots.json"
+          python tools/run_shared_slot_evidence.py --output "$RUNNER_TEMP/second/shared-slots.json"
+          cmp "$RUNNER_TEMP/first/shared-slots.json" "$RUNNER_TEMP/second/shared-slots.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: k23-synthetic-shared-slot-evidence
+          path: ${{ runner.temp }}/first/shared-slots.json
