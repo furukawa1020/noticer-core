@@ -11,6 +11,14 @@ export const publicRoutes = Object.freeze([
     markers: ["SYNTHETIC DEMO ONLY", "logical time", "Real protocol recovery is unverified"],
   },
   {
+    file: "shared-slot-verifier/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "same public prefix", "worst-case success is 1/2"],
+  },
+  {
+    file: "shared-slot-capacity/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Exact neighborhood", "Insufficient reachable capacity"],
+  },
+  {
     file: "quotient-trial/index.html",
     markers: ["QuotientTrial | Comparative Evaluation Lab", "NOT SCIENTIFIC RESULTS"],
   },
