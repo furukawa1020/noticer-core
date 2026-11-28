@@ -1,0 +1,41 @@
+---
+import "../styles/slot-mix.css";
+import { budgets, costs, values } from "../scripts/receipt-limit-demo.mjs";
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Receipt Tradeoff | QuotientForge Studio</title></head>
+<body><main class="slot-mix">
+<nav><a href={`${base}receipt-coalition/`}>Try coalition visibility</a></nav>
+<header>
+<p class="tag">SYNTHETIC DEMO ONLY</p>
+<h1>Delivery has<br />a privacy price.</h1>
+<p>The authorized actions are fixed. Only private readiness changes. Compare exact optimal worst-history delivery under an observed trace-distance cap.</p>
+</header>
+<section class="panel">
+<h2>Trace distance cap</h2>
+<label for="cap">Total variation</label>
+<select id="cap">{budgets.map((budget, i) => <option value={i}>{budget}</option>)}</select>
+<table><thead><tr><th scope="col">Observer or rule</th><th scope="col">Complete delivery</th></tr></thead>
+<tbody aria-live="polite">
+<tr><th scope="row">One receiver, no failure indicator</th><td id="single">{values.single[0]}</td></tr>
+<tr><th scope="row">Both receivers together</th><td id="coalition">{values.coalition[0]}</td></tr>
+<tr><th scope="row">One receiver with failure indicator</th><td id="single_failure_visible">{values.single_failure_visible[0]}</td></tr>
+<tr><th scope="row">Complete-only baseline</th><td id="baseline">{costs[0]}</td></tr>
+</tbody></table>
+</section>
+<footer>An exact finite-model result, not empirical privacy or network timing.</footer>
+</main></body></html>
+<script>
+  import { costs, values } from "../scripts/receipt-limit-demo.mjs";
+  const cap = document.querySelector<HTMLSelectElement>("#cap");
+  cap?.addEventListener("change", () => {
+    const i = Number(cap.value);
+    for (const [id, row] of Object.entries({ ...values, baseline: costs })) {
+      const cell = document.getElementById(id);
+      if (cell && row[i] !== undefined) cell.textContent = row[i];
+    }
+  });
+</script>
