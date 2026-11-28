@@ -4,6 +4,14 @@ import { pathToFileURL } from "node:url";
 
 export const publicRoutes = Object.freeze([
   {
+    file: "receipt-coalition/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Both receivers together", "Not a result on a live service"],
+  },
+  {
+    file: "receipt-tradeoff/index.html",
+    markers: ["SYNTHETIC DEMO ONLY", "Complete-only baseline", "not empirical privacy"],
+  },
+  {
     file: "mixed-slot-lab/index.html",
     markers: ["SYNTHETIC DEMO ONLY", "The tape is fixed before the draw"],
   },
