@@ -26,6 +26,12 @@ const base = import.meta.env.BASE_URL;
 <tr><th scope="row">Complete-only baseline</th><td id="baseline">{costs[0]}</td></tr>
 </tbody></table>
 </section>
+<section class="panel">
+<h2>Recheck the result</h2>
+<p><a href={`${base}receipt-tradeoff/proof.json`} download="proof.json">Download the checked proof</a>.
+<a href={`${base}receipt-tradeoff/report.json`} download="report.json">Download all comparison counts</a>.</p>
+<p>With the repository installed, run <code>python tools/check_receipt_limit_certificate.py proof.json</code>.</p>
+</section>
 <footer>An exact finite-model result, not empirical privacy or network timing.</footer>
 </main></body></html>
 <script>

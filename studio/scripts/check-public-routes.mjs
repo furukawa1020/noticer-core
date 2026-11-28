@@ -9,7 +9,10 @@ export const publicRoutes = Object.freeze([
   },
   {
     file: "receipt-tradeoff/index.html",
-    markers: ["SYNTHETIC DEMO ONLY", "Complete-only baseline", "not empirical privacy"],
+    markers: [
+      "SYNTHETIC DEMO ONLY", "Complete-only baseline", "not empirical privacy",
+      "receipt-tradeoff/proof.json", "receipt-tradeoff/report.json",
+    ],
   },
   {
     file: "mixed-slot-lab/index.html",

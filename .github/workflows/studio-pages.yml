@@ -7,6 +7,8 @@ on:
       - "studio/**"
       - "src/noticer_core/slot_mix_*.py"
       - "tools/*slot_mix_certificate.py"
+      - "src/noticer_core/receipt_limit_*.py"
+      - "tools/*receipt_limit*.py"
       - ".github/workflows/studio-pages.yml"
   workflow_dispatch:
 
@@ -47,6 +49,14 @@ jobs:
           proof=studio/dist/mixed-slot-proof/asymmetric.json
           python tools/write_slot_mix_certificate.py "$proof"
           python tools/check_slot_mix_certificate.py "$proof"
+      - name: Publish independently checked receipt tradeoff evidence
+        env:
+          PYTHONPATH: src
+        run: |
+          output=studio/dist/receipt-tradeoff
+          python tools/run_receipt_limit_study.py --grid --output "$output/report.json"
+          python tools/write_receipt_limit_certificate.py "$output/proof.json"
+          python tools/check_receipt_limit_certificate.py "$output/proof.json"
       - name: Check public routes and evidence labels
         run: |
           node --test scripts/check-public-routes.test.mjs
