@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="730" height="212" viewBox="0 0 730 212" role="img" aria-labelledby="title desc">
+<title id="title">Equal receiver marginals, disjoint joint traces</title>
+<desc id="desc">Each receiver sees early and late with equal probability in both histories, but a coalition sees aligned timing or opposed timing.</desc>
+<rect width="730" height="212" fill="#f3eee4"/>
+<g font-family="sans-serif" fill="#26362e" font-size="17">
+<text x="28" y="39" font-weight="bold">Both histories: each receiver sees 50% early, 50% late</text>
+<text x="28" y="91">History 0</text><text x="171" y="91">(early, early)</text><text x="353" y="91">(late, late)</text>
+<text x="28" y="135">History 1</text><text x="171" y="135">(early, late)</text><text x="353" y="135">(late, early)</text>
+<text x="28" y="182" font-weight="bold">Separate TV = 0. Joint TV = 1. Both always meet both deadlines.</text>
+</g>
+<path d="M28 55 H698 M28 106 H698 M28 151 H698" stroke="#5e8d7b" fill="none"/>
+</svg>
