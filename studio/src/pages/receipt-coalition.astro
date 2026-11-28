@@ -1,0 +1,41 @@
+---
+import "../styles/slot-mix.css";
+const base = import.meta.env.BASE_URL;
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Receipt Coalition | QuotientForge Studio</title></head>
+<body><main class="slot-mix">
+<nav><a href={`${base}mixed-slot-results/`}>Deadline-only benchmark</a></nav>
+<header>
+<p class="tag">SYNTHETIC DEMO ONLY</p>
+<h1>Same inbox.<br />Different together.</h1>
+<p>Both histories always deliver. Each receiver sees early or late with equal probability, but the joint timing differs.</p>
+</header>
+<section class="panel">
+<h2>Choose an observer</h2>
+<label>Compare traces <select id="observer">
+<option value="alpha">Receiver A only</option><option value="bravo">Receiver B only</option>
+<option value="coalition">Both receivers together</option>
+</select></label>
+<p class="big" id="distance" role="status">TV 0</p>
+<table><thead><tr><th scope="col">History</th><th scope="col">Two equally likely observations</th></tr></thead>
+<tbody><tr><th scope="row">0</th><td id="left">early / late</td></tr>
+<tr><th scope="row">1</th><td id="right">early / late</td></tr></tbody></table>
+</section>
+<footer>Decoded logical receipts only. Not a result on a live service or a real network.</footer>
+</main></body></html>
+<script>
+  const selector = document.querySelector<HTMLSelectElement>("#observer");
+  const distance = document.querySelector("#distance");
+  const left = document.querySelector("#left");
+  const right = document.querySelector("#right");
+  selector?.addEventListener("change", () => {
+    if (!distance || !left || !right) return;
+    const joint = selector.value === "coalition";
+    distance.textContent = joint ? "TV 1" : "TV 0";
+    left.textContent = joint ? "(early, early) / (late, late)" : "early / late";
+    right.textContent = joint ? "(early, late) / (late, early)" : "early / late";
+  });
+</script>
